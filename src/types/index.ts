@@ -65,7 +65,7 @@ export type Client = {
   _seed?: boolean
 }
 
-export type AppointmentState = 'agendada' | 'confirmada' | 'completada' | 'cancelada' | 'no_asistio'
+export type AppointmentState = 'agendada' | 'confirmada' | 'completada' | 'cancelada' | 'no_asistio' | 'pendiente'
 
 export type AppointmentHistoryItem = {
   estado: AppointmentState
