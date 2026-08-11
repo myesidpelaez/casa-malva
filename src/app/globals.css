@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-fraunces), Georgia, serif;
+
+  --color-malva: #7B4B6E;
+  --color-malva-soft: #F3EAF0;
+  --color-ink: #1A1618;
+  --color-ink-soft: #6B6268;
+  --color-canvas: #FAF8F9;
+  --color-canvas-pure: #FFFFFF;
+  --color-success: #2F7D5B;
+  --color-alert: #B4462F;
+}
+
+:root {
+  --font-fraunces: 'Fraunces', Georgia, serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #FAF8F9;
+  color: #1A1618;
+  min-height: 100vh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure minimum touch target height */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
