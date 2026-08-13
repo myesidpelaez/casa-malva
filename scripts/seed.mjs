@@ -113,7 +113,7 @@ async function runSeed() {
     {
       id: 'pro_valentina',
       nombre: 'Valentina Ruiz',
-      rol: 'Manicurista sénior',
+      cargo: 'Manicurista sénior',
       serviceIds: ['srv_manicure_trad', 'srv_manicure_semi', 'srv_pedicure_spa', 'srv_unas_acrilicas', 'srv_retiro_semi'],
       horario: { 1: [9, 18], 2: [9, 18], 3: [9, 18], 4: [9, 18], 5: [9, 18], 6: [9, 18] },
       excepciones: [],
@@ -123,7 +123,7 @@ async function runSeed() {
     {
       id: 'pro_daniela',
       nombre: 'Daniela Ospina',
-      rol: 'Estilista sénior',
+      cargo: 'Estilista sénior',
       serviceIds: ['srv_corte_peinado', 'srv_cepillado', 'srv_hidratacion', 'srv_color_raiz', 'srv_balayage', 'srv_keratina'],
       horario: { 2: [10, 19], 3: [10, 19], 4: [10, 19], 5: [10, 19], 6: [10, 19] },
       excepciones: [],
@@ -131,9 +131,9 @@ async function runSeed() {
       _seed: true,
     },
     {
-      id: 'pro_sara',
-      nombre: 'Sara Jaramillo',
-      rol: 'Estilista y maquilladora',
+      id: 'prof_marcela',
+      nombre: 'Marcela Jaramillo',
+      cargo: 'Estilista y maquilladora',
       serviceIds: ['srv_corte_peinado', 'srv_cepillado', 'srv_hidratacion', 'srv_maq_social', 'srv_maq_novia'],
       horario: { 1: [9, 18], 2: [9, 18], 3: [9, 18], 4: [9, 18], 5: [9, 18] },
       excepciones: [],
@@ -143,7 +143,7 @@ async function runSeed() {
     {
       id: 'pro_camila',
       nombre: 'Camila Restrepo',
-      rol: 'Especialista en cejas y pestañas',
+      cargo: 'Especialista en cejas y pestañas',
       serviceIds: ['srv_diseno_cejas', 'srv_laminado_cejas', 'srv_lifting_pestanas', 'srv_manicure_trad'],
       horario: { 1: [11, 19], 2: [11, 19], 3: [11, 19], 4: [11, 19], 5: [11, 19], 6: [11, 19] },
       excepciones: [],
@@ -263,7 +263,7 @@ async function runSeed() {
     {
       id: 'apt_cancelled_1',
       clientId: 'cli_luisa_martinez',
-      professionalId: 'pro_sara',
+      professionalId: 'prof_marcela',
       serviceId: 'srv_maq_social',
       inicioUtc: makeUtcString(yesterday, 16, 0),
       finUtc: makeUtcString(yesterday, 17, 0),
@@ -356,19 +356,45 @@ async function runSeed() {
   }
   console.log(`  ✓ ${appointments.length} citas semilla y sus slots creados`)
 
-  // 7. Usuario Admin
-  const adminEmail = 'admin@casamalva.co'
-  const adminPass = 'admin123'
-  const passwordHash = hashPassword(adminPass)
-  await db.collection('users').doc('usr_admin_1').set({
-    id: 'usr_admin_1',
-    email: adminEmail,
-    passwordHash,
-    nombre: 'Dueña Casa Malva',
-    rol: 'admin',
-    _seed: true,
-  })
-  console.log(`  ✓ Usuario admin creado: ${adminEmail}`)
+  // 7. Usuarios
+  const { SEED_ADMIN_PASS, SEED_RECEPCION_PASS, SEED_PROFESIONAL_PASS } = process.env
+  
+  if (!SEED_ADMIN_PASS || !SEED_RECEPCION_PASS || !SEED_PROFESIONAL_PASS) {
+    throw new Error('Faltan variables de entorno para contraseñas de seed (SEED_ADMIN_PASS, SEED_RECEPCION_PASS, SEED_PROFESIONAL_PASS).')
+  }
+
+  const users = [
+    {
+      id: 'usr_admin_1',
+      email: 'admin@casamalva.co',
+      passwordHash: hashPassword(SEED_ADMIN_PASS),
+      nombre: 'Dueña Casa Malva',
+      rol: 'admin',
+      _seed: true,
+    },
+    {
+      id: 'usr_recepcion_1',
+      email: 'recepcion@casamalva.co',
+      passwordHash: hashPassword(SEED_RECEPCION_PASS),
+      nombre: 'Recepción Casa Malva',
+      rol: 'recepcion',
+      _seed: true,
+    },
+    {
+      id: 'usr_profesional_1',
+      email: 'marcela@casamalva.co',
+      passwordHash: hashPassword(SEED_PROFESIONAL_PASS),
+      nombre: 'Marcela Jaramillo',
+      rol: 'profesional',
+      professionalId: 'prof_marcela',
+      _seed: true,
+    },
+  ]
+
+  for (const user of users) {
+    await db.collection('users').doc(user.id).set(user)
+  }
+  console.log(`  ✓ ${users.length} usuarios creados (admin, recepcion, profesional)`)
 
   console.log('\n✅ Seed en Cloud Firestore completado exitosamente.')
 }

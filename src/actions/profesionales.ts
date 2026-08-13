@@ -22,7 +22,7 @@ export async function getProfessionalsAction(): Promise<ActionResult<Professiona
  * Actualización de datos, horarios y servicios de profesional (Protegida)
  */
 export const updateProfessionalAction = withAuth<Professional, [profData: Partial<Professional> & { id: string }]>(
-  ['admin'],
+  'equipo:editar',
   async (ctx, profData) => {
     const existing = await docGet<Professional>('professionals', profData.id)
     if (!existing) {
@@ -34,7 +34,7 @@ export const updateProfessionalAction = withAuth<Professional, [profData: Partia
       ...profData,
       id: profData.id,
       nombre: profData.nombre ?? existing.nombre,
-      rol: profData.rol ?? existing.rol,
+      cargo: profData.cargo ?? existing.cargo,
       serviceIds: profData.serviceIds ?? existing.serviceIds,
       horario: profData.horario ?? existing.horario,
       excepciones: profData.excepciones ?? existing.excepciones ?? [],

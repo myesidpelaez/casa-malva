@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Info, Lock, Mail, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Lock, Mail, TriangleAlert } from 'lucide-react'
 import { loginAction } from '@/actions/auth'
 import { spring, tween } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
@@ -23,8 +23,10 @@ import { Field } from '@/components/ui/field'
  */
 export default function AdminLoginPage() {
   const router = useRouter()
-  const [email, setEmail] = React.useState('admin@casamalva.co')
-  const [password, setPassword] = React.useState('admin123')
+  // Campos vacíos: el panel sale a internet con clientas reales. Precargar credenciales
+  // convierte cualquier navegador abierto en una sesión de administradora.
+  const [email, setEmail] = React.useState('')
+  const [password, setPassword] = React.useState('')
   const [entrando, setEntrando] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -109,13 +111,12 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          <div className="flex items-start gap-2.5 rounded-[var(--radius-sm)] border border-champagne/60 bg-champagne/20 px-3.5 py-3 text-[12px] leading-relaxed text-ink-500">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" strokeWidth={2} />
-            <div>
-              <p className="font-semibold text-ink-700">Credenciales de demostración</p>
-              <p className="tnum mt-0.5">admin@casamalva.co · admin123</p>
-            </div>
-          </div>
+          {/*
+            Aquí se imprimían las credenciales de demostración en pantalla. Con el panel
+            servido en un enlace público eso no es una ayuda: es publicar la contraseña de
+            la administradora. Las credenciales las fija `npm run seed` desde las variables
+            SEED_ADMIN_PASS / SEED_RECEPCION_PASS / SEED_PROFESIONAL_PASS.
+          */}
         </Surface>
 
         <div className="mt-4 text-center">

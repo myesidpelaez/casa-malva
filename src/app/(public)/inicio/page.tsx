@@ -181,7 +181,7 @@ export default async function InicioPage() {
                   <h3 className="mt-3 text-[15px] font-semibold text-ink-900">
                     {prof.nombre}
                   </h3>
-                  <p className="text-[12.5px] text-ink-500">{prof.rol}</p>
+                  <p className="text-[12.5px] text-ink-500">{prof.cargo}</p>
                   <p className="mt-2 text-[11.5px] text-ink-400">
                     {prof.serviceIds.length} servicios habilitados
                   </p>

@@ -110,6 +110,7 @@ export function ReservaWizard({
   React.useEffect(() => {
     if (!servicio) return
     let vivo = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCargandoFranjas(true)
     setFranja(null)
 
@@ -535,7 +536,7 @@ function PasoProfesional({
                   <h3 className="truncate text-[14.5px] font-semibold text-ink-900">
                     {p.nombre}
                   </h3>
-                  <p className="truncate text-[12.5px] text-ink-500">{p.rol}</p>
+                  <p className="truncate text-[12.5px] text-ink-500">{p.cargo}</p>
                 </div>
               </div>
             </Surface>

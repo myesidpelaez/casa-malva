@@ -12,7 +12,6 @@ import {
   MessageCircle,
   Monitor,
   Sparkles,
-  User,
   Users,
   UserX,
   X,
@@ -425,7 +424,7 @@ export default function AdminAgendaPage() {
                       <h2 className="truncate text-[13.5px] font-semibold text-ink-900">
                         {prof.nombre}
                       </h2>
-                      <p className="truncate text-[11px] text-ink-400">{prof.rol}</p>
+                      <p className="truncate text-[11px] text-ink-400">{prof.cargo}</p>
                     </div>
                     <Badge tone={suyas.length ? 'malva' : 'neutral'} size="sm">
                       {suyas.length}

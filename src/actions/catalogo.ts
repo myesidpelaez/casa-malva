@@ -39,7 +39,7 @@ export async function getServicesAction(): Promise<ActionResult<Service[]>> {
  * Mutación administrativa de categorías (Protegida)
  */
 export const upsertCategoryAction = withAuth<Category, [categoryData: Partial<Category> & { id?: string }]>(
-  ['admin'],
+  'catalogo:editar',
   async (ctx, categoryData) => {
     const id = categoryData.id || `cat_${Date.now()}`
     const existing = categoryData.id ? await docGet<Category>('categories', categoryData.id) : null
@@ -60,7 +60,7 @@ export const upsertCategoryAction = withAuth<Category, [categoryData: Partial<Ca
  * Mutación administrativa de servicios y precios (Protegida)
  */
 export const upsertServiceAction = withAuth<Service, [serviceData: Partial<Service> & { id?: string }]>(
-  ['admin'],
+  'catalogo:editar',
   async (ctx, serviceData) => {
     const id = serviceData.id || `srv_${Date.now()}`
     const existing = serviceData.id ? await docGet<Service>('services', serviceData.id) : null

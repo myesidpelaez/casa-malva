@@ -12,6 +12,7 @@ import {
 } from '@/lib/db'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
 import { withAuth } from '@/lib/withAuth'
+import { puedeTocarCita } from '@/lib/permisos'
 import {
   claveDia,
   franjasDisponibles,
@@ -163,10 +164,10 @@ export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResu
  * Confirmación de cita (Protegida: Admin y Recepción)
  */
 export const confirmarCitaAction = withAuth<Appointment, [citaId: string, cambiadoPor?: string]>(
-  ['admin', 'recepcion'],
+  'cita:cambiar_estado',
   async (ctx, citaId, cambiadoPor = 'admin') => {
     const cita = await docGet<Appointment>('appointments', citaId)
-    if (!cita) return { ok: false, error: 'Cita no encontrada' }
+    if (!cita || !puedeTocarCita(ctx, cita)) return { ok: false, error: 'Cita no encontrada' }
 
     if (cita.estado === 'cancelada' || cita.estado === 'completada') {
       return { ok: false, error: `No se puede confirmar una cita en estado '${cita.estado}'` }
@@ -195,10 +196,10 @@ export const confirmarCitaAction = withAuth<Appointment, [citaId: string, cambia
  * Cancelación de cita administrativa y liberación de slots (Protegida: Admin y Recepción)
  */
 export const cancelarCitaAction = withAuth<Appointment, [citaId: string, motivo?: string, cambiadoPor?: string]>(
-  ['admin', 'recepcion'],
+  'cita:reagendar',
   async (ctx, citaId, motivo = 'Cancelada por el administrador', cambiadoPor = 'admin') => {
     const cita = await docGet<Appointment>('appointments', citaId)
-    if (!cita) return { ok: false, error: 'Cita no encontrada' }
+    if (!cita || !puedeTocarCita(ctx, cita)) return { ok: false, error: 'Cita no encontrada' }
 
     if (cita.estado === 'completada' || cita.estado === 'cancelada') {
       return { ok: false, error: `La cita ya está ${cita.estado}` }
@@ -242,10 +243,10 @@ export const cancelarCitaAction = withAuth<Appointment, [citaId: string, motivo?
  * Marca cita como completada (Protegida: Admin y Recepción)
  */
 export const marcarCompletadaAction = withAuth<Appointment, [citaId: string, cambiadoPor?: string]>(
-  ['admin', 'recepcion'],
+  'cita:cambiar_estado',
   async (ctx, citaId, cambiadoPor = 'admin') => {
     const cita = await docGet<Appointment>('appointments', citaId)
-    if (!cita) return { ok: false, error: 'Cita no encontrada' }
+    if (!cita || !puedeTocarCita(ctx, cita)) return { ok: false, error: 'Cita no encontrada' }
 
     const updated: Appointment = {
       ...cita,
@@ -270,10 +271,10 @@ export const marcarCompletadaAction = withAuth<Appointment, [citaId: string, cam
  * Marca no-asistencia (Protegida: Admin y Recepción)
  */
 export const marcarNoAsistioAction = withAuth<Appointment, [citaId: string, cambiadoPor?: string]>(
-  ['admin', 'recepcion'],
+  'cita:cambiar_estado',
   async (ctx, citaId, cambiadoPor = 'admin') => {
     const cita = await docGet<Appointment>('appointments', citaId)
-    if (!cita) return { ok: false, error: 'Cita no encontrada' }
+    if (!cita || !puedeTocarCita(ctx, cita)) return { ok: false, error: 'Cita no encontrada' }
 
     const updated: Appointment = {
       ...cita,
@@ -298,10 +299,10 @@ export const marcarNoAsistioAction = withAuth<Appointment, [citaId: string, camb
  * Reagendar cita en nueva fecha/hora liberando slots antiguos y reservando los nuevos (Protegida)
  */
 export const reagendarCitaAction = withAuth<Appointment, [citaId: string, nuevaInicioUtc: string, cambiadoPor?: string]>(
-  ['admin', 'recepcion'],
+  'cita:reagendar',
   async (ctx, citaId, nuevaInicioUtc, cambiadoPor = 'admin') => {
     const cita = await docGet<Appointment>('appointments', citaId)
-    if (!cita) return { ok: false, error: 'Cita no encontrada' }
+    if (!cita || !puedeTocarCita(ctx, cita)) return { ok: false, error: 'Cita no encontrada' }
 
     if (cita.estado === 'cancelada' || cita.estado === 'completada') {
       return { ok: false, error: `No se puede reagendar una cita ${cita.estado}` }
@@ -381,9 +382,12 @@ export const reagendarCitaAction = withAuth<Appointment, [citaId: string, nuevaI
  * Consulta de citas del día o completas (Protegida: Admin y Recepción)
  */
 export const getCitasAction = withAuth<Appointment[], [fechaIso?: string]>(
-  ['admin', 'recepcion'],
+  'agenda:leer',
   async (ctx, fechaIso) => {
-    const appointments = await getAppointments()
+    const allAppointments = await getAppointments()
+    const appointments = ctx.rol === 'profesional' 
+      ? allAppointments.filter(a => a.professionalId === ctx.professionalId)
+      : allAppointments
 
     if (!fechaIso) {
       return appointments

@@ -1,10 +1,8 @@
 'use server'
 
-import { docGet, docSet, getAppointments, getClients } from '@/lib/db'
-import { normalizePhoneE164 } from '@/lib/utils'
+import { docGet, getAppointments, getClients } from '@/lib/db'
 import { withAuth } from '@/lib/withAuth'
 import type { Appointment, Client } from '@/types'
-import type { ActionResult } from './catalogo'
 
 /*
  * ELIMINADA — `upsertClientePorTelefonoAction` (hallazgo F5, 2026-08-14).
@@ -21,7 +19,7 @@ import type { ActionResult } from './catalogo'
  * Listado completo de clientas del CRM (Protegida: Admin y Recepción)
  */
 export const getClientsAction = withAuth<Client[], []>(
-  ['admin', 'recepcion'],
+  'clienta:leer',
   async () => {
     return await getClients()
   }
@@ -39,8 +37,8 @@ export const getClientDetailAction = withAuth<
     noShowCount: number
   },
   [clientId: string]
->(
-  ['admin', 'recepcion'],
+> (
+  'clienta:leer',
   async (ctx, clientId) => {
     const client = await docGet<Client>('clients', clientId)
     if (!client) {

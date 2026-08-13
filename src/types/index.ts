@@ -48,7 +48,7 @@ export type Exception = {
 export type Professional = {
   id: string
   nombre: string
-  rol: string
+  cargo: string
   serviceIds: string[]
   horario: ProfessionalSchedule
   excepciones: Exception[]

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -11,17 +12,19 @@ function getSessionSecret(): string {
   return secret
 }
 
+import { PERMISOS, type Permiso } from '@/lib/permisos'
+
 // Lightweight crypto helper for Edge runtime in Next middleware using Web Crypto API
-async function verifySessionToken(token: string): Promise<boolean> {
+async function verifySessionToken(token: string): Promise<any | null> {
   try {
     const parts = token.split('.')
-    if (parts.length !== 2) return false
+    if (parts.length !== 2) return null
     const [b64Payload, sigHex] = parts
 
     const payloadStr = Buffer.from(b64Payload, 'base64url').toString('utf-8')
     const payload = JSON.parse(payloadStr)
 
-    if (payload.exp && Date.now() > payload.exp) return false
+    if (payload.exp && Date.now() > payload.exp) return null
 
     // Verify HMAC-SHA256 signature
     const encoder = new TextEncoder()
@@ -36,10 +39,19 @@ async function verifySessionToken(token: string): Promise<boolean> {
     // Convert hex signature back to Uint8Array
     const sigBytes = new Uint8Array(sigHex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
 
-    return await crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(payloadStr))
+    const isValid = await crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(payloadStr))
+    if (!isValid) return null
+    return payload
   } catch {
-    return false
+    return null
   }
+}
+
+const ROUTE_PERMISSIONS: Record<string, Permiso> = {
+  '/admin/catalogo': 'catalogo:editar',
+  '/admin/profesionales': 'equipo:editar',
+  '/admin/clientas': 'clienta:leer',
+  '/admin/agente': 'catalogo:editar', // Solo admin puede ver agente, asumo catalogo:editar
 }
 
 export async function middleware(request: NextRequest) {
@@ -48,18 +60,39 @@ export async function middleware(request: NextRequest) {
   // Protected paths: /admin and any subpath except /admin/login
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value
+    const session = sessionCookie ? await verifySessionToken(sessionCookie) : null
 
-    if (!sessionCookie || !(await verifySessionToken(sessionCookie))) {
+    if (!session) {
       const loginUrl = new URL('/admin/login', request.url)
       return NextResponse.redirect(loginUrl)
     }
+
+    // Si intenta entrar a la raíz /admin, redirigir al módulo principal del rol
+    if (pathname === '/admin') {
+      if (session.rol === 'admin') {
+        return NextResponse.redirect(new URL('/admin/catalogo', request.url))
+      }
+      // Los demás se quedan en /admin (agenda)
+    }
+
+    // Validar permisos por ruta
+    for (const [route, permiso] of Object.entries(ROUTE_PERMISSIONS)) {
+      if (pathname.startsWith(route)) {
+        const roles = PERMISOS[permiso]
+        if (!(roles as readonly string[]).includes(session.rol as string)) {
+          return new NextResponse(JSON.stringify({ error: 'Acceso denegado' }), { status: 403 })
+        }
+      }
+    }
   }
 
-  // If visiting /admin/login while already authenticated, redirect to /admin
+  // If visiting /admin/login while already authenticated, redirect to their main module
   if (pathname === '/admin/login') {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value
-    if (sessionCookie && (await verifySessionToken(sessionCookie))) {
-      const adminUrl = new URL('/admin', request.url)
+    const session = sessionCookie ? await verifySessionToken(sessionCookie) : null
+    if (session) {
+      const redirectPath = session.rol === 'admin' ? '/admin/catalogo' : '/admin'
+      const adminUrl = new URL(redirectPath, request.url)
       return NextResponse.redirect(adminUrl)
     }
   }

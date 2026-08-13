@@ -6,8 +6,6 @@ import type {
   BusinessSettings,
   Category,
   Client,
-  Conversation,
-  Message,
   Professional,
   Service,
   Slot,
@@ -19,6 +17,7 @@ export type UserRow = {
   passwordHash: string
   nombre: string
   rol: string
+  professionalId?: string
 }
 
 let firestoreInstance: Firestore | null = null

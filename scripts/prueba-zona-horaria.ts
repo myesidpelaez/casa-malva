@@ -93,7 +93,7 @@ const servicio: Service = {
 const profesional: Professional = {
   id: 'prof_prueba',
   nombre: 'Profesional de prueba',
-  rol: 'Estilista',
+  cargo: 'Estilista',
   serviceIds: ['svc_prueba'],
   horario: { 1: [9, 19], 2: [9, 19], 3: [9, 19], 4: [9, 19], 5: [9, 19], 6: [9, 19] },
   excepciones: [],

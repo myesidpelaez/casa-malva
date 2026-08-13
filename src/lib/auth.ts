@@ -38,16 +38,18 @@ export type SessionData = {
   email: string
   nombre: string
   rol: string
+  professionalId?: string
   exp: number
 }
 
-export async function createSession(user: { id: string; email: string; nombre: string; rol: string }): Promise<void> {
+export async function createSession(user: { id: string; email: string; nombre: string; rol: string; professionalId?: string }): Promise<void> {
   const exp = Date.now() + 7 * 24 * 3600 * 1000 // 7 days
   const payload: SessionData = {
     id: user.id,
     email: user.email,
     nombre: user.nombre,
     rol: user.rol,
+    professionalId: user.professionalId,
     exp,
   }
   const payloadStr = JSON.stringify(payload)

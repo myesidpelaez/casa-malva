@@ -1,14 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import {
-  Check,
-  CheckCheck,
-  Clock,
-  Pencil,
-  Sparkles,
-  XCircle,
-} from 'lucide-react'
+import { Pencil, Clock, Check, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { getProfessionalsAction, updateProfessionalAction } from '@/actions/profesionales'
 import { getCategoriesAction, getServicesAction } from '@/actions/catalogo'
@@ -50,7 +43,7 @@ export default function AdminProfesionalesPage() {
 
   const [editando, setEditando] = React.useState<Professional | null>(null)
   const [nombre, setNombre] = React.useState('')
-  const [rol, setRol] = React.useState('')
+  const [cargo, setCargo] = React.useState('')
   const [serviceIds, setServiceIds] = React.useState<string[]>([])
   const [horario, setHorario] = React.useState<ProfessionalSchedule>({})
   const [activo, setActivo] = React.useState(true)
@@ -69,13 +62,14 @@ export default function AdminProfesionalesPage() {
   }, [])
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     cargar()
   }, [cargar])
 
   function abrir(prof: Professional) {
     setEditando(prof)
     setNombre(prof.nombre)
-    setRol(prof.rol)
+    setCargo(prof.cargo)
     setServiceIds(prof.serviceIds ?? [])
     setHorario(prof.horario ?? {})
     setActivo(prof.activo)
@@ -147,7 +141,7 @@ export default function AdminProfesionalesPage() {
     const res = await updateProfessionalAction({
       id: editando.id,
       nombre: nombre.trim(),
-      rol: rol.trim(),
+      cargo: cargo.trim(),
       serviceIds,
       horario,
       activo,
@@ -195,7 +189,7 @@ export default function AdminProfesionalesPage() {
                     <h2 className="truncate font-display text-[17px] font-semibold text-ink-900">
                       {prof.nombre}
                     </h2>
-                    <p className="truncate text-[12.5px] text-ink-500">{prof.rol}</p>
+                    <p className="truncate text-[12.5px] text-ink-500">{prof.cargo}</p>
                   </div>
                   <Badge tone={prof.activo ? 'success' : 'neutral'} size="sm">
                     {prof.activo ? 'Activa' : 'Inactiva'}
@@ -304,9 +298,9 @@ export default function AdminProfesionalesPage() {
               placeholder="Ej: Valentina Ruiz"
             />
             <Field
-              label="Rol"
-              value={rol}
-              onChange={(e) => setRol(e.target.value)}
+              label="Cargo"
+              value={cargo}
+              onChange={(e) => setCargo(e.target.value)}
               placeholder="Ej: Manicurista sénior"
             />
           </div>
