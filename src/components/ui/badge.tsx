@@ -1,33 +1,128 @@
+'use client'
+
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
+import type { AppointmentState } from '@/types'
 
+/**
+ * Distintivos y píldoras de estado.
+ *
+ * Regla: el estado de una cita se ve SIEMPRE igual, en la agenda, en la ficha
+ * de la clienta y en la confirmación pública. Un mismo hecho, un mismo color
+ * ([[04-BIBLIOTECA/patrones/trazabilidad-mejoria]]).
+ */
 const badgeVariants = cva(
-  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+  'inline-flex items-center gap-1.5 font-semibold whitespace-nowrap transition-colors',
   {
     variants: {
-      variant: {
-        default: 'border-transparent bg-[#7B4B6E] text-white',
-        secondary: 'border-transparent bg-[#F3EAF0] text-[#7B4B6E]',
-        success: 'border-transparent bg-[#E8F5E9] text-[#2F7D5B]',
-        alert: 'border-transparent bg-[#FDE8E8] text-[#B4462F]',
-        outline: 'border-[#7B4B6E] text-[#7B4B6E]',
+      tone: {
+        neutral: 'bg-ink-100 text-ink-700',
+        malva: 'bg-malva-100 text-malva-700',
+        success: 'bg-success-soft text-success',
+        warning: 'bg-warning-soft text-warning',
+        danger: 'bg-danger-soft text-danger',
+        info: 'bg-info-soft text-info',
+        glass: 'glass text-ink-700',
       },
+      size: {
+        sm: 'px-2 py-0.5 text-[10.5px] rounded-md',
+        md: 'px-2.5 py-1 text-[11.5px] rounded-lg',
+        lg: 'px-3.5 py-1.5 text-[13px] rounded-full',
+      },
+      uppercase: { true: 'uppercase tracking-[0.08em]', false: '' },
     },
-    defaultVariants: {
-      variant: 'default',
-    },
+    defaultVariants: { tone: 'neutral', size: 'md', uppercase: false },
   }
 )
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
+export function Badge({ className, tone, size, uppercase, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <span className={cn(badgeVariants({ tone, size, uppercase }), className)} {...props} />
   )
 }
 
-export { Badge, badgeVariants }
+/* -------------------------------------------------------------------------
+   Mapa único estado de cita → color y etiqueta legible.
+   ---------------------------------------------------------------------- */
+type StateMeta = {
+  label: string
+  tone: NonNullable<VariantProps<typeof badgeVariants>['tone']>
+  /** Color de la barra lateral de la tarjeta en la agenda. */
+  accent: string
+  /** Fondo de la tarjeta en la agenda. */
+  surface: string
+}
+
+export const APPOINTMENT_STATE: Record<AppointmentState, StateMeta> = {
+  pendiente: {
+    label: 'Por confirmar',
+    tone: 'warning',
+    accent: 'bg-warning',
+    surface: 'bg-warning-soft/45',
+  },
+  agendada: {
+    label: 'Agendada',
+    tone: 'info',
+    accent: 'bg-info',
+    surface: 'bg-info-soft/40',
+  },
+  confirmada: {
+    label: 'Confirmada',
+    tone: 'success',
+    accent: 'bg-success',
+    surface: 'bg-success-soft/45',
+  },
+  completada: {
+    label: 'Completada',
+    tone: 'neutral',
+    accent: 'bg-ink-300',
+    surface: 'bg-ink-50',
+  },
+  cancelada: {
+    label: 'Cancelada',
+    tone: 'danger',
+    accent: 'bg-danger',
+    surface: 'bg-danger-soft/40',
+  },
+  no_asistio: {
+    label: 'No asistió',
+    tone: 'danger',
+    accent: 'bg-danger',
+    surface: 'bg-danger-soft/30',
+  },
+}
+
+export function StatusPill({
+  estado,
+  size = 'sm',
+}: {
+  estado: AppointmentState
+  size?: 'sm' | 'md' | 'lg'
+}) {
+  const meta = APPOINTMENT_STATE[estado] ?? APPOINTMENT_STATE.agendada
+  return (
+    <Badge tone={meta.tone} size={size} uppercase>
+      {meta.label}
+    </Badge>
+  )
+}
+
+/** Punto latiendo. Señal de "esto está vivo" en la cabecera del panel. */
+export function LivePulse({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2 text-[11.5px] font-semibold text-ink-500">
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-70" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+      </span>
+      {label}
+    </span>
+  )
+}
+
+export { badgeVariants }

@@ -2,7 +2,14 @@
 
 import { docGet, docSet, getAppointments, getClients, getProfessionals, getServices, transaccion } from '@/lib/db'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
-import { proximasFranjas, validarReserva, type SlotInfo } from '@/lib/disponibilidad'
+import {
+  claveDia,
+  franjasDisponibles,
+  profesionalesPara,
+  proximasFranjas,
+  validarReserva,
+  type SlotInfo,
+} from '@/lib/disponibilidad'
 import { normalizePhoneE164 } from '@/lib/utils'
 import type { Appointment, AppointmentState, Client } from '@/types'
 import type { ActionResult } from './catalogo'
@@ -372,6 +379,123 @@ export async function getCitasPorTelefonoAction(telefonoRaw: string): Promise<Ac
     return { ok: true, data: clientAppts }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Error al buscar citas por teléfono'
+    return { ok: false, error: errorMsg }
+  }
+}
+
+/**
+ * Franjas libres de un servicio en un día concreto.
+ *
+ * Existe para que la página pública NO tenga que descargarse la tabla de
+ * citas. Antes se enviaba `getCitasAction()` entera al navegador para calcular
+ * la disponibilidad allí: eso exponía `clientId`, teléfono y precio de todas
+ * las clientas a cualquiera que abriera la pestaña de red. El cálculo vive en
+ * el servidor y solo viajan las horas libres.
+ *
+ * Spec: docs/specs/04-disponibilidad.md
+ */
+export async function franjasDelDiaAction(
+  serviceId: string,
+  fechaIso: string,
+  professionalId?: string
+): Promise<ActionResult<Array<{ inicioUtc: string; professionalId: string; professionalNombre: string }>>> {
+  try {
+    const services = getServices()
+    const professionals = getProfessionals()
+    const appointments = getAppointments()
+
+    const svc = services.find((s) => s.id === serviceId)
+    if (!svc) return { ok: false, error: 'Servicio no encontrado' }
+
+    const fecha = new Date(fechaIso)
+    const candidatos = professionalId
+      ? professionals.filter((p) => p.id === professionalId && p.activo)
+      : profesionalesPara(serviceId, professionals)
+
+    // Un mismo minuto puede estar libre en dos profesionales. Se muestra una
+    // sola vez y se recuerda quién lo cubre, para no elegir al azar al agendar.
+    const porMinuto = new Map<
+      number,
+      { inicioUtc: string; professionalId: string; professionalNombre: string }
+    >()
+
+    for (const prof of candidatos) {
+      for (const inicio of franjasDisponibles(
+        serviceId,
+        prof.id,
+        fecha,
+        appointments,
+        services,
+        professionals
+      )) {
+        const key = inicio.getTime()
+        if (!porMinuto.has(key)) {
+          porMinuto.set(key, {
+            inicioUtc: inicio.toISOString(),
+            professionalId: prof.id,
+            professionalNombre: prof.nombre,
+          })
+        }
+      }
+    }
+
+    const franjas = [...porMinuto.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([, v]) => v)
+
+    return { ok: true, data: franjas }
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Error al consultar franjas'
+    return { ok: false, error: errorMsg }
+  }
+}
+
+/**
+ * Qué días de un rango tienen al menos un cupo. Alimenta la tira de fechas:
+ * un día sin cupos se muestra apagado ANTES de que la clienta lo pulse.
+ */
+export async function diasConCuposAction(
+  serviceId: string,
+  desdeIso: string,
+  dias = 14,
+  professionalId?: string
+): Promise<ActionResult<Record<string, number>>> {
+  try {
+    const services = getServices()
+    const professionals = getProfessionals()
+    const appointments = getAppointments()
+
+    const candidatos = professionalId
+      ? professionals.filter((p) => p.id === professionalId && p.activo)
+      : profesionalesPara(serviceId, professionals)
+
+    const conteo: Record<string, number> = {}
+    const desde = new Date(desdeIso)
+
+    for (let i = 0; i < dias; i++) {
+      const dia = new Date(desde)
+      dia.setDate(dia.getDate() + i)
+      dia.setHours(0, 0, 0, 0)
+
+      const minutos = new Set<number>()
+      for (const prof of candidatos) {
+        for (const inicio of franjasDisponibles(
+          serviceId,
+          prof.id,
+          dia,
+          appointments,
+          services,
+          professionals
+        )) {
+          minutos.add(inicio.getTime())
+        }
+      }
+      conteo[claveDia(dia)] = minutos.size
+    }
+
+    return { ok: true, data: conteo }
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Error al consultar días con cupos'
     return { ok: false, error: errorMsg }
   }
 }

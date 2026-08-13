@@ -18,6 +18,21 @@ export function isSunday(d: Date): boolean {
   return d.getDay() === 0
 }
 
+/**
+ * Clave `YYYY-MM-DD` de un día **en hora local**.
+ *
+ * No se usa `toISOString().split('T')[0]`: eso devuelve la fecha en UTC y, en
+ * Colombia (UTC-5), un día local a las 00:00 cae en el día ANTERIOR en UTC.
+ * Con la versión de UTC, un bloqueo puesto para el jueves se aplicaba al
+ * miércoles.
+ */
+export function claveDia(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export function inLunch(minutes: number): boolean {
   return minutes >= REGLAS_NEGOCIO.almuerzo.desde && minutes < REGLAS_NEGOCIO.almuerzo.hasta
 }
@@ -35,8 +50,8 @@ export function getWorkWindow(prof: Professional, date: Date): [number, number] 
   // En prof.horario: 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab, 7=Dom
   const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay()
 
-  // Revisar excepciones para la fecha YYYY-MM-DD
-  const dateStr = date.toISOString().split('T')[0]
+  // Revisar excepciones para la fecha YYYY-MM-DD (local, no UTC — ver claveDia)
+  const dateStr = claveDia(date)
   const exc = prof.excepciones?.find((e) => e.fecha === dateStr)
   if (exc) {
     if (exc.tipo === 'bloqueo') return null

@@ -1,107 +1,133 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { ArrowLeft, Info, Lock, Mail, TriangleAlert } from 'lucide-react'
 import { loginAction } from '@/actions/auth'
-import { Shield, Lock, Mail, AlertCircle, Info } from 'lucide-react'
+import { spring, tween } from '@/lib/motion'
+import { Button } from '@/components/ui/button'
+import { Surface } from '@/components/ui/surface'
+import { Field } from '@/components/ui/field'
 
+/**
+ * Entrada al panel.
+ *
+ * La sesión es una cookie firmada (HMAC) que valida el middleware en cada
+ * petición a `/admin/*`. En la versión anterior había además una marca en
+ * `localStorage` que cada página comprobaba: no protegía nada — se ponía a
+ * mano desde la consola en dos segundos — y hacía creer que sí.
+ * Es el anti-patrón [[04-BIBLIOTECA/patrones/guardianes-que-no-guardan]], así
+ * que se eliminó por completo.
+ */
 export default function AdminLoginPage() {
   const router = useRouter()
   const [email, setEmail] = React.useState('admin@casamalva.co')
   const [password, setPassword] = React.useState('admin123')
-  const [loading, setLoading] = React.useState(false)
+  const [entrando, setEntrando] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  async function handleLogin(e: React.FormEvent) {
+  async function entrar(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
+    setEntrando(true)
     setError(null)
 
-    try {
-      const res = await loginAction(email, password)
-      if (res.ok) {
-        localStorage.setItem('casa_malva_admin_session', 'true')
-        router.push('/admin')
-        router.refresh()
-      } else {
-        setError(res.error || 'Credenciales incorrectas.')
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error al iniciar sesión'
-      setError(msg)
-    } finally {
-      setLoading(false)
+    const res = await loginAction(email, password)
+
+    if (res.ok) {
+      router.push('/admin')
+      router.refresh()
+      return
     }
+
+    setEntrando(false)
+    setError(res.error ?? 'No se pudo iniciar sesión')
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6 rounded-2xl border border-[#F3EAF0] bg-white p-8 shadow-sm text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F3EAF0] text-[#7B4B6E]">
-          <Shield className="h-7 w-7 stroke-[1.5]" />
-        </div>
-
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-[#1A1618]">Panel de Administración</h1>
-          <p className="text-xs text-[#6B6268]">Ingresa tus credenciales para acceder a la agenda local</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-4 text-left">
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[#1A1618] block">Correo Electrónico</label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 stroke-[1.5]" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-[#F3EAF0] pl-10 pr-4 py-3 text-sm focus:border-[#7B4B6E] focus:outline-none bg-white"
-              />
-            </div>
+    <div className="grid min-h-dvh place-items-center px-4 py-10">
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={spring.gentle}
+        className="w-full max-w-[400px]"
+      >
+        <Surface material="frost" radius="xl" pad="lg" className="space-y-[var(--spacing-fib-3)]">
+          <div className="text-center">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-[18px] bg-malva-600 font-display text-2xl font-semibold text-white shadow-[var(--shadow-malva)]">
+              M
+            </span>
+            <h1 className="mt-3 font-display text-[24px] font-semibold text-ink-900">
+              Panel del estudio
+            </h1>
+            <p className="text-[13px] text-ink-500">Casa Malva · Laureles, Medellín</p>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[#1A1618] block">Contraseña</label>
-            <div className="relative">
-              <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 stroke-[1.5]" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-[#F3EAF0] pl-10 pr-4 py-3 text-sm focus:border-[#7B4B6E] focus:outline-none bg-white"
-              />
+          <form onSubmit={entrar} className="space-y-[var(--spacing-fib-2)]">
+            <Field
+              label="Correo"
+              type="email"
+              required
+              icon={Mail}
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <Field
+              label="Contraseña"
+              type="password"
+              required
+              icon={Lock}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            {error && (
+              <motion.p
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={tween.fast}
+                role="alert"
+                className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-danger/25 bg-danger-soft px-3 py-2.5 text-[12.5px] text-danger"
+              >
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
+                {error}
+              </motion.p>
+            )}
+
+            <Button
+              type="submit"
+              size="lg"
+              full
+              loading={entrando}
+              loadingText="Entrando…"
+            >
+              Entrar
+            </Button>
+          </form>
+
+          <div className="flex items-start gap-2.5 rounded-[var(--radius-sm)] border border-champagne/60 bg-champagne/20 px-3.5 py-3 text-[12px] leading-relaxed text-ink-500">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" strokeWidth={2} />
+            <div>
+              <p className="font-semibold text-ink-700">Credenciales de demostración</p>
+              <p className="tnum mt-0.5">admin@casamalva.co · admin123</p>
             </div>
           </div>
+        </Surface>
 
-          {error && (
-            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0 stroke-[2]" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-[#7B4B6E] py-3.5 text-sm font-semibold text-white hover:bg-[#683d5d] disabled:opacity-50 transition-colors touch-target shadow-sm"
+        <div className="mt-4 text-center">
+          <Link
+            href="/inicio"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ink-400 transition-colors hover:text-malva-700"
           >
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
-        </form>
-
-        <div className="pt-4 border-t border-[#F3EAF0] space-y-3">
-          <div className="p-3 rounded-xl bg-[#FAF8F9] border border-[#F3EAF0] text-left text-xs text-[#6B6268] space-y-1">
-            <div className="flex items-center gap-1.5 font-semibold text-[#7B4B6E]">
-              <Info className="h-3.5 w-3.5 stroke-[2]" />
-              <span>Credenciales Locales (SQLite)</span>
-            </div>
-            <p>Email: <strong className="text-[#1A1618]">admin@casamalva.co</strong></p>
-            <p>Password: <strong className="text-[#1A1618]">admin123</strong></p>
-          </div>
+            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />
+            Volver al sitio
+          </Link>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

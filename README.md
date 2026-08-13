@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Casa Malva — Demo de Gestión y Reservas para Spas
 
-## Getting Started
+Sistema de gestión y reservas para spas y salones de belleza (Next.js 16 + React 19 + Tailwind CSS 4 + SQLite nativo).
 
-First, run the development server:
+> ⏸️ **Estado:** Proyecto pausado temporalmente (2026-08-13) mientras se construye la línea de producción MejorIA OS. Respaldado en repositorio privado para posterior refactorización y conexión del agente conversacional.
 
+---
+
+## 🛠️ Stack Tecnológico
+
+- **Framework:** Next.js 16.3.0 (App Router) + React 19
+- **Estilos:** Tailwind CSS v4 + Radix UI + Framer Motion
+- **Persistencia (Demo):** SQLite nativo (`node:sqlite` / `DatabaseSync`) con modo WAL (`casa-malva.db`)
+- **Migración planificada:** PostgreSQL vía Firebase SQL Connect (ver `docs/adr/0002-motor-de-datos-sqlite-a-postgresql.md`)
+
+---
+
+## 🚀 Arranque Rápido
+
+### 1. Instalación de dependencias
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Generar base de datos inicial (Seed)
+La base de datos SQLite (`casa-malva.db`) **no está versionada** en Git porque se regenera de forma 100% determinista mediante el script de seed:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run seed
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> ⚠️ **Nota sobre los datos:** Todos los datos generados por `scripts/seed.mjs` (servicios, clientas, citas y profesionales) son **datos de MAQUETA** creados con fines de demostración comercial y pruebas funcionales.
 
-## Learn More
+### 3. Iniciar servidor de desarrollo
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Abre [http://localhost:3000](http://localhost:3000) en el navegador.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📋 Verificación de Calidad
 
-## Deploy on Vercel
+Para ejecutar chequeo de tipos, linter y tests de concurrencia / prevención de doble reserva:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run verificar
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📚 Documentación y Decisiones
+
+- **Decisiones de Arquitectura:** Consultar `docs/adr/` (`0001-estetica-vidrio-y-movimiento.md`, `0002-motor-de-datos-sqlite-a-postgresql.md`).
+- **Ficha en Bóveda MEMORIA:** `D:\MEMORIA\01-PROYECTOS\spa-demo\`.

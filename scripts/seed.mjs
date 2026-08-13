@@ -58,10 +58,10 @@ async function runSeed() {
 
   // 2. Categorías (4)
   const categories = [
-    { id: 'cat_unas', nombre: 'Uñas 💅', orden: 1, activa: 1 },
-    { id: 'cat_cabello', nombre: 'Cabello ✂️', orden: 2, activa: 1 },
-    { id: 'cat_maquillaje', nombre: 'Maquillaje 💄', orden: 3, activa: 1 },
-    { id: 'cat_cejas', nombre: 'Cejas y pestañas 👁️', orden: 4, activa: 1 },
+    { id: 'cat_unas', nombre: 'Uñas', orden: 1, activa: 1 },
+    { id: 'cat_cabello', nombre: 'Cabello', orden: 2, activa: 1 },
+    { id: 'cat_maquillaje', nombre: 'Maquillaje', orden: 3, activa: 1 },
+    { id: 'cat_cejas', nombre: 'Cejas y pestañas', orden: 4, activa: 1 },
   ]
   const stmtCat = db.prepare('INSERT OR REPLACE INTO categories (id, nombre, orden, activa) VALUES (?, ?, ?, ?)')
   for (const cat of categories) {

@@ -2,38 +2,74 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Sparkles, CalendarPlus, Shield } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { CalendarPlus, Home, Shield, Sparkles, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { spring } from '@/lib/motion'
 
-export function BottomNav() {
+type Item = { label: string; href: string; icon: LucideIcon }
+
+const PUBLIC_ITEMS: Item[] = [
+  { label: 'Inicio', href: '/inicio', icon: Home },
+  { label: 'Servicios', href: '/servicios', icon: Sparkles },
+  { label: 'Reservar', href: '/reservar', icon: CalendarPlus },
+  { label: 'Panel', href: '/admin', icon: Shield },
+]
+
+/**
+ * Dock inferior flotante para móvil.
+ *
+ * No está pegado al borde: flota sobre el contenido con margen y esquinas
+ * redondeadas, respetando el área segura del iPhone. La pastilla activa se
+ * desliza entre pestañas con `layoutId`.
+ */
+export function BottomNav({ items = PUBLIC_ITEMS }: { items?: Item[] }) {
   const pathname = usePathname()
 
-  const items = [
-    { label: 'Inicio', href: '/inicio', icon: Home },
-    { label: 'Catálogo', href: '/servicios', icon: Sparkles },
-    { label: 'Reservar', href: '/reservar', icon: CalendarPlus },
-    { label: 'Admin', href: '/admin', icon: Shield },
-  ]
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#F3EAF0] bg-white/95 backdrop-blur-md sm:hidden">
-      <div className="flex h-16 items-center justify-around px-2">
+    <nav
+      aria-label="Navegación principal"
+      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(12px,env(safe-area-inset-bottom))] md:hidden"
+    >
+      <div className="glass-strong glass-edge mx-auto flex max-w-md items-center justify-around rounded-[var(--radius-xl)] p-1.5">
         {items.map((item) => {
           const Icon = item.icon
-          const isActive = pathname === item.href || (item.href !== '/inicio' && pathname.startsWith(item.href))
+          const active =
+            pathname === item.href ||
+            (item.href !== '/inicio' && pathname.startsWith(item.href))
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={cn(
-                'flex flex-col items-center justify-center w-full h-full py-1 text-xs font-semibold transition-colors touch-target',
-                isActive
-                  ? 'text-[#7B4B6E]'
-                  : 'text-[#6B6268] hover:text-[#1A1618]'
-              )}
+              aria-current={active ? 'page' : undefined}
+              className="relative flex flex-1 flex-col items-center gap-0.5 rounded-[var(--radius-md)] py-2 touch-target"
             >
-              <Icon className="h-5 w-5 stroke-[1.5] mb-1" />
-              <span>{item.label}</span>
+              {active && (
+                <motion.span
+                  layoutId="bottomnav-active"
+                  transition={spring.glide}
+                  className="absolute inset-0 rounded-[var(--radius-md)] bg-malva-100"
+                />
+              )}
+              <motion.span
+                animate={{ scale: active ? 1.08 : 1, y: active ? -1 : 0 }}
+                transition={spring.snappy}
+                className="relative z-10"
+              >
+                <Icon
+                  className={cn('h-[21px] w-[21px]', active ? 'text-malva-700' : 'text-ink-400')}
+                  strokeWidth={active ? 2 : 1.6}
+                />
+              </motion.span>
+              <span
+                className={cn(
+                  'relative z-10 text-[10.5px] font-semibold',
+                  active ? 'text-malva-700' : 'text-ink-400'
+                )}
+              >
+                {item.label}
+              </span>
             </Link>
           )
         })}
@@ -41,3 +77,5 @@ export function BottomNav() {
     </nav>
   )
 }
+
+export { PUBLIC_ITEMS }

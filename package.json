@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "node scripts/seed.mjs",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "prueba:doble-reserva": "tsx scripts/prueba-doble-reserva.ts",
+    "verificar": "npm run tsc && npm run lint && npm run prueba:doble-reserva"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -1,254 +1,273 @@
 'use client'
 
 import * as React from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import {
-  UserCheck,
-  Calendar,
-  BookOpen,
-  Users,
-  Search,
-  ChevronRight,
-  Phone,
-  X,
-} from 'lucide-react'
-import { getClientsAction, getClientDetailAction } from '@/actions/clientes'
+import { ChevronRight, Phone, Search, UserRound } from 'lucide-react'
+import { toast } from 'sonner'
+import { getClientDetailAction, getClientsAction } from '@/actions/clientes'
 import { getServicesAction } from '@/actions/catalogo'
 import { getProfessionalsAction } from '@/actions/profesionales'
 import { formatCurrencyFromCents } from '@/lib/currency'
-import type { Client, Appointment, Service, Professional } from '@/types'
+import { fechaHoraConAnio, selloCorto } from '@/lib/fechas'
+import { cn } from '@/lib/utils'
+import { AdminHeader } from '@/components/layout/AdminShell'
+import { Surface } from '@/components/ui/surface'
+import { StatusPill } from '@/components/ui/badge'
+import { Field } from '@/components/ui/field'
+import { Sheet } from '@/components/ui/sheet'
+import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/common/EmptyState'
+import { RevealGroup, RevealItem } from '@/components/common/Reveal'
+import type { Appointment, Client, Professional, Service } from '@/types'
 
+type Detalle = {
+  client: Client
+  appointments: Appointment[]
+  totalSpentCentavos: number
+  totalAppointments: number
+  noShowCount: number
+}
+
+/**
+ * Fichas de clientas.
+ *
+ * Las tres cifras de la ficha se CALCULAN sobre citas que existen de verdad,
+ * nunca se guardan ni se inventan ([[04-BIBLIOTECA/patrones/fallos-silenciosos]]:
+ * cero métricas derivadas en el seed). "Gastado" cuenta solo lo completado —
+ * una cita agendada todavía no es dinero.
+ *
+ * Spec: docs/specs/08-crm-admin.md
+ */
 export default function AdminClientasPage() {
-  const router = useRouter()
-  const [loading, setLoading] = React.useState(true)
-  const [clients, setClients] = React.useState<Client[]>([])
-  const [services, setServices] = React.useState<Service[]>([])
-  const [professionals, setProfessionals] = React.useState<Professional[]>([])
-  const [search, setSearch] = React.useState('')
-
-  // Detail Modal State
-  const [selectedClientDetail, setSelectedClientDetail] = React.useState<{
-    client: Client
-    appointments: Appointment[]
-    totalSpentCentavos: number
-    totalAppointments: number
-    noShowCount: number
-  } | null>(null)
-
-  // Auth Guard
-  React.useEffect(() => {
-    const isAuth = localStorage.getItem('casa_malva_admin_session')
-    if (!isAuth) router.push('/admin/login')
-  }, [router])
+  const [clientas, setClientas] = React.useState<Client[]>([])
+  const [servicios, setServicios] = React.useState<Service[]>([])
+  const [equipo, setEquipo] = React.useState<Professional[]>([])
+  const [cargando, setCargando] = React.useState(true)
+  const [busqueda, setBusqueda] = React.useState('')
+  const [detalle, setDetalle] = React.useState<Detalle | null>(null)
+  const [abriendo, setAbriendo] = React.useState<string | null>(null)
 
   React.useEffect(() => {
-    async function init() {
-      const [cRes, sRes, pRes] = await Promise.all([
-        getClientsAction(),
-        getServicesAction(),
-        getProfessionalsAction(),
-      ])
-      if (cRes.ok) setClients(cRes.data)
-      if (sRes.ok) setServices(sRes.data)
-      if (pRes.ok) setProfessionals(pRes.data)
-      setLoading(false)
-    }
-    init()
+    Promise.all([getClientsAction(), getServicesAction(), getProfessionalsAction()]).then(
+      ([c, s, p]) => {
+        if (c.ok) setClientas(c.data)
+        if (s.ok) setServicios(s.data)
+        if (p.ok) setEquipo(p.data)
+        setCargando(false)
+      }
+    )
   }, [])
 
-  async function openClientDetail(clientId: string) {
+  async function abrir(clientId: string) {
+    setAbriendo(clientId)
     const res = await getClientDetailAction(clientId)
-    if (res.ok) {
-      setSelectedClientDetail(res.data)
-    } else {
-      alert(res.error)
-    }
+    setAbriendo(null)
+    if (res.ok) setDetalle(res.data)
+    else toast.error(res.error)
   }
 
-  const filteredClients = clients.filter(
-    (c) =>
-      c.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      c.telefonoE164.includes(search)
-  )
+  const filtradas = React.useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    if (!q) return clientas
+    return clientas.filter(
+      (c) =>
+        c.nombre.toLowerCase().includes(q) ||
+        c.telefonoE164.replace(/\D/g, '').includes(q.replace(/\D/g, ''))
+    )
+  }, [clientas, busqueda])
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 space-y-6">
-      {/* Navigation Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#F3EAF0] pb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1A1618]">Ficha de Clientas</h1>
-          <p className="text-xs text-[#6B6268]">Base de datos, métricas calculadas e historial cronológico</p>
-        </div>
+    <>
+      <AdminHeader
+        title="Clientas"
+        subtitle="Cada ficha reúne el historial completo, venga de la web, de WhatsApp o de recepción."
+      />
 
-        <div className="flex items-center gap-2 overflow-x-auto">
-          <Link
-            href="/admin"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#F3EAF0] bg-white text-[#1A1618] text-xs font-semibold hover:bg-[#F3EAF0]"
-          >
-            <Calendar className="h-3.5 w-3.5" />
-            <span>Agenda</span>
-          </Link>
-          <Link
-            href="/admin/catalogo"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#F3EAF0] bg-white text-[#1A1618] text-xs font-semibold hover:bg-[#F3EAF0]"
-          >
-            <BookOpen className="h-3.5 w-3.5" />
-            <span>Catálogo</span>
-          </Link>
-          <Link
-            href="/admin/profesionales"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#F3EAF0] bg-white text-[#1A1618] text-xs font-semibold hover:bg-[#F3EAF0]"
-          >
-            <Users className="h-3.5 w-3.5" />
-            <span>Equipo</span>
-          </Link>
-          <Link
-            href="/admin/clientas"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#7B4B6E] text-white text-xs font-semibold"
-          >
-            <UserCheck className="h-3.5 w-3.5" />
-            <span>Clientas</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Search Input */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400 stroke-[1.5]" />
-        <input
-          type="text"
-          placeholder="Buscar por nombre o teléfono..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-[#F3EAF0] pl-10 pr-4 py-2.5 text-xs focus:border-[#7B4B6E] focus:outline-none bg-white"
+      <div className="mb-[var(--spacing-fib-3)] max-w-sm">
+        <Field
+          icon={Search}
+          type="search"
+          placeholder="Buscar por nombre o teléfono"
+          aria-label="Buscar clienta"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
         />
       </div>
 
-      {loading ? (
-        <div className="p-12 text-center text-xs text-[#6B6268]">Cargando clientas...</div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredClients.map((cli) => (
-            <div
-              key={cli.id}
-              onClick={() => openClientDetail(cli.id)}
-              className="p-4 rounded-xl border border-[#F3EAF0] bg-white hover:border-[#7B4B6E]/40 cursor-pointer transition-all flex items-center justify-between shadow-xs"
-            >
-              <div className="space-y-1">
-                <h3 className="font-bold text-sm text-[#1A1618]">{cli.nombre}</h3>
-                <p className="text-xs text-[#6B6268] flex items-center gap-1">
-                  <Phone className="h-3 w-3" />
-                  {cli.telefonoE164}
-                </p>
-                {cli.notas && <p className="text-[11px] text-[#7B4B6E] truncate max-w-[200px]">{cli.notas}</p>}
-              </div>
-
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </div>
+      {cargando ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-[var(--radius-lg)]" />
           ))}
         </div>
+      ) : filtradas.length === 0 ? (
+        <EmptyState
+          icon={UserRound}
+          title={busqueda ? 'Ninguna coincidencia' : 'Todavía no hay clientas'}
+          description={
+            busqueda
+              ? 'Prueba con otro nombre o con los últimos dígitos del celular.'
+              : 'La primera reserva crea la ficha automáticamente, con el teléfono como identidad.'
+          }
+        />
+      ) : (
+        <RevealGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filtradas.map((cli) => (
+            <RevealItem key={cli.id} variant="pop">
+              <Surface
+                interactive
+                pad="sm"
+                radius="lg"
+                role="button"
+                tabIndex={0}
+                onClick={() => abrir(cli.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    abrir(cli.id)
+                  }
+                }}
+                className={cn('h-full', abriendo === cli.id && 'opacity-60')}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-malva-100 font-display text-base font-semibold text-malva-700">
+                    {cli.nombre.charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate text-[14px] font-semibold text-ink-900">
+                      {cli.nombre}
+                    </h2>
+                    <p className="tnum flex items-center gap-1 truncate text-[12px] text-ink-400">
+                      <Phone className="h-3 w-3" strokeWidth={2} />
+                      {cli.telefonoE164}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-300" strokeWidth={2} />
+                </div>
+              </Surface>
+            </RevealItem>
+          ))}
+        </RevealGroup>
       )}
 
-      {/* Client Detail Drawer / Modal */}
-      {selectedClientDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="w-full max-w-xl rounded-2xl bg-white p-6 space-y-6 shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#F3EAF0] pb-3">
-              <div>
-                <h3 className="font-bold text-lg text-[#1A1618]">{selectedClientDetail.client.nombre}</h3>
-                <p className="text-xs text-[#6B6268]">{selectedClientDetail.client.telefonoE164}</p>
-              </div>
-              <button onClick={() => setSelectedClientDetail(null)} className="p-1 rounded text-gray-400 hover:text-gray-600">
-                <X className="h-5 w-5" />
-              </button>
+      {/* ---------- Ficha ---------- */}
+      <Sheet
+        open={!!detalle}
+        onOpenChange={(abierto) => !abierto && setDetalle(null)}
+        title={detalle?.client.nombre ?? ''}
+        description={detalle?.client.telefonoE164}
+        size="lg"
+      >
+        {detalle && (
+          <div className="space-y-[var(--spacing-fib-3)]">
+            <div className="grid grid-cols-3 gap-2">
+              <Metrica etiqueta="Citas" valor={String(detalle.totalAppointments)} />
+              <Metrica
+                etiqueta="Gastado"
+                valor={formatCurrencyFromCents(detalle.totalSpentCentavos)}
+                nota="solo completadas"
+                acento
+              />
+              <Metrica
+                etiqueta="No-shows"
+                valor={String(detalle.noShowCount)}
+                tono={detalle.noShowCount > 0 ? 'alerta' : 'bien'}
+              />
             </div>
 
-            {/* Calculated Metrics Cards (CERO INVENTADAS) */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl border border-[#F3EAF0] bg-[#FAF8F9] text-center space-y-0.5">
-                <span className="text-[11px] text-[#6B6268] block">Total Citas</span>
-                <span className="text-lg font-bold text-[#1A1618]">{selectedClientDetail.totalAppointments}</span>
-              </div>
+            <div className="space-y-2">
+              <h3 className="text-[13px] font-semibold text-ink-700">Historial</h3>
 
-              <div className="p-3 rounded-xl border border-[#F3EAF0] bg-[#FAF8F9] text-center space-y-0.5">
-                <span className="text-[11px] text-[#6B6268] block">Ticket Total Real</span>
-                <span className="text-sm font-bold text-[#7B4B6E]">
-                  {formatCurrencyFromCents(selectedClientDetail.totalSpentCentavos)}
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl border border-[#F3EAF0] bg-[#FAF8F9] text-center space-y-0.5">
-                <span className="text-[11px] text-[#6B6268] block">No-Shows</span>
-                <span className={`text-lg font-bold ${selectedClientDetail.noShowCount > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                  {selectedClientDetail.noShowCount}
-                </span>
-              </div>
-            </div>
-
-            {/* Chronological History */}
-            <div className="space-y-3">
-              <h4 className="font-bold text-sm text-[#1A1618]">Historial de Citas</h4>
-
-              {selectedClientDetail.appointments.length > 0 ? (
-                <div className="space-y-3">
-                  {selectedClientDetail.appointments.map((appt) => {
-                    const svc = services.find((s) => s.id === appt.serviceId)
-                    const prof = professionals.find((p) => p.id === appt.professionalId)
-                    const dateStr = new Date(appt.inicioUtc).toLocaleDateString('es-CO', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-
-                    return (
-                      <div key={appt.id} className="p-3.5 rounded-xl border border-[#F3EAF0] bg-white space-y-2 text-xs">
-                        <div className="flex items-center justify-between font-bold">
-                          <span className="text-[#1A1618]">{svc?.nombre || 'Servicio'}</span>
-                          <span className="text-[#7B4B6E]">{formatCurrencyFromCents(appt.precioCentavos)}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between text-[#6B6268]">
-                          <span>{dateStr} · {prof?.nombre || 'Profesional'}</span>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                              appt.estado === 'completada'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : appt.estado === 'confirmada'
-                                ? 'bg-blue-100 text-blue-800'
-                                : appt.estado === 'no_asistio'
-                                ? 'bg-rose-100 text-rose-800'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {appt.estado}
-                          </span>
-                        </div>
-
-                        {/* Audit log entries */}
-                        {appt.historial && appt.historial.length > 0 && (
-                          <div className="pt-1 border-t border-gray-100 space-y-1 text-[11px] text-[#6B6268]">
-                            {appt.historial.map((h, i) => (
-                              <p key={i}>
-                                • <strong>{h.estado}</strong> ({new Date(h.fechaUtc).toLocaleDateString('es-CO')}): {h.nota}
-                              </p>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
+              {detalle.appointments.length === 0 ? (
+                <EmptyState compact title="Sin citas registradas" />
               ) : (
-                <div className="p-6 text-center text-xs text-[#6B6268]">Sin citas registradas aún.</div>
+                <ol className="relative space-y-2 border-l border-malva-200 pl-4">
+                  {detalle.appointments.map((cita) => (
+                    <li key={cita.id} className="relative">
+                      <span className="absolute -left-[21px] top-3 h-2 w-2 rounded-full bg-malva-400 ring-4 ring-[var(--canvas)]" />
+
+                      <Surface material="solid" radius="md" pad="sm">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-[13px] font-semibold text-ink-900">
+                              {servicios.find((s) => s.id === cita.serviceId)?.nombre ??
+                                'Servicio'}
+                            </p>
+                            <p className="tnum text-[11.5px] text-ink-400 first-letter:uppercase">
+                              {fechaHoraConAnio(cita.inicioUtc)}
+                              {' · '}
+                              {equipo.find((p) => p.id === cita.professionalId)?.nombre ?? '—'}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="tnum text-[13px] font-semibold text-malva-700">
+                              {formatCurrencyFromCents(cita.precioCentavos)}
+                            </p>
+                            <div className="mt-1">
+                              <StatusPill estado={cita.estado} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {cita.historial?.length > 0 && (
+                          <details className="mt-2 border-t border-ink-100 pt-2">
+                            <summary className="cursor-pointer text-[11.5px] font-semibold text-ink-400 hover:text-malva-700">
+                              Traza ({cita.historial.length})
+                            </summary>
+                            <ul className="mt-1.5 space-y-1">
+                              {cita.historial.map((h, i) => (
+                                <li key={i} className="text-[11px] leading-relaxed text-ink-400">
+                                  <span className="tnum">
+                                    {selloCorto(h.fechaUtc)}
+                                  </span>{' '}
+                                  · <strong className="text-ink-700">{h.estado}</strong>
+                                  {h.nota ? ` — ${h.nota}` : ''}
+                                  {h.cambiadoPor ? ` (${h.cambiadoPor})` : ''}
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        )}
+                      </Surface>
+                    </li>
+                  ))}
+                </ol>
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Sheet>
+    </>
+  )
+}
+
+function Metrica({
+  etiqueta,
+  valor,
+  nota,
+  acento,
+  tono,
+}: {
+  etiqueta: string
+  valor: string
+  nota?: string
+  acento?: boolean
+  tono?: 'alerta' | 'bien'
+}) {
+  return (
+    <div className="rounded-[var(--radius-md)] border border-ink-100 bg-white/60 px-2.5 py-3 text-center">
+      <p className="text-[10.5px] uppercase tracking-[0.1em] text-ink-400">{etiqueta}</p>
+      <p
+        className={cn(
+          'tnum mt-0.5 text-[16px] font-semibold',
+          acento && 'text-malva-700',
+          tono === 'alerta' && 'text-danger',
+          tono === 'bien' && 'text-success',
+          !acento && !tono && 'text-ink-900'
+        )}
+      >
+        {valor}
+      </p>
+      {nota && <p className="text-[9.5px] text-ink-300">{nota}</p>}
     </div>
   )
 }

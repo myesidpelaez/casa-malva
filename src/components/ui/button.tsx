@@ -1,51 +1,71 @@
+'use client'
+
 import * as React from 'react'
-import { Slot } from '@radix-ui/react-slot'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { motion, type HTMLMotionProps } from 'framer-motion'
+import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { spring } from '@/lib/motion'
+import { buttonVariants, type ButtonVariantProps } from './button-variants'
 
-const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7B4B6E] disabled:pointer-events-none disabled:opacity-50 touch-target cursor-pointer',
-  {
-    variants: {
-      variant: {
-        default: 'bg-[#7B4B6E] text-white hover:bg-[#683d5d] active:bg-[#57324d]',
-        secondary: 'bg-[#F3EAF0] text-[#7B4B6E] hover:bg-[#e8d8e3] active:bg-[#dcc7d6]',
-        outline: 'border border-[#7B4B6E] text-[#7B4B6E] bg-transparent hover:bg-[#F3EAF0]',
-        ghost: 'text-[#1A1618] hover:bg-[#F3EAF0] hover:text-[#7B4B6E]',
-        destructive: 'bg-[#B4462F] text-white hover:bg-[#9a3b27]',
-      },
-      size: {
-        default: 'h-11 px-5 py-2.5',
-        sm: 'h-9 rounded-md px-3.5 text-xs',
-        lg: 'h-13 rounded-xl px-7 text-base',
-        icon: 'h-11 w-11 p-0',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
-  }
-)
-
+/**
+ * El botón de Casa Malva.
+ *
+ * Tres cosas lo separan de un `<button>` con clases:
+ *   1. Física de pulsación (escala con muelle) — se siente como un objeto.
+ *   2. Estado `loading` de primera clase: bloquea, conserva el ancho y no
+ *      deja que el texto salte. Un botón que cambia de tamaño al enviar es
+ *      el detalle que delata a un prototipo.
+ *   3. Material: el primario es malva con brillo; el resto es vidrio.
+ *
+ * Para vestir un `<Link>` con este aspecto, usa `buttonClass()` de
+ * `./button-variants` — ese módulo sí se puede leer desde el servidor.
+ *
+ * Especificación: docs/specs/10-sistema-diseno.md §5
+ */
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+  extends Omit<HTMLMotionProps<'button'>, 'children'>,
+    ButtonVariantProps {
+  loading?: boolean
+  /** Texto mientras `loading` está activo. Si se omite, conserva el original. */
+  loadingText?: string
+  children?: React.ReactNode
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button'
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant,
+      size,
+      full,
+      loading = false,
+      loadingText,
+      disabled,
+      children,
+      ...props
+    },
+    ref
+  ) => (
+    <motion.button
+      ref={ref}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      className={cn(buttonVariants({ variant, size, full }), className)}
+      whileHover={disabled || loading ? undefined : { scale: 1.02, y: -1 }}
+      whileTap={disabled || loading ? undefined : { scale: 0.97, y: 0 }}
+      transition={spring.snappy}
+      {...props}
+    >
+      {loading && <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />}
+      <span className="relative z-[2] inline-flex items-center gap-2">
+        {loading && loadingText ? loadingText : children}
+      </span>
+    </motion.button>
+  )
 )
 Button.displayName = 'Button'
 
-export { Button, buttonVariants }
+export { buttonVariants }
+// `buttonClass` NO se reexporta aquí a propósito: importarlo desde este módulo
+// arrastraría la frontera de cliente a cualquier página de servidor que lo use.
+// Impórtalo siempre desde '@/components/ui/button-variants'.

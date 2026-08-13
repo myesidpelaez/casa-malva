@@ -1,37 +1,70 @@
+'use client'
+
 import * as React from 'react'
-import { LucideIcon, Sparkles } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Sparkles, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { spring } from '@/lib/motion'
 
-interface EmptyStateProps {
-  icon?: LucideIcon
-  title: string
-  description?: string
-  action?: React.ReactNode
-  className?: string
-}
-
+/**
+ * Estado vacío.
+ *
+ * Un vacío bien resuelto es lo que separa una demo de un producto: nunca se
+ * deja una zona en blanco sin explicar por qué está vacía y qué hacer ahora.
+ */
 export function EmptyState({
   icon: Icon = Sparkles,
   title,
   description,
   action,
   className,
-}: EmptyStateProps) {
+  compact = false,
+}: {
+  icon?: LucideIcon
+  title: string
+  description?: string
+  action?: React.ReactNode
+  className?: string
+  compact?: boolean
+}) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={spring.gentle}
       className={cn(
-        'flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed border-[#e2d5de] bg-[#FAF8F9]',
+        'flex flex-col items-center justify-center rounded-[var(--radius-lg)]',
+        'border border-dashed border-malva-200 bg-white/40 text-center backdrop-blur-sm',
+        compact ? 'gap-2 p-[var(--spacing-fib-3)]' : 'gap-3 p-[var(--spacing-fib-4)]',
         className
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F3EAF0] text-[#7B4B6E] mb-4">
-        <Icon className="h-6 w-6 stroke-[1.5]" />
+      <div
+        className={cn(
+          'grid place-items-center rounded-full bg-malva-100 text-malva-600',
+          compact ? 'h-10 w-10' : 'h-14 w-14'
+        )}
+      >
+        <Icon className={compact ? 'h-5 w-5' : 'h-6 w-6'} strokeWidth={1.5} />
       </div>
-      <h4 className="text-base font-semibold text-[#1A1618] mb-1">{title}</h4>
-      {description && (
-        <p className="text-sm text-[#6B6268] max-w-sm mb-4">{description}</p>
-      )}
-      {action}
-    </div>
+
+      <div className="space-y-1">
+        <h4
+          className={cn(
+            'font-display font-semibold text-ink-900',
+            compact ? 'text-[15px]' : 'text-lg'
+          )}
+        >
+          {title}
+        </h4>
+        {description && (
+          <p className="mx-auto max-w-sm text-[13px] leading-relaxed text-ink-500">
+            {description}
+          </p>
+        )}
+      </div>
+
+      {action && <div className="pt-1">{action}</div>}
+    </motion.div>
   )
 }
