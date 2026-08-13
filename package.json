@@ -12,7 +12,7 @@
     "prueba:doble-reserva": "tsx scripts/prueba-doble-reserva.ts",
     "prueba:zona": "tsx scripts/prueba-zona-horaria.ts",
     "prueba:permisos": "tsx scripts/prueba-permisos.ts",
-    "verificar": "npm run tsc && npm run lint && npm run prueba:zona && npm run prueba:doble-reserva && npm run prueba:permisos"
+    "verificar": "npm run tsc && npm run lint && npm run prueba:zona && npm run prueba:doble-reserva && npm run prueba:permisos && npm run build"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
