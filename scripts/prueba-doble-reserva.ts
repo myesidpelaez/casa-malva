@@ -16,7 +16,7 @@ import { loadEnvConfig } from '@next/env'
 loadEnvConfig(process.cwd())
 
 import { crearCitaAction } from '../src/actions/citas'
-import { getDb, getProfessionals, getServices, getAppointments } from '../src/lib/db'
+import { getDb, getProfessionals, getServices, getAppointmentsEnRango } from '../src/lib/db'
 import { planificarSlots } from '../src/lib/ocupacion'
 import { franjasDisponibles } from '../src/lib/disponibilidad'
 
@@ -49,7 +49,9 @@ async function main() {
   const svc = servicios.find((s) => s.activo && prof.serviceIds.includes(s.id))
   if (!svc) throw new Error('No hay servicio activo para esa profesional')
 
-  const citasActuales = await getAppointments()
+  const hoyStr = new Date().toISOString()
+  const finStr = new Date(Date.now() + 20 * 24 * 3600 * 1000).toISOString()
+  const citasActuales = await getAppointmentsEnRango(hoyStr, finStr, prof.id)
 
   // Primer cupo libre a partir de mañana (evita el mínimo de antelación).
   let cupo: Date | null = null
@@ -106,7 +108,11 @@ async function main() {
   )
 
   // --- En Firestore hay UNA sola cita en ese instante ----------------------
-  const citasTrasReserva = await getAppointments()
+  const citasTrasReserva = await getAppointmentsEnRango(
+    cupo!.toISOString(),
+    new Date(cupo!.getTime() + 24 * 3600 * 1000).toISOString(),
+    prof.id
+  )
   const enEseCupo = citasTrasReserva.filter(
     (a) =>
       a.professionalId === prof.id &&
@@ -137,7 +143,11 @@ async function main() {
     svc.id,
     prof.id,
     cupo,
-    await getAppointments(),
+    await getAppointmentsEnRango(
+      cupo!.toISOString(),
+      new Date(cupo!.getTime() + 24 * 3600 * 1000).toISOString(),
+      prof.id
+    ),
     servicios,
     equipo
   )

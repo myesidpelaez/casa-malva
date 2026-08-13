@@ -23,6 +23,10 @@ export type UserRow = {
 
 let firestoreInstance: Firestore | null = null
 
+let lecturas = 0
+export function lecturasRealizadas(): number { return lecturas }
+export function reiniciarContadorLecturas(): void { lecturas = 0 }
+
 export function getDb(): Firestore {
   if (!firestoreInstance) {
     let app: App
@@ -67,6 +71,7 @@ function normalizeDocData<T>(docId: string, raw: Record<string, unknown>): T {
 export async function docGet<T>(collection: string, docId: string): Promise<T | null> {
   const db = getDb()
   const snap = await db.collection(collection).doc(docId).get()
+  lecturas += 1
   if (!snap.exists) return null
   return normalizeDocData<T>(snap.id, snap.data() || {})
 }
@@ -90,9 +95,11 @@ export async function docUpdate<T extends Record<string, unknown>>(
   const db = getDb()
   const ref = db.collection(collection).doc(docId)
   const snap = await ref.get()
+  lecturas += 1
   if (!snap.exists) return null
   await ref.update(partialData as Record<string, unknown>)
   const updatedSnap = await ref.get()
+  lecturas += 1
   return normalizeDocData<T>(docId, updatedSnap.data() || {})
 }
 
@@ -105,6 +112,7 @@ export async function docDelete(collection: string, docId: string): Promise<bool
 export async function listDocs<T>(collection: string): Promise<T[]> {
   const db = getDb()
   const snap = await db.collection(collection).get()
+  lecturas += snap.size
   return snap.docs.map((d) => normalizeDocData<T>(d.id, d.data()))
 }
 
@@ -129,12 +137,42 @@ export async function getProfessionals(): Promise<Professional[]> {
   return await listDocs<Professional>('professionals')
 }
 
-export async function getClients(): Promise<Client[]> {
-  return await listDocs<Client>('clients')
+export async function getAppointmentsEnRango(
+  desdeUtcISO: string,
+  hastaUtcISO: string,
+  professionalId?: string
+): Promise<Appointment[]> {
+  const db = getDb()
+  let q: FirebaseFirestore.Query = db.collection('appointments')
+  if (professionalId) {
+    q = q.where('professionalId', '==', professionalId)
+  }
+  q = q.where('inicioUtc', '>=', desdeUtcISO).where('inicioUtc', '<', hastaUtcISO)
+  const snap = await q.get()
+  lecturas += snap.size
+  return snap.docs.map((d) => normalizeDocData<Appointment>(d.id, d.data()))
 }
 
-export async function getAppointments(): Promise<Appointment[]> {
-  return await listDocs<Appointment>('appointments')
+export async function getAppointmentsDeCliente(clientId: string): Promise<Appointment[]> {
+  const db = getDb()
+  const snap = await db.collection('appointments').where('clientId', '==', clientId).get()
+  lecturas += snap.size
+  return snap.docs.map((d) => normalizeDocData<Appointment>(d.id, d.data()))
+}
+
+export async function getClientByPhone(telefonoE164: string): Promise<Client | null> {
+  const db = getDb()
+  const snap = await db.collection('clients').where('telefonoE164', '==', telefonoE164).limit(1).get()
+  lecturas += snap.size
+  if (snap.empty) return null
+  return normalizeDocData<Client>(snap.docs[0].id, snap.docs[0].data())
+}
+
+export async function getClientsRecientes(limite = 200): Promise<Client[]> {
+  const db = getDb()
+  const snap = await db.collection('clients').orderBy('creadaEn', 'desc').limit(limite).get()
+  lecturas += snap.size
+  return snap.docs.map((d) => normalizeDocData<Client>(d.id, d.data()))
 }
 
 export async function getBusinessSettings(): Promise<BusinessSettings | null> {
@@ -144,6 +182,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
 export async function getUserByEmail(email: string): Promise<UserRow | null> {
   const db = getDb()
   const snap = await db.collection('users').where('email', '==', email).limit(1).get()
+  lecturas += snap.size
   if (snap.empty) return null
   const d = snap.docs[0]
   return normalizeDocData<UserRow>(d.id, d.data())
@@ -166,6 +205,7 @@ export async function aplicarCambioDeCita(
     await db.runTransaction(async (tx) => {
       // 1. LECTURAS PRIMERO
       const snapsCrear = await Promise.all(slotRefsCrear.map((ref) => tx.get(ref)))
+      lecturas += snapsCrear.length
 
       for (const snap of snapsCrear) {
         if (snap.exists) {

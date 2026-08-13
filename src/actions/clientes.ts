@@ -1,6 +1,6 @@
 'use server'
 
-import { docGet, getAppointments, getClients } from '@/lib/db'
+import { docGet, getAppointmentsDeCliente, getClientsRecientes } from '@/lib/db'
 import { withAuth } from '@/lib/withAuth'
 import type { Appointment, Client } from '@/types'
 
@@ -21,7 +21,7 @@ import type { Appointment, Client } from '@/types'
 export const getClientsAction = withAuth<Client[], []>(
   'clienta:leer',
   async () => {
-    return await getClients()
+    return await getClientsRecientes(200)
   }
 )
 
@@ -45,10 +45,8 @@ export const getClientDetailAction = withAuth<
       return { ok: false, error: 'Clienta no encontrada' }
     }
 
-    const allAppointments = await getAppointments()
-    const clientAppts = allAppointments
-      .filter((a) => a.clientId === clientId)
-      .sort((a, b) => new Date(b.inicioUtc).getTime() - new Date(a.inicioUtc).getTime())
+    const clientAppts = await getAppointmentsDeCliente(clientId)
+    clientAppts.sort((a, b) => new Date(b.inicioUtc).getTime() - new Date(a.inicioUtc).getTime())
 
     const totalSpentCentavos = clientAppts
       .filter((a) => a.estado === 'completada')

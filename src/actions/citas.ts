@@ -3,8 +3,8 @@
 import {
   docGet,
   docSet,
-  getAppointments,
-  getClients,
+  getAppointmentsEnRango,
+  getClientByPhone,
   getProfessionals,
   getServices,
   aplicarCambioDeCita,
@@ -45,8 +45,13 @@ export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResu
   try {
     const services = await getServices()
     const professionals = await getProfessionals()
-    const allAppointments = await getAppointments()
-    const clients = await getClients()
+    const inicioDateRango = startOfDay(input.inicioUtc)
+    const finDateRango = new Date(inicioDateRango.getTime() + 14 * 24 * 3600 * 1000)
+    const allAppointments = await getAppointmentsEnRango(
+      inicioDateRango.toISOString(),
+      finDateRango.toISOString(),
+      input.professionalId
+    )
 
     const svc = services.find((s) => s.id === input.serviceId)
     const prof = professionals.find((p) => p.id === input.professionalId)
@@ -86,7 +91,7 @@ export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResu
     let resolvedClientId = input.clientId
     if (!resolvedClientId && input.clienteTelefono) {
       const phoneE164 = normalizePhoneE164(input.clienteTelefono)
-      const existingClient = clients.find((c) => c.telefonoE164 === phoneE164)
+      const existingClient = await getClientByPhone(phoneE164)
       if (existingClient) {
         resolvedClientId = existingClient.id
       } else {
@@ -313,7 +318,13 @@ export const reagendarCitaAction = withAuth<Appointment, [citaId: string, nuevaI
 
     const services = await getServices()
     const professionals = await getProfessionals()
-    const allAppointments = await getAppointments()
+    const inicioDateRango = startOfDay(nuevaInicioUtc)
+    const finDateRango = new Date(inicioDateRango.getTime() + 14 * 24 * 3600 * 1000)
+    const allAppointments = await getAppointmentsEnRango(
+      inicioDateRango.toISOString(),
+      finDateRango.toISOString(),
+      cita.professionalId
+    )
 
     const svc = services.find((s) => s.id === cita.serviceId)
     if (!svc) return { ok: false, error: 'Servicio de la cita no encontrado' }
@@ -380,25 +391,22 @@ export const reagendarCitaAction = withAuth<Appointment, [citaId: string, nuevaI
 export const getCitasAction = withAuth<Appointment[], [fechaIso?: string]>(
   'agenda:leer',
   async (ctx, fechaIso) => {
-    const allAppointments = await getAppointments()
-    const appointments = ctx.rol === 'profesional' 
-      ? allAppointments.filter(a => a.professionalId === ctx.professionalId)
-      : allAppointments
-
-    if (!fechaIso) {
-      return appointments
+    let startIso: string
+    let endIso: string
+    if (fechaIso) {
+      const dayStart = startOfDay(new Date(fechaIso))
+      const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000)
+      startIso = dayStart.toISOString()
+      endIso = dayEnd.toISOString()
+    } else {
+      const dayStart = startOfDay(new Date())
+      const dayEnd = new Date(dayStart.getTime() + 60 * 24 * 3600 * 1000)
+      const pastStart = new Date(dayStart.getTime() - 7 * 24 * 3600 * 1000)
+      startIso = pastStart.toISOString()
+      endIso = dayEnd.toISOString()
     }
-
-    // El día de la agenda es el del reloj del estudio, no el del servidor (hallazgo F2)
-    const dayStart = startOfDay(new Date(fechaIso))
-    const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000)
-
-    const filtered = appointments.filter((a) => {
-      const d = new Date(a.inicioUtc)
-      return d >= dayStart && d < dayEnd
-    })
-
-    return filtered
+    const profId = ctx.rol === 'profesional' ? ctx.professionalId : undefined
+    return await getAppointmentsEnRango(startIso, endIso, profId)
   }
 )
 
@@ -426,7 +434,9 @@ export async function franjasDelDiaAction(
   try {
     const services = await getServices()
     const professionals = await getProfessionals()
-    const appointments = await getAppointments()
+    const dayStart = startOfDay(new Date(fechaIso))
+    const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000)
+    const appointments = await getAppointmentsEnRango(dayStart.toISOString(), dayEnd.toISOString(), professionalId)
 
     const svc = services.find((s) => s.id === serviceId)
     if (!svc) return { ok: false, error: 'Servicio no encontrado' }
@@ -484,14 +494,16 @@ export async function diasConCuposAction(
   try {
     const services = await getServices()
     const professionals = await getProfessionals()
-    const appointments = await getAppointments()
+    const desde = new Date(desdeIso)
+    const dayStart = startOfDay(desde)
+    const dayEnd = new Date(dayStart.getTime() + dias * 24 * 3600 * 1000)
+    const appointments = await getAppointmentsEnRango(dayStart.toISOString(), dayEnd.toISOString(), professionalId)
 
     const candidatos = professionalId
       ? professionals.filter((p) => p.id === professionalId && p.activo)
       : profesionalesPara(serviceId, professionals)
 
     const conteo: Record<string, number> = {}
-    const desde = new Date(desdeIso)
 
     for (let i = 0; i < dias; i++) {
       // Días completos del reloj del estudio (hallazgo F2)
@@ -531,7 +543,9 @@ export async function consultarDisponibilidadAction(
   try {
     const services = await getServices()
     const professionals = await getProfessionals()
-    const appointments = await getAppointments()
+    const inicioDateRango = startOfDay(desdeIso ? new Date(desdeIso) : new Date())
+    const finDateRango = new Date(inicioDateRango.getTime() + 14 * 24 * 3600 * 1000)
+    const appointments = await getAppointmentsEnRango(inicioDateRango.toISOString(), finDateRango.toISOString(), professionalId)
 
     const alternativas = proximasFranjas(
       serviceId,
