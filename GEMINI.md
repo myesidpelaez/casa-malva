@@ -81,8 +81,19 @@ estuvo un día entero sin poder desplegarse y nadie lo notó (hallazgo F17).
 
 ## Cómo reportas
 
-Al terminar, en el chat: **HECHO** · **NO HECHO** · **GATES QUE NO FIRMO** · **DUDAS**, con la
-salida real de los comandos pegada. Sin salida de comando, no escribas "verificado".
+**Protocolo completo y obligatorio:** `D:\MEMORIA\06-AGENTES\antigravity-protocolo-de-cierre.md`.
+Léelo entero antes de cerrar cualquier tarea y **rellena su plantilla de seis secciones**.
+
+Lo esencial:
+
+- **Un gate es un comando**, y la lista vive en `package.json`, no en el plano. `npm run verificar`
+  los corre todos y falla entero si uno falla. **No hay gates que renumerar ni que reinterpretar.**
+- **Se pega la salida completa**, sin recortar ni resumir.
+- **El rojo va antes que el verde.** Si no hay rojo, se escribe "NO HAY ROJO" y por qué.
+- Un gate que **no se puede** ejecutar aquí (falta credencial, no hay navegador) se reporta con
+  su nombre exacto y la causa. **Eso es una respuesta aceptable.** Reinterpretarlo no lo es.
+- **"verificado", "superado" y "a totalidad" no se escriben sin salida de comando encima.**
+- **Tú no firmas el gate de tu propio trabajo** (prohibición nº 3). Ejecutas, pegas y reportas.
 
 Y una distinción que costó caro: **"no lo hice yo" ≠ "no está hecho"**. Antes de reportar algo
 como pendiente, compruébalo (`git log`, `git ls-remote`, `Test-Path`). Si no puedes comprobarlo,
