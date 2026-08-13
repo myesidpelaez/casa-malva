@@ -81,6 +81,7 @@ export type Appointment = {
   serviceId: string
   inicioUtc: string // UTC ISO string
   finUtc: string // UTC ISO string
+  duracionTotalMin: number // Congelado al agendar
   estado: AppointmentState
   origen: 'web' | 'admin' | 'whatsapp'
   precioCentavos: number // Congelado al agendarse

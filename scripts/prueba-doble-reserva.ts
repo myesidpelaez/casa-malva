@@ -7,7 +7,8 @@
  * Ejecutar:  npm run prueba:doble-reserva
  */
 import { crearCitaAction } from '../src/actions/citas'
-import { getDb, getProfessionals, getServices, getAppointments, liberarSlotsCita } from '../src/lib/db'
+import { getDb, getProfessionals, getServices, getAppointments } from '../src/lib/db'
+import { planificarSlots } from '../src/lib/ocupacion'
 import { franjasDisponibles } from '../src/lib/disponibilidad'
 
 const VERDE = '\x1b[32m'
@@ -145,9 +146,10 @@ async function limpiar() {
   for (const id of creadas) {
     const snap = await db.collection('appointments').doc(id).get()
     if (snap.exists) {
-      const data = snap.data()
+      const data = snap.data() as import('../src/types').Appointment
       if (data) {
-        await liberarSlotsCita(data.professionalId, data.inicioUtc, 60)
+        const plan = planificarSlots(data, { ...data, estado: 'cancelada' }, data.duracionTotalMin || 60)
+        plan.borrar.forEach(id => batch.delete(db.collection('slots').doc(id)))
       }
       batch.delete(db.collection('appointments').doc(id))
     }

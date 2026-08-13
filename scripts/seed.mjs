@@ -334,12 +334,16 @@ async function runSeed() {
   ]
 
   for (const apt of appointments) {
+    const srv = services.find((s) => s.id === apt.serviceId)
+    const durTotalMin = (srv?.duracionMin || 40) + (srv?.bufferMin || 10)
+    
+    // Agregamos duracionTotalMin a la cita (Spec 21)
+    apt.duracionTotalMin = durTotalMin
+
     await db.collection('appointments').doc(apt.id).set(apt)
 
-    // Crear slots deterministas solo para citas activas futuras
-    if (apt.estado === 'agendada' || apt.estado === 'confirmada') {
-      const srv = services.find((s) => s.id === apt.serviceId)
-      const durTotalMin = (srv?.duracionMin || 40) + (srv?.bufferMin || 10)
+    // Crear slots deterministas solo para estados que ocupan
+    if (['pendiente', 'agendada', 'confirmada', 'completada'].includes(apt.estado)) {
       const franjas = calcularFranjasSlot(apt.inicioUtc, durTotalMin, 15)
       for (const franja of franjas) {
         const slotId = `${apt.professionalId}_${franja}`

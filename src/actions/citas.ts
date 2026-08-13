@@ -7,9 +7,9 @@ import {
   getClients,
   getProfessionals,
   getServices,
-  reservarCitaConSlots,
-  liberarSlotsCita,
+  aplicarCambioDeCita,
 } from '@/lib/db'
+import { planificarSlots } from '@/lib/ocupacion'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
 import { withAuth } from '@/lib/withAuth'
 import { puedeTocarCita } from '@/lib/permisos'
@@ -122,6 +122,7 @@ export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResu
       serviceId: input.serviceId,
       inicioUtc: inicioDate.toISOString(),
       finUtc: finDate.toISOString(),
+      duracionTotalMin: durTotalMin,
       estado: estadoInicial,
       origen: input.origen,
       precioCentavos,
@@ -138,7 +139,8 @@ export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResu
     }
 
     // Reserva atómica de slots en Firestore
-    const resReserva = await reservarCitaConSlots(nuevaCita, durTotalMin)
+    const plan = planificarSlots(null, nuevaCita, nuevaCita.duracionTotalMin)
+    const resReserva = await aplicarCambioDeCita(nuevaCita, plan)
     if (!resReserva.ok) {
       const alternativas = proximasFranjas(
         input.serviceId,
@@ -187,7 +189,9 @@ export const confirmarCitaAction = withAuth<Appointment, [citaId: string, cambia
       ],
     }
 
-    await docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
+    const plan = planificarSlots(cita, updated, updated.duracionTotalMin)
+    const res = await aplicarCambioDeCita(updated, plan)
+    if (!res.ok) return { ok: false, error: res.error }
     return updated
   }
 )
@@ -204,13 +208,6 @@ export const cancelarCitaAction = withAuth<Appointment, [citaId: string, motivo?
     if (cita.estado === 'completada' || cita.estado === 'cancelada') {
       return { ok: false, error: `La cita ya está ${cita.estado}` }
     }
-
-    const services = await getServices()
-    const svc = services.find((s) => s.id === cita.serviceId)
-    const durTotalMin = (svc?.duracionMin ?? 40) + (svc?.bufferMin ?? 10)
-
-    // Liberar slots en Firestore
-    await liberarSlotsCita(cita.professionalId, cita.inicioUtc, durTotalMin)
 
     const inicioTime = new Date(cita.inicioUtc).getTime()
     const horasParaInicio = (inicioTime - Date.now()) / (3600 * 1000)
@@ -234,7 +231,9 @@ export const cancelarCitaAction = withAuth<Appointment, [citaId: string, motivo?
       ],
     }
 
-    await docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
+    const plan = planificarSlots(cita, updated, updated.duracionTotalMin)
+    const res = await aplicarCambioDeCita(updated, plan)
+    if (!res.ok) return { ok: false, error: res.error }
     return updated
   }
 )
@@ -262,7 +261,9 @@ export const marcarCompletadaAction = withAuth<Appointment, [citaId: string, cam
       ],
     }
 
-    await docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
+    const plan = planificarSlots(cita, updated, updated.duracionTotalMin)
+    const res = await aplicarCambioDeCita(updated, plan)
+    if (!res.ok) return { ok: false, error: res.error }
     return updated
   }
 )
@@ -290,7 +291,9 @@ export const marcarNoAsistioAction = withAuth<Appointment, [citaId: string, camb
       ],
     }
 
-    await docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
+    const plan = planificarSlots(cita, updated, updated.duracionTotalMin)
+    const res = await aplicarCambioDeCita(updated, plan)
+    if (!res.ok) return { ok: false, error: res.error }
     return updated
   }
 )
@@ -344,12 +347,9 @@ export const reagendarCitaAction = withAuth<Appointment, [citaId: string, nuevaI
       return { ok: false, error: val.error || 'No es posible reagendar en esta fecha/hora' }
     }
 
-    const durTotalMin = svc.duracionMin + svc.bufferMin
+    const durTotalMin = cita.duracionTotalMin
     const inicioDate = new Date(nuevaInicioUtc)
     const finDate = new Date(inicioDate.getTime() + durTotalMin * 60 * 1000)
-
-    // Liberar slots anteriores
-    await liberarSlotsCita(cita.professionalId, cita.inicioUtc, durTotalMin)
 
     const updated: Appointment = {
       ...cita,
@@ -366,13 +366,9 @@ export const reagendarCitaAction = withAuth<Appointment, [citaId: string, nuevaI
       ],
     }
 
-    // Reservar nuevos slots
-    const resReserva = await reservarCitaConSlots(updated, durTotalMin)
-    if (!resReserva.ok) {
-      // Si falla, restaurar slots previos
-      await reservarCitaConSlots(cita, durTotalMin)
-      return { ok: false, error: 'cupo_ocupado' }
-    }
+    const plan = planificarSlots(cita, updated, updated.duracionTotalMin)
+    const res = await aplicarCambioDeCita(updated, plan)
+    if (!res.ok) return { ok: false, error: res.error }
 
     return updated
   }

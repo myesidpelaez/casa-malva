@@ -10,6 +10,7 @@ import type {
   Service,
   Slot,
 } from '@/types'
+import { type PlanDeSlots } from './ocupacion'
 
 export type UserRow = {
   id: string
@@ -149,80 +150,63 @@ export async function getUserByEmail(email: string): Promise<UserRow | null> {
 }
 
 /**
- * Calcula todas las franjas de 15 minutos que abarca un servicio (duración + buffer)
+ * Aplica el plan y persiste la cita en UNA sola transacción de Firestore.
+ * Lecturas primero, escrituras después (lo exige el motor).
  */
-export function calcularFranjasSlot(inicioUtcISO: string, duracionTotalMin: number, pasoMin = 15): string[] {
-  const franjas: string[] = []
-  const inicio = new Date(inicioUtcISO)
-  for (let m = 0; m < duracionTotalMin; m += pasoMin) {
-    const slotDate = new Date(inicio.getTime() + m * 60 * 1000)
-    franjas.push(slotDate.toISOString())
-  }
-  return franjas
-}
-
-/**
- * Anti-Doble-Reserva atómica con la técnica de slots (skill firestore-modelado §2).
- *
- * 1) LECTURAS PRIMERO: Verifica la disponibilidad de todos los slots que cubrirá la cita.
- * 2) ESCRITURAS DESPUÉS: Crea cada slot con ID determinista `${profId}_${slotISO}` + documento de cita.
- * Si algún slot ya existe, la transacción de Firestore aborta automáticamente con error de colisión.
- */
-export async function reservarCitaConSlots(
-  appointment: Appointment,
-  duracionTotalMin: number
-): Promise<{ ok: true; data: Appointment } | { ok: false; error: string }> {
+export async function aplicarCambioDeCita(
+  cita: Appointment,
+  plan: PlanDeSlots
+): Promise<{ ok: true; data: Appointment } | { ok: false; error: 'cupo_ocupado' }> {
   const db = getDb()
-  const franjas = calcularFranjasSlot(appointment.inicioUtc, duracionTotalMin, 15)
-  const slotRefs = franjas.map((franja) => db.doc(`slots/${appointment.professionalId}_${franja}`))
-  const appointmentRef = db.doc(`appointments/${appointment.id}`)
+  const citaRef = db.doc(`appointments/${cita.id}`)
+  const slotRefsCrear = plan.crear.map((id) => db.doc(`slots/${id}`))
+  const slotRefsBorrar = plan.borrar.map((id) => db.doc(`slots/${id}`))
 
   try {
-    const result = await db.runTransaction(async (tx) => {
-      // 1. LECTURAS PRIMERO — Leer todos los slots para verificar si alguno ya está ocupado
-      const slotSnaps = await Promise.all(slotRefs.map((ref) => tx.get(ref)))
-      for (const snap of slotSnaps) {
+    await db.runTransaction(async (tx) => {
+      // 1. LECTURAS PRIMERO
+      const snapsCrear = await Promise.all(slotRefsCrear.map((ref) => tx.get(ref)))
+
+      for (const snap of snapsCrear) {
         if (snap.exists) {
-          throw new Error('cupo_ocupado')
+          const data = snap.data() as Slot
+          if (data.appointmentId !== cita.id) {
+            throw new Error('cupo_ocupado')
+          }
         }
       }
 
-      // 2. ESCRITURAS DESPUÉS — Bloquear franjas y persistir la cita
-      for (let i = 0; i < franjas.length; i++) {
-        const slotData: Slot = {
-          id: `${appointment.professionalId}_${franjas[i]}`,
-          appointmentId: appointment.id,
-          professionalId: appointment.professionalId,
-          inicioUtc: franjas[i],
-          creadoEn: new Date().toISOString(),
-        }
-        tx.create(slotRefs[i], slotData)
+      // 2. ESCRITURAS DESPUÉS
+      for (const ref of slotRefsBorrar) {
+        tx.delete(ref)
       }
 
-      tx.create(appointmentRef, appointment)
-      return appointment
+      for (let i = 0; i < snapsCrear.length; i++) {
+        const snap = snapsCrear[i]
+        if (!snap.exists) {
+          const slotId = plan.crear[i]
+          // slotId is professionalId_inicioUtcISO
+          const inicioUtc = slotId.substring(cita.professionalId.length + 1)
+          const slotData: Slot = {
+            id: slotId,
+            appointmentId: cita.id,
+            professionalId: cita.professionalId,
+            inicioUtc,
+            creadoEn: new Date().toISOString(),
+          }
+          tx.create(slotRefsCrear[i], slotData)
+        }
+      }
+
+      tx.set(citaRef, cita, { merge: true })
     })
 
-    return { ok: true, data: result }
+    return { ok: true, data: cita }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
     if (msg.includes('cupo_ocupado') || msg.includes('ALREADY_EXISTS') || msg.includes('already exists')) {
       return { ok: false, error: 'cupo_ocupado' }
     }
-    return { ok: false, error: msg }
+    throw err
   }
-}
-
-/**
- * Libera las franjas de slots al cancelar o completar una cita
- */
-export async function liberarSlotsCita(professionalId: string, inicioUtcISO: string, duracionTotalMin: number): Promise<void> {
-  const db = getDb()
-  const franjas = calcularFranjasSlot(inicioUtcISO, duracionTotalMin, 15)
-  const batch = db.batch()
-  for (const franja of franjas) {
-    const ref = db.doc(`slots/${professionalId}_${franja}`)
-    batch.delete(ref)
-  }
-  await batch.commit()
 }

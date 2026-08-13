@@ -1,4 +1,5 @@
 import { REGLAS_NEGOCIO } from './reglas'
+import { ocupaFranja } from './ocupacion'
 import type { Appointment, Professional, Service } from '@/types'
 
 export type SlotInfo = {
@@ -144,13 +145,12 @@ export function getOccupiedBlocks(
   for (const a of allAppointments) {
     if (a.professionalId !== prof.id) continue
     if (excludeApptId && a.id === excludeApptId) continue
-    if (a.estado === 'cancelada' || a.estado === 'no_asistio') continue
+    if (!ocupaFranja(a.estado)) continue
 
     const start = new Date(a.inicioUtc)
     if (start < dayStart || start >= dayNext) continue
 
-    const svc = services.find((s) => s.id === a.serviceId)
-    const durMin = (svc?.duracionMin ?? 40) + (svc?.bufferMin ?? 10)
+    const durMin = a.duracionTotalMin
     const startMin = toMinutes(start)
 
     blocks.push({
