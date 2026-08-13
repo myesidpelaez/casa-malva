@@ -8,37 +8,100 @@ export type SlotInfo = {
   professionalNombre: string
 }
 
-export function startOfDay(d: Date | string): Date {
-  const x = new Date(d)
-  x.setHours(0, 0, 0, 0)
-  return x
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Reloj del estudio (hallazgo F2, corregido el 2026-08-14)
+ *
+ * Todas estas funciones usaban `getHours()`, `getDate()` y `setHours()`, que leen
+ * y escriben en la hora local **del servidor**. En el portátil de Medellín daban
+ * bien; en App Hosting, que corre en **UTC**, el estudio abría a las 09:00 UTC —
+ * las 04:00 de Bogotá— y todo el horario, el almuerzo y el cierre de domingo se
+ * corrían cinco horas. Un fallo que solo aparecía en producción.
+ *
+ * Ahora el día, la hora y el día de la semana se leen siempre en
+ * `REGLAS_NEGOCIO.zonaHoraria`, sin importar dónde corra el proceso.
+ *
+ * Colombia no aplica horario de verano desde 1993, pero el desplazamiento se
+ * calcula por instante en vez de fijarse en −5 para no heredar una constante que
+ * el día que cambie nadie recordará.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+const ZONA = REGLAS_NEGOCIO.zonaHoraria
+
+const FMT_ZONA = new Intl.DateTimeFormat('en-CA', {
+  timeZone: ZONA,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+})
+
+type PartesZona = { anio: number; mes: number; dia: number; hora: number; minuto: number }
+
+/** Descompone un instante en las partes de calendario que marca el reloj de ZONA. */
+function partesEnZona(d: Date): PartesZona {
+  const partes = FMT_ZONA.formatToParts(d)
+  const v = (tipo: string): number => Number(partes.find((p) => p.type === tipo)?.value)
+  return { anio: v('year'), mes: v('month'), dia: v('day'), hora: v('hour'), minuto: v('minute') }
 }
 
-export function isSunday(d: Date): boolean {
-  return d.getDay() === 0
+/** Minutos que hay que sumar a UTC para obtener la hora de ZONA en ese instante. Bogotá: −300. */
+function desplazamientoMin(d: Date): number {
+  const p = partesEnZona(d)
+  const comoSiFueraUtc = Date.UTC(p.anio, p.mes - 1, p.dia, p.hora, p.minuto)
+  const instanteAlMinuto = Math.floor(d.getTime() / 60000) * 60000
+  return Math.round((comoSiFueraUtc - instanteAlMinuto) / 60000)
 }
 
 /**
- * Clave `YYYY-MM-DD` de un día **en hora local**.
+ * Instante exacto en que ZONA marca `minutos` desde su medianoche, el día en que
+ * cae `diaRef`. Sustituye a `setHours(h, m, 0, 0)`, que escribía en hora del servidor.
+ */
+export function instanteEnZona(diaRef: Date, minutos: number): Date {
+  const p = partesEnZona(diaRef)
+  const tentativo = Date.UTC(p.anio, p.mes - 1, p.dia, 0, 0) + minutos * 60000
+  return new Date(tentativo - desplazamientoMin(new Date(tentativo)) * 60000)
+}
+
+/** Día de la semana **en ZONA**: 0=Domingo … 6=Sábado. */
+export function diaSemanaEnZona(d: Date): number {
+  const p = partesEnZona(d)
+  return new Date(Date.UTC(p.anio, p.mes - 1, p.dia)).getUTCDay()
+}
+
+/** Medianoche de ZONA del día en que cae `d`. */
+export function startOfDay(d: Date | string): Date {
+  return instanteEnZona(new Date(d), 0)
+}
+
+export function isSunday(d: Date): boolean {
+  return diaSemanaEnZona(d) === 0
+}
+
+/**
+ * Clave `YYYY-MM-DD` del día **según el reloj del estudio**.
  *
  * No se usa `toISOString().split('T')[0]`: eso devuelve la fecha en UTC y, en
- * Colombia (UTC-5), un día local a las 00:00 cae en el día ANTERIOR en UTC.
- * Con la versión de UTC, un bloqueo puesto para el jueves se aplicaba al
- * miércoles.
+ * Colombia (UTC−5), un día local a las 00:00 cae en el día ANTERIOR en UTC —
+ * un bloqueo puesto para el jueves se aplicaba al miércoles. Tampoco sirve
+ * `getFullYear()/getMonth()/getDate()`, que dependen de la zona del servidor.
  */
 export function claveDia(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+  const p = partesEnZona(d)
+  return `${p.anio}-${String(p.mes).padStart(2, '0')}-${String(p.dia).padStart(2, '0')}`
 }
 
 export function inLunch(minutes: number): boolean {
   return minutes >= REGLAS_NEGOCIO.almuerzo.desde && minutes < REGLAS_NEGOCIO.almuerzo.hasta
 }
 
+/** Minutos transcurridos desde la medianoche de ZONA. */
 export function toMinutes(d: Date): number {
-  return d.getHours() * 60 + d.getMinutes()
+  const p = partesEnZona(d)
+  return p.hora * 60 + p.minuto
 }
 
 /**
@@ -46,11 +109,12 @@ export function toMinutes(d: Date): number {
  * para la fecha dada, o null si el profesional no trabaja ese día de la semana.
  */
 export function getWorkWindow(prof: Professional, date: Date): [number, number] | null {
-  // getDay(): 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
+  // diaSemanaEnZona(): 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
   // En prof.horario: 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab, 7=Dom
-  const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay()
+  const diaZona = diaSemanaEnZona(date)
+  const dayOfWeek = diaZona === 0 ? 7 : diaZona
 
-  // Revisar excepciones para la fecha YYYY-MM-DD (local, no UTC — ver claveDia)
+  // Revisar excepciones para la fecha YYYY-MM-DD (en el reloj del estudio — ver claveDia)
   const dateStr = claveDia(date)
   const exc = prof.excepciones?.find((e) => e.fecha === dateStr)
   if (exc) {
@@ -73,8 +137,7 @@ export function getOccupiedBlocks(
   excludeApptId?: string
 ): Array<{ startMin: number; endMin: number }> {
   const dayStart = startOfDay(date)
-  const dayNext = new Date(dayStart)
-  dayNext.setDate(dayNext.getDate() + 1)
+  const dayNext = new Date(dayStart.getTime() + 24 * 3600 * 1000)
 
   const blocks: Array<{ startMin: number; endMin: number }> = []
 
@@ -146,8 +209,7 @@ export function getStartMinutes(
     // Tampoco puede terminar dentro de o cruzar el almuerzo
     if (m < REGLAS_NEGOCIO.almuerzo.hasta && m + totalDur > REGLAS_NEGOCIO.almuerzo.desde) continue
 
-    const slotDate = new Date(date)
-    slotDate.setHours(Math.floor(m / 60), m % 60, 0, 0)
+    const slotDate = instanteEnZona(date, m)
 
     if (slotDate.getTime() < minStartMs) continue
     if (slotDate.getTime() > maxStartMs) continue
@@ -178,11 +240,7 @@ export function franjasDisponibles(
   if (!svc || !prof) return []
 
   const minutes = getStartMinutes(prof, svc, date, allAppointments, services)
-  return minutes.map((m) => {
-    const d = new Date(date)
-    d.setHours(Math.floor(m / 60), m % 60, 0, 0)
-    return d
-  })
+  return minutes.map((m) => instanteEnZona(date, m))
 }
 
 /**
@@ -230,15 +288,14 @@ export function proximasFranjas(
   const slots: SlotInfo[] = []
 
   for (let d = 0; d < dias && slots.length < limite; d++) {
-    const currDate = new Date(startDate)
-    currDate.setDate(currDate.getDate() + d)
+    // Avanzar por días completos del reloj del estudio, no del servidor
+    const currDate = new Date(startOfDay(startDate).getTime() + d * 24 * 3600 * 1000)
     if (isSunday(currDate)) continue
 
     for (const prof of targetProfs) {
       const minutes = getStartMinutes(prof, svc, currDate, allAppointments, services)
       for (const m of minutes) {
-        const start = new Date(currDate)
-        start.setHours(Math.floor(m / 60), m % 60, 0, 0)
+        const start = instanteEnZona(currDate, m)
         const end = new Date(start.getTime() + svc.duracionMin * 60 * 1000)
 
         slots.push({

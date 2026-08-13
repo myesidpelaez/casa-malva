@@ -6,45 +6,16 @@ import { withAuth } from '@/lib/withAuth'
 import type { Appointment, Client } from '@/types'
 import type { ActionResult } from './catalogo'
 
-/**
- * Registro / actualización de clienta por teléfono (Pública para flujo de reserva)
+/*
+ * ELIMINADA — `upsertClientePorTelefonoAction` (hallazgo F5, 2026-08-14).
+ *
+ * Era una Server Action pública que permitía sobrescribir el nombre y el email de la ficha
+ * de cualquier clienta conociendo solo su teléfono.
+ *
+ * No la consumía ninguna pantalla y era redundante: `crearCitaAction` ya resuelve o crea la
+ * ficha de la clienta dentro del flujo de reserva, que es el único momento legítimo en que
+ * una persona sin sesión debe poder escribir en `clients`.
  */
-export async function upsertClientePorTelefonoAction(
-  nombre: string,
-  telefonoRaw: string,
-  email?: string
-): Promise<ActionResult<Client>> {
-  try {
-    const telefonoE164 = normalizePhoneE164(telefonoRaw)
-    const clients = await getClients()
-    const existing = clients.find((c) => c.telefonoE164 === telefonoE164)
-
-    if (existing) {
-      const updated: Client = {
-        ...existing,
-        nombre: nombre || existing.nombre,
-        email: email || existing.email,
-      }
-      await docSet('clients', existing.id, updated as unknown as Record<string, unknown>)
-      return { ok: true, data: updated }
-    }
-
-    const id = `cli_${Date.now()}`
-    const newClient: Client = {
-      id,
-      nombre: nombre || 'Clienta',
-      telefonoE164,
-      email: email || '',
-      creadaEn: new Date().toISOString(),
-    }
-
-    await docSet('clients', id, newClient as unknown as Record<string, unknown>)
-    return { ok: true, data: newClient }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al guardar información de la clienta'
-    return { ok: false, error: errorMsg }
-  }
-}
 
 /**
  * Listado completo de clientas del CRM (Protegida: Admin y Recepción)

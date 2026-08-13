@@ -57,7 +57,10 @@ export async function createSession(user: { id: string; email: string; nombre: s
   const cookieStore = await cookies()
   cookieStore.set(SESSION_COOKIE_NAME, cookieValue, {
     httpOnly: true,
-    secure: false, // Local dev over HTTP / LAN IP
+    // Hallazgo F8: estaba fijo en `false` con el comentario "local dev over HTTP / LAN IP".
+    // En App Hosting, que sirve por HTTPS, eso deja viajar la cookie de sesión en claro.
+    // En desarrollo sigue en `false` para poder probar desde el móvil por IP de la LAN.
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: 7 * 24 * 3600,

@@ -17,6 +17,7 @@ import {
   franjasDisponibles,
   profesionalesPara,
   proximasFranjas,
+  startOfDay,
   validarReserva,
   type SlotInfo,
 } from '@/lib/disponibilidad'
@@ -388,10 +389,9 @@ export const getCitasAction = withAuth<Appointment[], [fechaIso?: string]>(
       return appointments
     }
 
-    const dayStart = new Date(fechaIso)
-    dayStart.setHours(0, 0, 0, 0)
-    const dayEnd = new Date(dayStart)
-    dayEnd.setDate(dayEnd.getDate() + 1)
+    // El día de la agenda es el del reloj del estudio, no el del servidor (hallazgo F2)
+    const dayStart = startOfDay(new Date(fechaIso))
+    const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000)
 
     const filtered = appointments.filter((a) => {
       const d = new Date(a.inicioUtc)
@@ -402,29 +402,18 @@ export const getCitasAction = withAuth<Appointment[], [fechaIso?: string]>(
   }
 )
 
-/**
- * Consulta de citas por teléfono (Pública para clientas en consulta de reserva)
+/*
+ * ELIMINADA — `getCitasPorTelefonoAction` (hallazgo F4, 2026-08-14).
+ *
+ * Era una Server Action pública, sin sesión y sin límite de intentos, que devolvía el
+ * historial completo de una clienta a cambio de un teléfono. Los móviles colombianos
+ * (`3XXXXXXXXX`) son enumerables: cualquiera podía barrer el rango y leer qué servicio se
+ * hizo cada persona, cuánto pagó y con quién. Ley 1581 de 2012 (Habeas Data).
+ *
+ * No la consumía ninguna pantalla. Si se reimplanta la consulta de citas para la clienta,
+ * NO basta con `withAuth` —la clienta legítima tampoco tiene sesión—: exige un segundo
+ * factor (código por WhatsApp o enlace firmado con expiración).
  */
-export async function getCitasPorTelefonoAction(telefonoRaw: string): Promise<ActionResult<Appointment[]>> {
-  try {
-    const phoneE164 = normalizePhoneE164(telefonoRaw)
-    const clients = await getClients()
-    const client = clients.find((c) => c.telefonoE164 === phoneE164)
-    if (!client) {
-      return { ok: true, data: [] }
-    }
-
-    const appointments = await getAppointments()
-    const clientAppts = appointments
-      .filter((a) => a.clientId === client.id)
-      .sort((a, b) => new Date(a.inicioUtc).getTime() - new Date(b.inicioUtc).getTime())
-
-    return { ok: true, data: clientAppts }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al buscar citas por teléfono'
-    return { ok: false, error: errorMsg }
-  }
-}
 
 /**
  * Franjas libres de un servicio en un día concreto (Pública para wizard)
@@ -505,9 +494,8 @@ export async function diasConCuposAction(
     const desde = new Date(desdeIso)
 
     for (let i = 0; i < dias; i++) {
-      const dia = new Date(desde)
-      dia.setDate(dia.getDate() + i)
-      dia.setHours(0, 0, 0, 0)
+      // Días completos del reloj del estudio (hallazgo F2)
+      const dia = new Date(startOfDay(desde).getTime() + i * 24 * 3600 * 1000)
 
       const minutos = new Set<number>()
       for (const prof of candidatos) {

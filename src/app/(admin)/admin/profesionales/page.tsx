@@ -437,7 +437,7 @@ export default function AdminProfesionalesPage() {
                 <Sparkles className="h-4 w-4 text-malva-600" />
                 <p className="text-[13px] font-semibold text-ink-900">Servicios que realiza</p>
               </div>
-              <Badge tone={serviceIds.length > 0 ? 'primary' : 'neutral'} size="sm">
+              <Badge tone={serviceIds.length > 0 ? 'malva' : 'neutral'} size="sm">
                 {serviceIds.length} de {servicios.length} activos
               </Badge>
             </div>
