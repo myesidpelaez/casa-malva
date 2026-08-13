@@ -4,8 +4,17 @@
  * Ejercita la Server Action real (`crearCitaAction`) contra Cloud Firestore
  * validando la técnica de slots atómica y transaccional (firestore-modelado §2).
  *
- * Ejecutar:  npm run prueba:doble-reserva
+ * Ejecutar:  npm run verificar:nube   (necesita credenciales de Firestore)
  */
+// Carga `.env.local` igual que lo hace Next. Sin esto el script no ve
+// GOOGLE_APPLICATION_CREDENTIALS y falla con "Could not load the default credentials"
+// aunque el `.env.local` esté bien puesto.
+//
+// En ESM los `import` de abajo se evalúan ANTES que esta llamada. Es correcto igualmente
+// porque `getDb()` lee `process.env` dentro de la función, no al cargar `db.ts`.
+import { loadEnvConfig } from '@next/env'
+loadEnvConfig(process.cwd())
+
 import { crearCitaAction } from '../src/actions/citas'
 import { getDb, getProfessionals, getServices, getAppointments } from '../src/lib/db'
 import { planificarSlots } from '../src/lib/ocupacion'

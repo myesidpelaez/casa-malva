@@ -1,3 +1,19 @@
+// Carga `.env.local` igual que lo hace Next.
+//
+// Sin esto el script no ve GOOGLE_APPLICATION_CREDENTIALS ni SEED_*_PASS y falla con
+// "Could not load the default credentials" aunque el `.env.local` esté bien puesto:
+// `next dev` y `next build` cargan ese archivo, pero `node scripts/seed.mjs` no.
+//
+// Ojo con el orden: en ESM los `import` se evalúan ANTES que esta llamada, así que esto
+// NO garantiza que las variables existan mientras se cargan los módulos de abajo.
+// Funciona porque todo `process.env` de este script y de `db.ts` se lee **dentro** de una
+// función, no al cargar el módulo. Si algún día alguien lee env en el cuerpo de un módulo,
+// esto deja de bastar y hay que pasar a `node --env-file=.env.local`.
+// `@next/env` es CommonJS: desde un `.mjs` hay que importarlo por defecto, no con
+// destructuring de named exports (falla con "Named export 'loadEnvConfig' not found").
+import nextEnv from '@next/env'
+nextEnv.loadEnvConfig(process.cwd())
+
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import path from 'path'
