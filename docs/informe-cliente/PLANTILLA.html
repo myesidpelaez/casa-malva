@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Informe de Proyecto: {{NOMBRE_DEL_NEGOCIO}}</title>
+  
+  <!--
+    ======================================================================
+    PLANTILLA DE INFORME PARA CLIENTES (MeJorÍA)
+    ======================================================================
+
+    ⛔ ANTES DE ENVIAR: BORRA TODOS ESTOS COMENTARIOS.
+    Un comentario HTML no se ve en pantalla, pero VIAJA DENTRO DEL ARCHIVO y
+    cualquiera puede leerlo con "ver código fuente" o abriéndolo en un editor.
+    Aquí abajo hay nombres de agentes y notas internas: eso NO puede llegar a
+    un cliente. Última comprobación antes de mandarlo: busca "<!--" en el
+    archivo y no debe quedar ninguno.
+
+    Este es el documento que MeJorÍA le entrega a un cliente para que
+    entienda qué compró, en qué va y por qué puede confiar en ello.
+    
+    A QUIÉN LE ESCRIBES:
+    Al dueño(a) del negocio. No sabe programar. Háblale desde lo que 
+    le duele (citas, ventas, costos, tiempo). No a su sobrino técnico.
+
+    REGLA EDITORIAL (La regla de oro):
+    Cada cosa que afirmes tiene que significar algo para su negocio.
+    "Optimizamos lecturas de base de datos" -> NO.
+    "El costo de operar su sistema no sube cuando crecen sus clientes" -> SÍ.
+    Toda idea técnica va con una analogía cotidiana.
+
+    LO QUE NUNCA DEBE ENTRAR:
+    - Nombres de agentes (Claude, Antigravity, etc.) y sus fallos internos.
+    - El detalle técnico de cómo se explotaba un fallo de seguridad (solo di que se cerró).
+    - Incidentes con datos borrados en demos (asusta y no aporta).
+    - Rutas, credenciales, comandos (npm, src/, lib/).
+    - Cifras inventadas (si no está medido, no se escribe).
+    - Exageraciones publicitarias ("clase mundial", "última generación").
+
+    CÓMO SE HABLA DE ERRORES/HALLAZGOS:
+    - Agrúpalos por consecuencia de negocio (costaba dinero, tiempo, confianza).
+    - El marco es: "Buscamos los errores nosotros antes de que los sufra su cliente".
+    ======================================================================
+  -->
+
+  <style>
+    :root {
+      /* Puedes ajustar esta paleta al color principal del negocio */
+      --brand-50: #fdfafc;
+      --brand-600: #7B4B6E; 
+      --brand-900: #3a2233;
+      --ink-50: #f8f6f7;
+      --ink-900: #1a1518;
+      --radius-lg: 0.75rem;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--brand-50);
+      color: var(--ink-900);
+      line-height: 1.6;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: #ffffff;
+      padding: 2.5rem;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    }
+    h1, h2, h3 {
+      color: var(--brand-600);
+      line-height: 1.2;
+    }
+    h1 {
+      font-size: 2rem;
+      border-bottom: 2px solid var(--brand-50);
+      padding-bottom: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    a {
+      color: var(--brand-600);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .callout {
+      background: var(--ink-50);
+      border-left: 4px solid var(--brand-600);
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    }
+    .callout p {
+      margin: 0;
+    }
+    .button {
+      display: inline-block;
+      background: var(--brand-600);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-lg);
+      font-weight: 500;
+      margin-top: 1rem;
+      text-decoration: none;
+    }
+    .button:hover {
+      text-decoration: none;
+      opacity: 0.9;
+    }
+    .group {
+      margin-bottom: 1.5rem;
+    }
+    .group h4 {
+      margin: 0 0 0.5rem 0;
+      color: var(--brand-900);
+      font-size: 1.1rem;
+    }
+    .group p {
+      margin: 0;
+    }
+    ul {
+      padding-left: 1.5rem;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 0;
+      }
+      .container {
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 1.5rem;
+      }
+    }
+    @media print {
+      body {
+        background: white;
+      }
+      .container {
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+      }
+      .button {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>El estado de su sistema: {{NOMBRE_DEL_NEGOCIO}}</h1>
+    
+    <p>Este informe detalla qué le hemos construido, cómo funciona hoy y qué resultados arrojó nuestra revisión interna antes de entregárselo.</p>
+
+    <h2>1. Qué tiene hoy, funcionando</h2>
+    <p>El sistema ya está listo para que usted y sus clientes lo utilicen. Puede entrar ahora mismo desde su celular o computador haciendo clic aquí:</p>
+    <a href="{{ENLACE}}" class="button" target="_blank" rel="noopener noreferrer">Abrir el sistema de {{NOMBRE_DEL_NEGOCIO}}</a>
+
+    <h2>2. Cómo funciona, en cinco minutos</h2>
+    <p>El sistema está diseñado para que usted no tenga que intervenir. Este es el recorrido:</p>
+    <ul>
+      <li><strong>Su cliente actúa:</strong> {{ANALOGIA_DE_ACCION_DEL_CLIENTE_1}}</li>
+      <li><strong>Usted lo ve en su panel:</strong> {{ANALOGIA_DE_REVISION_DEL_DUENO}}</li>
+      <li><strong>Protección constante:</strong> {{ANALOGIA_DE_PROTECCION_DEL_SISTEMA}}</li>
+    </ul>
+
+    <h2>3. Qué revisamos y qué encontramos</h2>
+    <div class="callout">
+      <p>Todo software tiene defectos. La diferencia está en si alguien los busca antes que su cliente. En este proyecto revisamos nuestro propio trabajo línea por línea y encontramos {{NUMERO_DE_HALLAZGOS}}. Los que podían afectar a su negocio están cerrados y comprobados. Esto es lo que significaban.</p>
+      <!-- OJO: solo se escribe un numero que este MEDIDO y se pueda sustentar. Si quedan
+           hallazgos abiertos, se dicen aqui y se explica por que no afectan al cliente.
+           Ocultar uno y que aparezca despues cuesta mas que haberlo dicho. -->
+    </div>
+
+    <div class="group">
+      <h4>Le habría costado {{CONSECUENCIA_1_EJ_CITAS_O_VENTAS}}</h4>
+      <p>{{DESCRIPCION_DEL_HALLAZGO_1_CON_ANALOGIA}} <em>({{COMO_SE_CERRO_EN_TERMINOS_DE_NEGOCIO_1}})</em></p>
+    </div>
+
+    <div class="group">
+      <h4>Le habría costado dinero</h4>
+      <p>{{DESCRIPCION_DEL_HALLAZGO_2_CON_ANALOGIA}} <em>({{COMO_SE_CERRO_EN_TERMINOS_DE_NEGOCIO_2}})</em></p>
+    </div>
+
+    <div class="group">
+      <h4>Le habría costado confianza</h4>
+      <p>{{DESCRIPCION_DEL_HALLAZGO_3_CON_ANALOGIA}} <em>({{COMO_SE_CERRO_EN_TERMINOS_DE_NEGOCIO_3}})</em></p>
+    </div>
+
+    <h2>4. Qué le cuesta tener esto en línea</h2>
+    <p>Operar este sistema hoy <strong>le cuesta {{COSTO_MEDIDO_EN_PESOS}}</strong>. {{EXPLICACION_DEL_COSTO_POR_QUE_ES_BAJO}}.</p>
+    <p>Además, gracias a que optimizamos la forma en que el sistema consulta sus datos, el costo operativo no crecerá descontroladamente a medida que su negocio expanda. La base técnica que tiene hoy está pensada para proteger su bolsillo.</p>
+
+    <h2>5. Cómo sabemos que funciona</h2>
+    <p>Antes de entregarle esta versión, el sistema pasa por una batería de comprobaciones automáticas que se ejecutan enteras cada vez. Verifican, entre otras cosas, {{QUE_VERIFICAN_LAS_PRUEBAS}}.</p>
+    <!-- OJO: nombra dos o tres comprobaciones CONCRETAS que existan de verdad. No escribas
+         "garantizan que las reglas del negocio se cumplen": ninguna bateria de pruebas
+         garantiza eso, y es la clase de frase que se cae en la primera pregunta del cliente. -->
+    <p>Nuestra regla principal de calidad es que <strong>quien construye no es quien aprueba</strong>. Un miembro del equipo programa el código y otro miembro distinto intenta hacerlo fallar. Solo cuando el sistema demuestra soportar las pruebas, se da por finalizado.</p>
+
+    <h2>6. Qué sigue</h2>
+    <p>La base del sistema ya es sólida. Los próximos pasos naturales para seguir haciendo crecer {{NOMBRE_DEL_NEGOCIO}} son:</p>
+    <ul>
+      <li><strong>{{SIGUIENTE_PASO_1}}:</strong> {{BENEFICIO_DEL_SIGUIENTE_PASO_1}}.</li>
+      <li><strong>{{SIGUIENTE_PASO_2}}:</strong> {{BENEFICIO_DEL_SIGUIENTE_PASO_2}}.</li>
+      <li><strong>{{SIGUIENTE_PASO_3}}:</strong> {{BENEFICIO_DEL_SIGUIENTE_PASO_3}}.</li>
+    </ul>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Informe de Proyecto: Casa Malva</title>
+  <style>
+    :root {
+      --malva-50: #fdfafc;
+      --malva-600: #7B4B6E;
+      --malva-900: #3a2233;
+      --ink-50: #f8f6f7;
+      --ink-900: #1a1518;
+      --radius-lg: 0.75rem;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--malva-50);
+      color: var(--ink-900);
+      line-height: 1.6;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: #ffffff;
+      padding: 2.5rem;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 20px rgba(123, 75, 110, 0.08);
+    }
+    h1, h2, h3 {
+      color: var(--malva-600);
+      line-height: 1.2;
+    }
+    h1 {
+      font-size: 2rem;
+      border-bottom: 2px solid var(--malva-50);
+      padding-bottom: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    a {
+      color: var(--malva-600);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .callout {
+      background: var(--ink-50);
+      border-left: 4px solid var(--malva-600);
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    }
+    .callout p {
+      margin: 0;
+    }
+    .button {
+      display: inline-block;
+      background: var(--malva-600);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-lg);
+      font-weight: 500;
+      margin-top: 1rem;
+      text-decoration: none;
+    }
+    .button:hover {
+      text-decoration: none;
+      opacity: 0.9;
+    }
+    .group {
+      margin-bottom: 1.5rem;
+    }
+    .group h4 {
+      margin: 0 0 0.5rem 0;
+      color: var(--malva-900);
+      font-size: 1.1rem;
+    }
+    .group p {
+      margin: 0;
+    }
+    ul {
+      padding-left: 1.5rem;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 0;
+      }
+      .container {
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 1.5rem;
+      }
+    }
+    @media print {
+      body {
+        background: white;
+      }
+      .container {
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+      }
+      .button {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>El estado de su agenda: Casa Malva</h1>
+    
+    <p>Este informe detalla qué le hemos construido, cómo funciona hoy y qué resultados arrojó nuestra revisión interna antes de entregárselo.</p>
+
+    <h2>1. Qué tiene hoy, funcionando</h2>
+    <p>La agenda ya está lista para que usted y sus clientas la utilicen. Puede entrar ahora mismo desde su celular o computador haciendo clic aquí:</p>
+    <a href="https://casa-malva--casa-malva-demo.us-central1.hosted.app" class="button" target="_blank" rel="noopener noreferrer">Abrir la agenda de Casa Malva</a>
+
+    <h2>2. Cómo funciona, en cinco minutos</h2>
+    <p>El sistema está diseñado para que usted no tenga que intervenir. Este es el recorrido:</p>
+    <ul>
+      <li><strong>Su clienta elige y reserva:</strong> Ella entra al enlace, escoge su servicio, ve las horas disponibles y reserva al instante. Su agenda vive en los servidores de Google. Si dos clientas piden la misma hora en el mismo segundo, solo una la consigue, y a la otra el sistema le ofrece alternativas al instante (como un recepcionista que solo atiende a una persona a la vez).</li>
+      <li><strong>Usted lo ve en su panel:</strong> La cita queda registrada al instante y aparece en su agenda del día la próxima vez que la abra. No hay que llamar a nadie para confirmar.</li>
+      <li><strong>Protección constante:</strong> Si una clienta intenta agendar y luego reagendar, el sistema protege los turnos para que no queden huecos fantasmas. Funciona como un candado inteligente que nunca se olvida de asegurar la puerta al cambiar de turno.</li>
+    </ul>
+
+    <h2>3. Qué revisamos y qué encontramos</h2>
+    <div class="callout">
+      <p>Todo software tiene defectos. La diferencia está en si alguien los busca antes que su clienta. En este proyecto revisamos nuestro propio trabajo línea por línea y encontramos 17. Los que podían afectar a su negocio están cerrados y comprobados; los dos que quedan son de acabado y no cambian nada de lo que usted o su clienta ven. Esto es lo que significaban.</p>
+    </div>
+
+    <div class="group">
+      <h4>Le habría costado citas</h4>
+      <p>Encontramos que el sistema a veces tomaba la hora del servidor (ubicado en otro país) en lugar de la hora de Medellín, lo que habría hecho que su estudio pareciera abrir a horas equivocadas. También notamos un caso donde el sistema podía ofrecer una hora y luego negarla al intentar confirmarla. <em>(Ambos problemas están cerrados: las horas que ve su clienta son siempre las horas de Medellín, y la disponibilidad es real).</em></p>
+    </div>
+
+    <div class="group">
+      <h4>Le habría costado dinero</h4>
+      <p>Identificamos que el sistema estaba consultando su historia completa para saber si había un hueco disponible el próximo martes. Era como tener un bibliotecario que saca todos los libros del estante para saber si uno en particular está prestado. Esto habría aumentado sus costos rápidamente. <em>(Cerrado: ahora el sistema es eficiente, y consultar su agenda con diez mil citas costará lo mismo que con diez).</em></p>
+    </div>
+
+    <div class="group">
+      <h4>Le habría costado confianza</h4>
+      <p>Había dos puntos por los que se podía llegar a información de sus clientas sin permiso. Era como tener una puerta que se abre diciendo un número de tres cifras. <em>(Cerrados los dos, y eliminados de raíz antes de que el sistema saliera al público: nunca hubo datos de clientas reales expuestos).</em></p>
+    </div>
+
+    <h2>4. Qué le cuesta tener esto en línea</h2>
+    <p>Operar esta agenda hoy <strong>le cuesta cero pesos</strong>. El sistema se apaga cuando no se usa y la capa gratuita de Google cubre todas las necesidades actuales.</p>
+    <p>Además, gracias a que optimizamos la forma en que el sistema consulta sus citas, el costo operativo no crecerá descontroladamente a medida que su negocio expanda. La base técnica que tiene hoy está pensada para proteger su bolsillo.</p>
+
+    <h2>5. Cómo sabemos que funciona</h2>
+    <p>Antes de entregarle esta versión, el sistema pasa por una batería de comprobaciones automáticas que se ejecutan enteras cada vez. Verifican, entre otras cosas, que dos clientas no puedan quedarse con el mismo turno y que los horarios sean siempre los de Medellín.</p>
+    <p>Nuestra regla principal de calidad es que <strong>quien construye no es quien aprueba</strong>. Un miembro del equipo programa el código y otro miembro distinto intenta hacerlo fallar. Solo cuando el sistema demuestra soportar las pruebas, se da por finalizado.</p>
+
+    <h2>6. Qué sigue</h2>
+    <p>La base del sistema ya es sólida. Los próximos pasos naturales para seguir haciendo crecer Casa Malva son:</p>
+    <ul>
+      <li><strong>Agenda por WhatsApp:</strong> Permitir que sus clientas puedan agendar directamente chateando.</li>
+      <li><strong>Recordatorios automáticos:</strong> Enviar mensajes a sus clientas un día antes para reducir inasistencias.</li>
+      <li><strong>Impulso publicitario:</strong> Aprovechar que la agenda funciona sola para atraer clientas nuevas sin saturar su teléfono.</li>
+    </ul>
+
+  </div>
+</body>
+</html>
