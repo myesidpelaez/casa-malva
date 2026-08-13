@@ -1,5 +1,7 @@
-import { DatabaseSync } from 'node:sqlite'
+import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
 import path from 'path'
+import fs from 'fs'
 import crypto from 'node:crypto'
 
 function hashPassword(password) {
@@ -8,30 +10,40 @@ function hashPassword(password) {
   return `${salt}:${hash}`
 }
 
+function calcularFranjasSlot(inicioUtcISO, duracionTotalMin, pasoMin = 15) {
+  const franjas = []
+  const inicio = new Date(inicioUtcISO)
+  for (let m = 0; m < duracionTotalMin; m += pasoMin) {
+    const slotDate = new Date(inicio.getTime() + m * 60 * 1000)
+    franjas.push(slotDate.toISOString())
+  }
+  return franjas
+}
+
 async function runSeed() {
-  console.log('🌱 Iniciando seed para Casa Malva en SQLite local (casa-malva.db)...')
+  console.log('🌱 Iniciando seed para Casa Malva en Cloud Firestore...\n')
 
-  const dbPath = path.join(process.cwd(), 'casa-malva.db')
-  const db = new DatabaseSync(dbPath)
-  db.exec('PRAGMA journal_mode = WAL;')
+  let app
+  if (getApps().length === 0) {
+    const saPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || path.join(process.cwd(), 'service-account.json')
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID || 'casa-malva-demo'
 
-  // Migraciones / Tablas
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS categories (id TEXT PRIMARY KEY, nombre TEXT NOT NULL, orden INTEGER NOT NULL DEFAULT 0, activa INTEGER NOT NULL DEFAULT 1);
-    CREATE TABLE IF NOT EXISTS services (id TEXT PRIMARY KEY, categoryId TEXT NOT NULL, nombre TEXT NOT NULL, duracionMin INTEGER NOT NULL, bufferMin INTEGER NOT NULL, precioCentavos INTEGER NOT NULL, requiereConfirmacion INTEGER NOT NULL DEFAULT 0, activo INTEGER NOT NULL DEFAULT 1);
-    CREATE TABLE IF NOT EXISTS professionals (id TEXT PRIMARY KEY, nombre TEXT NOT NULL, rol TEXT NOT NULL, serviceIds TEXT NOT NULL, horario TEXT NOT NULL, excepciones TEXT NOT NULL DEFAULT '[]', activo INTEGER NOT NULL DEFAULT 1);
-    CREATE TABLE IF NOT EXISTS clients (id TEXT PRIMARY KEY, nombre TEXT NOT NULL, telefonoE164 TEXT UNIQUE, email TEXT DEFAULT '', notas TEXT DEFAULT '', creadaEn TEXT NOT NULL, _seed INTEGER DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS appointments (id TEXT PRIMARY KEY, clientId TEXT NOT NULL, professionalId TEXT NOT NULL, serviceId TEXT NOT NULL, inicioUtc TEXT NOT NULL, finUtc TEXT NOT NULL, estado TEXT NOT NULL, origen TEXT NOT NULL, precioCentavos INTEGER NOT NULL, creadaPor TEXT NOT NULL, historial TEXT NOT NULL DEFAULT '[]', _seed INTEGER DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, canal TEXT NOT NULL, clienteRef TEXT, estado TEXT NOT NULL, escaladaA TEXT, actualizadaEn TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, conversationId TEXT NOT NULL, rol TEXT NOT NULL, texto TEXT NOT NULL, herramientaUsada TEXT, enviadoEn TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, passwordHash TEXT NOT NULL, nombre TEXT NOT NULL, rol TEXT NOT NULL DEFAULT 'admin');
-    CREATE INDEX IF NOT EXISTS idx_appt_prof_fecha ON appointments (professionalId, inicioUtc);
-    CREATE INDEX IF NOT EXISTS idx_appt_cliente ON appointments (clientId);
-  `)
+    if (fs.existsSync(saPath)) {
+      const sa = JSON.parse(fs.readFileSync(saPath, 'utf-8'))
+      app = initializeApp({ credential: cert(sa), projectId })
+    } else {
+      app = initializeApp({ projectId })
+    }
+  } else {
+    app = getApps()[0]
+  }
+
+  const db = getFirestore(app)
+  db.settings({ ignoreUndefinedProperties: true })
 
   // 1. Settings / Business
   const businessConfig = {
+    id: 'business',
     nombre: 'Casa Malva',
     bajada: 'Estudio de belleza',
     horario: {
@@ -51,55 +63,50 @@ async function runSeed() {
       recordatorioHoras: 24,
       umbralConfirmacionCentavos: 20000000,
     },
+    _seed: true,
   }
-  const stmtSettings = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
-  stmtSettings.run('business', JSON.stringify(businessConfig))
-  console.log('  ✓ settings/business creado/actualizado')
+  await db.collection('settings').doc('business').set(businessConfig)
+  console.log('  ✓ settings/business creado')
 
   // 2. Categorías (4)
   const categories = [
-    { id: 'cat_unas', nombre: 'Uñas', orden: 1, activa: 1 },
-    { id: 'cat_cabello', nombre: 'Cabello', orden: 2, activa: 1 },
-    { id: 'cat_maquillaje', nombre: 'Maquillaje', orden: 3, activa: 1 },
-    { id: 'cat_cejas', nombre: 'Cejas y pestañas', orden: 4, activa: 1 },
+    { id: 'cat_unas', nombre: 'Uñas', orden: 1, activa: true, _seed: true },
+    { id: 'cat_cabello', nombre: 'Cabello', orden: 2, activa: true, _seed: true },
+    { id: 'cat_maquillaje', nombre: 'Maquillaje', orden: 3, activa: true, _seed: true },
+    { id: 'cat_cejas', nombre: 'Cejas y pestañas', orden: 4, activa: true, _seed: true },
   ]
-  const stmtCat = db.prepare('INSERT OR REPLACE INTO categories (id, nombre, orden, activa) VALUES (?, ?, ?, ?)')
   for (const cat of categories) {
-    stmtCat.run(cat.id, cat.nombre, cat.orden, cat.activa)
+    await db.collection('categories').doc(cat.id).set(cat)
   }
-  console.log(`  ✓ ${categories.length} categorías creadas/actualizadas`)
+  console.log(`  ✓ ${categories.length} categorías creadas`)
 
   // 3. Servicios (16)
   const services = [
     // Uñas
-    { id: 'srv_manicure_trad', categoryId: 'cat_unas', nombre: 'Manicure tradicional', duracionMin: 40, bufferMin: 10, precioCentavos: 2800000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_manicure_semi', categoryId: 'cat_unas', nombre: 'Manicure semipermanente', duracionMin: 60, bufferMin: 10, precioCentavos: 5500000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_pedicure_spa', categoryId: 'cat_unas', nombre: 'Pedicure spa', duracionMin: 60, bufferMin: 15, precioCentavos: 4500000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_unas_acrilicas', categoryId: 'cat_unas', nombre: 'Uñas acrílicas', duracionMin: 120, bufferMin: 15, precioCentavos: 13000000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_retiro_semi', categoryId: 'cat_unas', nombre: 'Retiro de semipermanente', duracionMin: 30, bufferMin: 10, precioCentavos: 2000000, requiereConfirmacion: 0, activo: 1 },
+    { id: 'srv_manicure_trad', categoryId: 'cat_unas', nombre: 'Manicure tradicional', duracionMin: 40, bufferMin: 10, precioCentavos: 2800000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_manicure_semi', categoryId: 'cat_unas', nombre: 'Manicure semipermanente', duracionMin: 60, bufferMin: 10, precioCentavos: 5500000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_pedicure_spa', categoryId: 'cat_unas', nombre: 'Pedicure spa', duracionMin: 60, bufferMin: 15, precioCentavos: 4500000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_unas_acrilicas', categoryId: 'cat_unas', nombre: 'Uñas acrílicas', duracionMin: 120, bufferMin: 15, precioCentavos: 13000000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_retiro_semi', categoryId: 'cat_unas', nombre: 'Retiro de semipermanente', duracionMin: 30, bufferMin: 10, precioCentavos: 2000000, requiereConfirmacion: false, activo: true, _seed: true },
     // Cabello
-    { id: 'srv_corte_peinado', categoryId: 'cat_cabello', nombre: 'Corte y peinado', duracionMin: 60, bufferMin: 10, precioCentavos: 6500000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_cepillado', categoryId: 'cat_cabello', nombre: 'Cepillado', duracionMin: 45, bufferMin: 10, precioCentavos: 3800000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_hidratacion', categoryId: 'cat_cabello', nombre: 'Hidratación profunda', duracionMin: 60, bufferMin: 10, precioCentavos: 8500000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_color_raiz', categoryId: 'cat_cabello', nombre: 'Color de raíz', duracionMin: 120, bufferMin: 15, precioCentavos: 18000000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_balayage', categoryId: 'cat_cabello', nombre: 'Balayage', duracionMin: 240, bufferMin: 20, precioCentavos: 42000000, requiereConfirmacion: 1, activo: 1 },
-    { id: 'srv_keratina', categoryId: 'cat_cabello', nombre: 'Keratina', duracionMin: 180, bufferMin: 20, precioCentavos: 29000000, requiereConfirmacion: 1, activo: 1 },
+    { id: 'srv_corte_peinado', categoryId: 'cat_cabello', nombre: 'Corte y peinado', duracionMin: 60, bufferMin: 10, precioCentavos: 6500000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_cepillado', categoryId: 'cat_cabello', nombre: 'Cepillado', duracionMin: 45, bufferMin: 10, precioCentavos: 3800000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_hidratacion', categoryId: 'cat_cabello', nombre: 'Hidratación profunda', duracionMin: 60, bufferMin: 10, precioCentavos: 8500000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_color_raiz', categoryId: 'cat_cabello', nombre: 'Color de raíz', duracionMin: 120, bufferMin: 15, precioCentavos: 18000000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_balayage', categoryId: 'cat_cabello', nombre: 'Balayage', duracionMin: 240, bufferMin: 20, precioCentavos: 42000000, requiereConfirmacion: true, activo: true, _seed: true },
+    { id: 'srv_keratina', categoryId: 'cat_cabello', nombre: 'Keratina', duracionMin: 180, bufferMin: 20, precioCentavos: 29000000, requiereConfirmacion: true, activo: true, _seed: true },
     // Maquillaje
-    { id: 'srv_maq_social', categoryId: 'cat_maquillaje', nombre: 'Maquillaje social', duracionMin: 60, bufferMin: 10, precioCentavos: 11000000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_maq_novia', categoryId: 'cat_maquillaje', nombre: 'Maquillaje de novia', duracionMin: 120, bufferMin: 20, precioCentavos: 32000000, requiereConfirmacion: 1, activo: 1 },
+    { id: 'srv_maq_social', categoryId: 'cat_maquillaje', nombre: 'Maquillaje social', duracionMin: 60, bufferMin: 10, precioCentavos: 11000000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_maq_novia', categoryId: 'cat_maquillaje', nombre: 'Maquillaje de novia', duracionMin: 120, bufferMin: 20, precioCentavos: 32000000, requiereConfirmacion: true, activo: true, _seed: true },
     // Cejas y pestañas
-    { id: 'srv_diseno_cejas', categoryId: 'cat_cejas', nombre: 'Diseño de cejas', duracionMin: 30, bufferMin: 5, precioCentavos: 3500000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_laminado_cejas', categoryId: 'cat_cejas', nombre: 'Laminado de cejas', duracionMin: 60, bufferMin: 10, precioCentavos: 9500000, requiereConfirmacion: 0, activo: 1 },
-    { id: 'srv_lifting_pestanas', categoryId: 'cat_cejas', nombre: 'Lifting de pestañas', duracionMin: 75, bufferMin: 10, precioCentavos: 13000000, requiereConfirmacion: 0, activo: 1 },
+    { id: 'srv_diseno_cejas', categoryId: 'cat_cejas', nombre: 'Diseño de cejas', duracionMin: 30, bufferMin: 5, precioCentavos: 3500000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_laminado_cejas', categoryId: 'cat_cejas', nombre: 'Laminado de cejas', duracionMin: 60, bufferMin: 10, precioCentavos: 9500000, requiereConfirmacion: false, activo: true, _seed: true },
+    { id: 'srv_lifting_pestanas', categoryId: 'cat_cejas', nombre: 'Lifting de pestañas', duracionMin: 75, bufferMin: 10, precioCentavos: 13000000, requiereConfirmacion: false, activo: true, _seed: true },
   ]
-
-  const stmtSvc = db.prepare(
-    'INSERT OR REPLACE INTO services (id, categoryId, nombre, duracionMin, bufferMin, precioCentavos, requiereConfirmacion, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-  )
   for (const srv of services) {
-    stmtSvc.run(srv.id, srv.categoryId, srv.nombre, srv.duracionMin, srv.bufferMin, srv.precioCentavos, srv.requiereConfirmacion, srv.activo)
+    await db.collection('services').doc(srv.id).set(srv)
   }
-  console.log(`  ✓ ${services.length} servicios creados/actualizados`)
+  console.log(`  ✓ ${services.length} servicios creados`)
 
   // 4. Profesionales (4)
   const professionals = [
@@ -107,46 +114,47 @@ async function runSeed() {
       id: 'pro_valentina',
       nombre: 'Valentina Ruiz',
       rol: 'Manicurista sénior',
-      serviceIds: JSON.stringify(['srv_manicure_trad', 'srv_manicure_semi', 'srv_pedicure_spa', 'srv_unas_acrilicas', 'srv_retiro_semi']),
-      horario: JSON.stringify({ 1: [9, 18], 2: [9, 18], 3: [9, 18], 4: [9, 18], 5: [9, 18], 6: [9, 18] }),
-      excepciones: JSON.stringify([]),
-      activo: 1,
+      serviceIds: ['srv_manicure_trad', 'srv_manicure_semi', 'srv_pedicure_spa', 'srv_unas_acrilicas', 'srv_retiro_semi'],
+      horario: { 1: [9, 18], 2: [9, 18], 3: [9, 18], 4: [9, 18], 5: [9, 18], 6: [9, 18] },
+      excepciones: [],
+      activo: true,
+      _seed: true,
     },
     {
       id: 'pro_daniela',
       nombre: 'Daniela Ospina',
       rol: 'Estilista sénior',
-      serviceIds: JSON.stringify(['srv_corte_peinado', 'srv_cepillado', 'srv_hidratacion', 'srv_color_raiz', 'srv_balayage', 'srv_keratina']),
-      horario: JSON.stringify({ 2: [10, 19], 3: [10, 19], 4: [10, 19], 5: [10, 19], 6: [10, 19] }),
-      excepciones: JSON.stringify([]),
-      activo: 1,
+      serviceIds: ['srv_corte_peinado', 'srv_cepillado', 'srv_hidratacion', 'srv_color_raiz', 'srv_balayage', 'srv_keratina'],
+      horario: { 2: [10, 19], 3: [10, 19], 4: [10, 19], 5: [10, 19], 6: [10, 19] },
+      excepciones: [],
+      activo: true,
+      _seed: true,
     },
     {
       id: 'pro_sara',
       nombre: 'Sara Jaramillo',
       rol: 'Estilista y maquilladora',
-      serviceIds: JSON.stringify(['srv_corte_peinado', 'srv_cepillado', 'srv_hidratacion', 'srv_maq_social', 'srv_maq_novia']),
-      horario: JSON.stringify({ 1: [9, 18], 2: [9, 18], 3: [9, 18], 4: [9, 18], 5: [9, 18] }),
-      excepciones: JSON.stringify([]),
-      activo: 1,
+      serviceIds: ['srv_corte_peinado', 'srv_cepillado', 'srv_hidratacion', 'srv_maq_social', 'srv_maq_novia'],
+      horario: { 1: [9, 18], 2: [9, 18], 3: [9, 18], 4: [9, 18], 5: [9, 18] },
+      excepciones: [],
+      activo: true,
+      _seed: true,
     },
     {
       id: 'pro_camila',
       nombre: 'Camila Restrepo',
       rol: 'Especialista en cejas y pestañas',
-      serviceIds: JSON.stringify(['srv_diseno_cejas', 'srv_laminado_cejas', 'srv_lifting_pestanas', 'srv_manicure_trad']),
-      horario: JSON.stringify({ 1: [11, 19], 2: [11, 19], 3: [11, 19], 4: [11, 19], 5: [11, 19], 6: [11, 19] }),
-      excepciones: JSON.stringify([]),
-      activo: 1,
+      serviceIds: ['srv_diseno_cejas', 'srv_laminado_cejas', 'srv_lifting_pestanas', 'srv_manicure_trad'],
+      horario: { 1: [11, 19], 2: [11, 19], 3: [11, 19], 4: [11, 19], 5: [11, 19], 6: [11, 19] },
+      excepciones: [],
+      activo: true,
+      _seed: true,
     },
   ]
-  const stmtProf = db.prepare(
-    'INSERT OR REPLACE INTO professionals (id, nombre, rol, serviceIds, horario, excepciones, activo) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  )
   for (const prof of professionals) {
-    stmtProf.run(prof.id, prof.nombre, prof.rol, prof.serviceIds, prof.horario, prof.excepciones, prof.activo)
+    await db.collection('professionals').doc(prof.id).set(prof)
   }
-  console.log(`  ✓ ${professionals.length} profesionales creadas/actualizadas`)
+  console.log(`  ✓ ${professionals.length} profesionales creadas`)
 
   // 5. Clientas (3)
   const clients = [
@@ -157,7 +165,7 @@ async function runSeed() {
       email: 'maria.gomez@gmail.com',
       notas: 'Preferencias: tonos neutros y pastel',
       creadaEn: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
-      _seed: 1,
+      _seed: true,
     },
     {
       id: 'cli_luisa_martinez',
@@ -166,7 +174,7 @@ async function runSeed() {
       email: 'luisa.martinez@gmail.com',
       notas: 'Sensibilidad leve a amoníaco',
       creadaEn: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
-      _seed: 1,
+      _seed: true,
     },
     {
       id: 'cli_carolina_perez',
@@ -175,16 +183,13 @@ async function runSeed() {
       email: 'carolina.perez@gmail.com',
       notas: 'Clienta frecuente de cejas',
       creadaEn: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
-      _seed: 1,
+      _seed: true,
     },
   ]
-  const stmtCli = db.prepare(
-    'INSERT OR REPLACE INTO clients (id, nombre, telefonoE164, email, notas, creadaEn, _seed) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  )
   for (const cli of clients) {
-    stmtCli.run(cli.id, cli.nombre, cli.telefonoE164, cli.email, cli.notas, cli.creadaEn, cli._seed)
+    await db.collection('clients').doc(cli.id).set(cli)
   }
-  console.log(`  ✓ ${clients.length} clientas creadas/actualizadas`)
+  console.log(`  ✓ ${clients.length} clientas creadas`)
 
   // 6. Citas Semilla (7)
   const now = new Date()
@@ -211,12 +216,13 @@ async function runSeed() {
       origen: 'web',
       precioCentavos: 5500000,
       creadaPor: 'cli_maria_fernanda',
-      historial: JSON.stringify([
+      googleEventId: null,
+      historial: [
         { estado: 'agendada', fechaUtc: makeUtcString(threeDaysAgo, 8, 0), nota: 'Agendada en línea' },
         { estado: 'confirmada', fechaUtc: makeUtcString(threeDaysAgo, 9, 0), nota: 'Confirmada por cliente' },
         { estado: 'completada', fechaUtc: makeUtcString(threeDaysAgo, 11, 5), nota: 'Servicio realizado' },
-      ]),
-      _seed: 1,
+      ],
+      _seed: true,
     },
     {
       id: 'apt_past_2',
@@ -229,11 +235,12 @@ async function runSeed() {
       origen: 'whatsapp',
       precioCentavos: 6500000,
       creadaPor: 'agente_ia',
-      historial: JSON.stringify([
+      googleEventId: null,
+      historial: [
         { estado: 'agendada', fechaUtc: makeUtcString(fourDaysAgo, 10, 0), nota: 'Agendada via WhatsApp' },
         { estado: 'completada', fechaUtc: makeUtcString(fourDaysAgo, 15, 0), nota: 'Servicio realizado' },
-      ]),
-      _seed: 1,
+      ],
+      _seed: true,
     },
     {
       id: 'apt_past_3',
@@ -246,11 +253,12 @@ async function runSeed() {
       origen: 'admin',
       precioCentavos: 9500000,
       creadaPor: 'recepcion',
-      historial: JSON.stringify([
+      googleEventId: null,
+      historial: [
         { estado: 'agendada', fechaUtc: makeUtcString(yesterday, 9, 0), nota: 'Agendada en recepción' },
         { estado: 'completada', fechaUtc: makeUtcString(yesterday, 12, 0), nota: 'Servicio realizado' },
-      ]),
-      _seed: 1,
+      ],
+      _seed: true,
     },
     {
       id: 'apt_cancelled_1',
@@ -263,11 +271,12 @@ async function runSeed() {
       origen: 'web',
       precioCentavos: 11000000,
       creadaPor: 'cli_luisa_martinez',
-      historial: JSON.stringify([
+      googleEventId: null,
+      historial: [
         { estado: 'agendada', fechaUtc: makeUtcString(yesterday, 8, 0), nota: 'Agendada web' },
         { estado: 'cancelada', fechaUtc: makeUtcString(yesterday, 14, 0), nota: 'Cancelada por el cliente' },
-      ]),
-      _seed: 1,
+      ],
+      _seed: true,
     },
     {
       id: 'apt_noshow_1',
@@ -280,11 +289,12 @@ async function runSeed() {
       origen: 'whatsapp',
       precioCentavos: 4500000,
       creadaPor: 'agente_ia',
-      historial: JSON.stringify([
+      googleEventId: null,
+      historial: [
         { estado: 'agendada', fechaUtc: makeUtcString(yesterday, 10, 0), nota: 'Agendada por WhatsApp' },
         { estado: 'no_asistio', fechaUtc: makeUtcString(yesterday, 17, 0), nota: 'No se presentó a la cita' },
-      ]),
-      _seed: 1,
+      ],
+      _seed: true,
     },
     {
       id: 'apt_future_1',
@@ -297,11 +307,12 @@ async function runSeed() {
       origen: 'whatsapp',
       precioCentavos: 18000000,
       creadaPor: 'agente_ia',
-      historial: JSON.stringify([
+      googleEventId: null,
+      historial: [
         { estado: 'agendada', fechaUtc: new Date().toISOString(), nota: 'Agendada en línea' },
         { estado: 'confirmada', fechaUtc: new Date().toISOString(), nota: 'Confirmada con anticipo' },
-      ]),
-      _seed: 1,
+      ],
+      _seed: true,
     },
     {
       id: 'apt_future_2',
@@ -314,47 +325,55 @@ async function runSeed() {
       origen: 'web',
       precioCentavos: 2800000,
       creadaPor: 'cli_carolina_perez',
-      historial: JSON.stringify([
+      googleEventId: null,
+      historial: [
         { estado: 'agendada', fechaUtc: new Date().toISOString(), nota: 'Agendada por la clienta' },
-      ]),
-      _seed: 1,
+      ],
+      _seed: true,
     },
   ]
-  const stmtApt = db.prepare(
-    'INSERT OR REPLACE INTO appointments (id, clientId, professionalId, serviceId, inicioUtc, finUtc, estado, origen, precioCentavos, creadaPor, historial, _seed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-  )
+
   for (const apt of appointments) {
-    stmtApt.run(
-      apt.id,
-      apt.clientId,
-      apt.professionalId,
-      apt.serviceId,
-      apt.inicioUtc,
-      apt.finUtc,
-      apt.estado,
-      apt.origen,
-      apt.precioCentavos,
-      apt.creadaPor,
-      apt.historial,
-      apt._seed
-    )
+    await db.collection('appointments').doc(apt.id).set(apt)
+
+    // Crear slots deterministas solo para citas activas futuras
+    if (apt.estado === 'agendada' || apt.estado === 'confirmada') {
+      const srv = services.find((s) => s.id === apt.serviceId)
+      const durTotalMin = (srv?.duracionMin || 40) + (srv?.bufferMin || 10)
+      const franjas = calcularFranjasSlot(apt.inicioUtc, durTotalMin, 15)
+      for (const franja of franjas) {
+        const slotId = `${apt.professionalId}_${franja}`
+        await db.collection('slots').doc(slotId).set({
+          id: slotId,
+          appointmentId: apt.id,
+          professionalId: apt.professionalId,
+          inicioUtc: franja,
+          creadoEn: new Date().toISOString(),
+          _seed: true,
+        })
+      }
+    }
   }
-  console.log(`  ✓ ${appointments.length} citas semilla creadas/actualizadas`)
+  console.log(`  ✓ ${appointments.length} citas semilla y sus slots creados`)
 
   // 7. Usuario Admin
   const adminEmail = 'admin@casamalva.co'
   const adminPass = 'admin123'
   const passwordHash = hashPassword(adminPass)
-  const stmtUser = db.prepare(
-    'INSERT OR REPLACE INTO users (id, email, passwordHash, nombre, rol) VALUES (?, ?, ?, ?, ?)'
-  )
-  stmtUser.run('usr_admin_1', adminEmail, passwordHash, 'Dueña Casa Malva', 'admin')
-  console.log(`  ✓ Usuario admin creado/actualizado: ${adminEmail} (password: ${adminPass})`)
+  await db.collection('users').doc('usr_admin_1').set({
+    id: 'usr_admin_1',
+    email: adminEmail,
+    passwordHash,
+    nombre: 'Dueña Casa Malva',
+    rol: 'admin',
+    _seed: true,
+  })
+  console.log(`  ✓ Usuario admin creado: ${adminEmail}`)
 
-  console.log('\n✅ Seed local completado exitosamente en casa-malva.db.')
+  console.log('\n✅ Seed en Cloud Firestore completado exitosamente.')
 }
 
 runSeed().catch((err) => {
-  console.error('❌ Error en seed:', err)
+  console.error('❌ Error en seed de Firestore:', err)
   process.exit(1)
 })

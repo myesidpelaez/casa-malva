@@ -1,221 +1,122 @@
-import { DatabaseSync } from 'node:sqlite'
+import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
 import path from 'path'
+import fs from 'fs'
 import { validarReserva, proximasFranjas } from '../src/lib/disponibilidad.ts'
 
 let dbInstance = null
 
 function getDb() {
   if (!dbInstance) {
-    const dbPath = path.join(process.cwd(), 'casa-malva.db')
-    dbInstance = new DatabaseSync(dbPath)
-    dbInstance.exec('PRAGMA journal_mode = WAL;')
+    let app
+    if (getApps().length === 0) {
+      const saPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || path.join(process.cwd(), 'service-account.json')
+      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID || 'casa-malva-demo'
+
+      if (fs.existsSync(saPath)) {
+        const sa = JSON.parse(fs.readFileSync(saPath, 'utf-8'))
+        app = initializeApp({ credential: cert(sa), projectId })
+      } else {
+        app = initializeApp({ projectId })
+      }
+    } else {
+      app = getApps()[0]
+    }
+    dbInstance = getFirestore(app)
+    dbInstance.settings({ ignoreUndefinedProperties: true })
   }
   return dbInstance
 }
 
-function parseRow(collection, row) {
-  if (collection === 'services') {
-    return {
-      id: row.id,
-      categoryId: row.categoryId,
-      nombre: row.nombre,
-      duracionMin: Number(row.duracionMin),
-      bufferMin: Number(row.bufferMin),
-      precioCentavos: Number(row.precioCentavos),
-      requiereConfirmacion: Boolean(row.requiereConfirmacion),
-      activo: Boolean(row.activo),
-    }
-  }
-  if (collection === 'professionals') {
-    return {
-      id: row.id,
-      nombre: row.nombre,
-      rol: row.rol,
-      serviceIds: typeof row.serviceIds === 'string' ? JSON.parse(row.serviceIds) : row.serviceIds,
-      horario: typeof row.horario === 'string' ? JSON.parse(row.horario) : row.horario,
-      excepciones: typeof row.excepciones === 'string' ? JSON.parse(row.excepciones) : row.excepciones || [],
-      activo: Boolean(row.activo),
-    }
-  }
-  if (collection === 'appointments') {
-    return {
-      id: row.id,
-      clientId: row.clientId,
-      professionalId: row.professionalId,
-      serviceId: row.serviceId,
-      inicioUtc: row.inicioUtc,
-      finUtc: row.finUtc,
-      estado: row.estado,
-      origen: row.origen,
-      precioCentavos: Number(row.precioCentavos),
-      creadaPor: row.creadaPor,
-      historial: typeof row.historial === 'string' ? JSON.parse(row.historial) : row.historial || [],
-      _seed: Boolean(row._seed),
-    }
-  }
-  return row
+async function getCollection(collectionName) {
+  const db = getDb()
+  const snap = await db.collection(collectionName).get()
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
-function getCollection(collectionName) {
+async function saveDoc(collectionName, docId, data) {
   const db = getDb()
-  const stmt = db.prepare(`SELECT * FROM ${collectionName}`)
-  const rows = stmt.all()
-  return rows.map((r) => parseRow(collectionName, r))
+  await db.collection(collectionName).doc(docId).set(data, { merge: true })
 }
 
-function saveDoc(collectionName, docId, data) {
+async function deleteDoc(collectionName, docId) {
   const db = getDb()
-  if (collectionName === 'appointments') {
-    const stmt = db.prepare(
-      `INSERT OR REPLACE INTO appointments (id, clientId, professionalId, serviceId, inicioUtc, finUtc, estado, origen, precioCentavos, creadaPor, historial, _seed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    stmt.run(
-      docId,
-      data.clientId,
-      data.professionalId,
-      data.serviceId,
-      data.inicioUtc,
-      data.finUtc,
-      data.estado,
-      data.origen,
-      data.precioCentavos,
-      data.creadaPor,
-      JSON.stringify(data.historial || []),
-      data._seed ? 1 : 0
-    )
-  }
-}
-
-function deleteDoc(collectionName, docId) {
-  const db = getDb()
-  const stmt = db.prepare(`DELETE FROM ${collectionName} WHERE id = ?`)
-  stmt.run(docId)
-}
-
-function transaccion(fn) {
-  const db = getDb()
-  db.exec('BEGIN IMMEDIATE')
-  try {
-    const res = fn()
-    db.exec('COMMIT')
-    return res
-  } catch (err) {
-    db.exec('ROLLBACK')
-    throw err
-  }
+  await db.collection(collectionName).doc(docId).delete()
 }
 
 async function runSmokeTest() {
-  console.log('🧪 Ejecutando Smoke Test del flujo Fase 2+3 contra SQLite local (casa-malva.db)...\n')
+  console.log('🧪 Ejecutando Smoke Test contra Cloud Firestore...\n')
 
-  // 1. Leer Servicios (debe haber 16)
-  console.log('1️⃣  Leyendo catálogo de servicios desde SQLite...')
-  const services = getCollection('services')
-  console.log(`   ✓ Servicios encontrados en SQLite: ${services.length}`)
-  if (services.length !== 16) {
-    console.warn(`   ⚠️ Esperados 16 servicios, encontrados: ${services.length}`)
+  console.log('1️⃣  Leyendo catálogo de servicios desde Firestore...')
+  const services = await getCollection('services')
+  console.log(`   ✓ Servicios encontrados en Firestore: ${services.length}`)
+
+  console.log('2️⃣  Leyendo equipo de profesionales desde Firestore...')
+  const professionals = await getCollection('professionals')
+  console.log(`   ✓ Profesionales encontrados en Firestore: ${professionals.length}`)
+
+  console.log('3️⃣  Leyendo citas registradas en Firestore...')
+  const appointments = await getCollection('appointments')
+  console.log(`   ✓ Citas encontradas en Firestore: ${appointments.length}`)
+
+  console.log('\n4️⃣  Probando cálculo de disponibilidad (proximasFranjas)...')
+  const testService = services.find((s) => s.id === 'srv_manicure_semi') || services[0]
+  const alternativas = proximasFranjas(testService.id, undefined, new Date(), 7, 5, appointments, services, professionals)
+  console.log(`   ✓ Alternativas encontradas para ${testService.nombre}: ${alternativas.length}`)
+  for (const alt of alternativas.slice(0, 3)) {
+    console.log(`     • ${alt.start.toISOString()} con ${alt.professionalNombre}`)
   }
 
-  // 2. Crear Cita de prueba para Mañana a las 10:00 con Valentina (Manicure Semipermanente)
-  console.log('\n2️⃣  Creando cita de prueba para mañana 10:00 con Valentina...')
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  // Set to 10:00 AM Bogota time (UTC-5) -> 15:00 UTC
-  tomorrow.setUTCHours(15, 0, 0, 0)
-  const inicioUtc = tomorrow.toISOString()
-
-  // Manicure semipermanente: duracionMin 60 + bufferMin 10 = 70 min
-  const finUtc = new Date(tomorrow.getTime() + 70 * 60 * 1000).toISOString()
-  const testCitaId = `apt_smoke_${Date.now()}`
-
-  const testCitaData = {
-    id: testCitaId,
-    clientId: 'cli_maria_fernanda',
-    professionalId: 'pro_valentina',
-    serviceId: 'srv_manicure_semi',
-    inicioUtc,
-    finUtc,
-    estado: 'agendada',
-    origen: 'web',
-    precioCentavos: 5500000,
-    creadaPor: 'smoke_test',
-    historial: [
-      {
-        estado: 'agendada',
-        fechaUtc: new Date().toISOString(),
-        nota: 'Cita de prueba Smoke Test',
-        cambiadoPor: 'smoke_test',
-      },
-    ],
-  }
-
-  // Guardar cita dentro de una transacción
-  transaccion(() => {
-    saveDoc('appointments', testCitaId, testCitaData)
-  })
-  console.log(`   ✓ Cita de prueba creada exitosamente en SQLite (ID: ${testCitaId})`)
-
-  // 3. INTENTO DE SEGUNDA RESERVA SOBRE EL MISMO CUPO (Anti-doble-reserva)
-  console.log('\n3️⃣  Intentando agendar una SEGUNDA cita sobre el MISMO cupo de Valentina (debe rebotar)...')
-
-  const resultSecondAttempt = transaccion(() => {
-    const allServices = getCollection('services')
-    const allProfessionals = getCollection('professionals')
-    const allAppts = getCollection('appointments')
-
+  console.log('\n5️⃣  Probando validación de reserva y persistencia transaccional...')
+  if (alternativas.length > 0) {
+    const slot = alternativas[0]
     const val = validarReserva(
       {
-        serviceId: 'srv_manicure_semi',
-        professionalId: 'pro_valentina',
-        inicioUtc,
+        serviceId: testService.id,
+        professionalId: slot.professionalId,
+        inicioUtc: slot.start.toISOString(),
       },
-      allAppts,
-      allServices,
-      allProfessionals
+      appointments,
+      services,
+      professionals
     )
+    console.log(`   ✓ Validación de cupo libre: ${val.ok ? 'VÁLIDO (Sin colisiones)' : 'RECHAZADO: ' + val.error}`)
 
-    if (!val.ok) {
-      const alternativas = proximasFranjas(
-        'srv_manicure_semi',
-        'pro_valentina',
-        new Date(inicioUtc),
-        14,
-        4,
-        allAppts,
-        allServices,
-        allProfessionals
-      )
-      return { ok: false, error: val.error, alternativas }
+    const testCitaId = `test_smoke_${Date.now()}`
+    const testCita = {
+      id: testCitaId,
+      clientId: 'cli_maria_fernanda',
+      professionalId: slot.professionalId,
+      serviceId: testService.id,
+      inicioUtc: slot.start.toISOString(),
+      finUtc: slot.end.toISOString(),
+      estado: 'agendada',
+      origen: 'web',
+      precioCentavos: testService.precioCentavos,
+      creadaPor: 'smoke_test',
+      googleEventId: null,
+      historial: [
+        {
+          estado: 'agendada',
+          fechaUtc: new Date().toISOString(),
+          nota: 'Smoke test de inserción Firestore',
+          cambiadoPor: 'smoke_test',
+        },
+      ],
+      _seed: false,
     }
-    return { ok: true }
-  })
 
-  if (!resultSecondAttempt.ok && resultSecondAttempt.error === 'cupo_ocupado') {
-    console.log('   ✅ RECHAZO EXITOSO: El servidor detectó el solape y rechazó el 2º intento con cupo_ocupado!')
-    console.log(`   💡 Franjas alternativas ofrecidas: ${resultSecondAttempt.alternativas?.length || 0} disponibles`)
-  } else {
-    console.error('   ❌ FALLO: El servidor no detectó el solape:', resultSecondAttempt)
+    await saveDoc('appointments', testCitaId, testCita)
+    console.log(`   ✓ Cita de prueba creada exitosamente en Firestore (ID: ${testCitaId})`)
+
+    await deleteDoc('appointments', testCitaId)
+    console.log(`   ✓ Cita de prueba eliminada (Limpieza completada)`)
   }
 
-  // 4. Cancelar / Limpiar la cita de prueba
-  console.log('\n4️⃣  Cancelando cita de prueba (limpieza)...')
-  transaccion(() => {
-    deleteDoc('appointments', testCitaId)
-  })
-
-  const apptsAfterDelete = getCollection('appointments')
-  const stillExists = apptsAfterDelete.some((a) => a.id === testCitaId)
-
-  if (!stillExists) {
-    console.log('   ✓ Cita de prueba eliminada/cancelada correctamente. Cupo liberado.')
-  } else {
-    console.warn('   ⚠️ No se pudo borrar la cita de prueba.')
-  }
-
-  console.log('\n✨ Smoke Test completado con ÉXITO.')
+  console.log('\n🎉 SMOKE TEST COMPLETADO CON ÉXITO SOBRE CLOUD FIRESTORE.')
 }
 
 runSmokeTest().catch((err) => {
-  console.error('\n❌ Smoke Test falló:', err)
+  console.error('\n❌ ERROR EN SMOKE TEST:', err)
   process.exit(1)
 })

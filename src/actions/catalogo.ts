@@ -1,6 +1,7 @@
 'use server'
 
 import { docGet, docSet, getCategories, getServices } from '@/lib/db'
+import { withAuth } from '@/lib/withAuth'
 import type { Category, Service } from '@/types'
 import type { SlotInfo } from '@/lib/disponibilidad'
 
@@ -8,9 +9,12 @@ export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string; alternativas?: SlotInfo[] }
 
+/**
+ * Consulta pública de categorías activas
+ */
 export async function getCategoriesAction(): Promise<ActionResult<Category[]>> {
   try {
-    const cats = getCategories()
+    const cats = await getCategories()
     return { ok: true, data: cats }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Error al obtener categorías'
@@ -18,9 +22,12 @@ export async function getCategoriesAction(): Promise<ActionResult<Category[]>> {
   }
 }
 
+/**
+ * Consulta pública del catálogo de servicios
+ */
 export async function getServicesAction(): Promise<ActionResult<Service[]>> {
   try {
-    const svcs = getServices()
+    const svcs = await getServices()
     return { ok: true, data: svcs }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Error al obtener servicios'
@@ -28,12 +35,14 @@ export async function getServicesAction(): Promise<ActionResult<Service[]>> {
   }
 }
 
-export async function upsertCategoryAction(
-  categoryData: Partial<Category> & { id?: string }
-): Promise<ActionResult<Category>> {
-  try {
+/**
+ * Mutación administrativa de categorías (Protegida)
+ */
+export const upsertCategoryAction = withAuth<Category, [categoryData: Partial<Category> & { id?: string }]>(
+  ['admin'],
+  async (ctx, categoryData) => {
     const id = categoryData.id || `cat_${Date.now()}`
-    const existing = categoryData.id ? docGet<Category>('categories', categoryData.id) : null
+    const existing = categoryData.id ? await docGet<Category>('categories', categoryData.id) : null
 
     const category: Category = {
       id,
@@ -42,20 +51,19 @@ export async function upsertCategoryAction(
       activa: categoryData.activa ?? existing?.activa ?? true,
     }
 
-    docSet('categories', id, category as unknown as Record<string, unknown>)
-    return { ok: true, data: category }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al guardar categoría'
-    return { ok: false, error: errorMsg }
+    await docSet('categories', id, category as unknown as Record<string, unknown>)
+    return category
   }
-}
+)
 
-export async function upsertServiceAction(
-  serviceData: Partial<Service> & { id?: string }
-): Promise<ActionResult<Service>> {
-  try {
+/**
+ * Mutación administrativa de servicios y precios (Protegida)
+ */
+export const upsertServiceAction = withAuth<Service, [serviceData: Partial<Service> & { id?: string }]>(
+  ['admin'],
+  async (ctx, serviceData) => {
     const id = serviceData.id || `srv_${Date.now()}`
-    const existing = serviceData.id ? docGet<Service>('services', serviceData.id) : null
+    const existing = serviceData.id ? await docGet<Service>('services', serviceData.id) : null
 
     const service: Service = {
       id,
@@ -71,10 +79,7 @@ export async function upsertServiceAction(
       activo: serviceData.activo ?? existing?.activo ?? true,
     }
 
-    docSet('services', id, service as unknown as Record<string, unknown>)
-    return { ok: true, data: service }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al guardar servicio'
-    return { ok: false, error: errorMsg }
+    await docSet('services', id, service as unknown as Record<string, unknown>)
+    return service
   }
-}
+)

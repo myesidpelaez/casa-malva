@@ -3,7 +3,14 @@ import { cookies } from 'next/headers'
 import { getUserByEmail, UserRow } from './db'
 
 const SESSION_COOKIE_NAME = 'casamalva_session'
-const SESSION_SECRET = process.env.SESSION_SECRET || 'casamalva-local-secret-key-2026-xyz'
+
+function getSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET
+  if (!secret) {
+    throw new Error('Falta SESSION_SECRET en las variables de entorno. La aplicación no arranca sin él.')
+  }
+  return secret
+}
 
 export function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString('hex')
@@ -21,7 +28,7 @@ export function verifyPassword(password: string, storedHash: string): boolean {
 }
 
 function signPayload(payloadStr: string): string {
-  const hmac = crypto.createHmac('sha256', SESSION_SECRET)
+  const hmac = crypto.createHmac('sha256', getSessionSecret())
   hmac.update(payloadStr)
   return hmac.digest('hex')
 }
@@ -90,7 +97,7 @@ export async function destroySession(): Promise<void> {
 }
 
 export async function authenticateUser(email: string, pass: string): Promise<UserRow | null> {
-  const user = getUserByEmail(email)
+  const user = await getUserByEmail(email)
   if (!user) return null
   const isValid = verifyPassword(pass, user.passwordHash)
   if (!isValid) return null

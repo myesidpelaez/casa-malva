@@ -1,12 +1,16 @@
 'use server'
 
 import { docGet, docSet, getProfessionals } from '@/lib/db'
+import { withAuth } from '@/lib/withAuth'
 import type { Professional } from '@/types'
 import type { ActionResult } from './catalogo'
 
+/**
+ * Consulta de equipo profesional (Pública para agenda / wizard de reservas)
+ */
 export async function getProfessionalsAction(): Promise<ActionResult<Professional[]>> {
   try {
-    const profs = getProfessionals()
+    const profs = await getProfessionals()
     return { ok: true, data: profs }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Error al obtener profesionales'
@@ -14,11 +18,13 @@ export async function getProfessionalsAction(): Promise<ActionResult<Professiona
   }
 }
 
-export async function updateProfessionalAction(
-  profData: Partial<Professional> & { id: string }
-): Promise<ActionResult<Professional>> {
-  try {
-    const existing = docGet<Professional>('professionals', profData.id)
+/**
+ * Actualización de datos, horarios y servicios de profesional (Protegida)
+ */
+export const updateProfessionalAction = withAuth<Professional, [profData: Partial<Professional> & { id: string }]>(
+  ['admin'],
+  async (ctx, profData) => {
+    const existing = await docGet<Professional>('professionals', profData.id)
     if (!existing) {
       return { ok: false, error: 'Profesional no encontrada' }
     }
@@ -35,10 +41,7 @@ export async function updateProfessionalAction(
       activo: profData.activo ?? existing.activo,
     }
 
-    docSet('professionals', profData.id, updated as unknown as Record<string, unknown>)
-    return { ok: true, data: updated }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al actualizar profesional'
-    return { ok: false, error: errorMsg }
+    await docSet('professionals', profData.id, updated as unknown as Record<string, unknown>)
+    return updated
   }
-}
+)

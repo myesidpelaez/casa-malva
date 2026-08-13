@@ -2,9 +2,13 @@
 
 import { docGet, docSet, getAppointments, getClients } from '@/lib/db'
 import { normalizePhoneE164 } from '@/lib/utils'
+import { withAuth } from '@/lib/withAuth'
 import type { Appointment, Client } from '@/types'
 import type { ActionResult } from './catalogo'
 
+/**
+ * Registro / actualización de clienta por teléfono (Pública para flujo de reserva)
+ */
 export async function upsertClientePorTelefonoAction(
   nombre: string,
   telefonoRaw: string,
@@ -12,7 +16,7 @@ export async function upsertClientePorTelefonoAction(
 ): Promise<ActionResult<Client>> {
   try {
     const telefonoE164 = normalizePhoneE164(telefonoRaw)
-    const clients = getClients()
+    const clients = await getClients()
     const existing = clients.find((c) => c.telefonoE164 === telefonoE164)
 
     if (existing) {
@@ -21,7 +25,7 @@ export async function upsertClientePorTelefonoAction(
         nombre: nombre || existing.nombre,
         email: email || existing.email,
       }
-      docSet('clients', existing.id, updated as unknown as Record<string, unknown>)
+      await docSet('clients', existing.id, updated as unknown as Record<string, unknown>)
       return { ok: true, data: updated }
     }
 
@@ -34,7 +38,7 @@ export async function upsertClientePorTelefonoAction(
       creadaEn: new Date().toISOString(),
     }
 
-    docSet('clients', id, newClient as unknown as Record<string, unknown>)
+    await docSet('clients', id, newClient as unknown as Record<string, unknown>)
     return { ok: true, data: newClient }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Error al guardar información de la clienta'
@@ -42,32 +46,37 @@ export async function upsertClientePorTelefonoAction(
   }
 }
 
-export async function getClientsAction(): Promise<ActionResult<Client[]>> {
-  try {
-    const clients = getClients()
-    return { ok: true, data: clients }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al obtener clientas'
-    return { ok: false, error: errorMsg }
+/**
+ * Listado completo de clientas del CRM (Protegida: Admin y Recepción)
+ */
+export const getClientsAction = withAuth<Client[], []>(
+  ['admin', 'recepcion'],
+  async () => {
+    return await getClients()
   }
-}
+)
 
-export async function getClientDetailAction(clientId: string): Promise<
-  ActionResult<{
+/**
+ * Ficha detallada de clienta con historial y gasto total (Protegida: Admin y Recepción)
+ */
+export const getClientDetailAction = withAuth<
+  {
     client: Client
     appointments: Appointment[]
     totalSpentCentavos: number
     totalAppointments: number
     noShowCount: number
-  }>
-> {
-  try {
-    const client = docGet<Client>('clients', clientId)
+  },
+  [clientId: string]
+>(
+  ['admin', 'recepcion'],
+  async (ctx, clientId) => {
+    const client = await docGet<Client>('clients', clientId)
     if (!client) {
       return { ok: false, error: 'Clienta no encontrada' }
     }
 
-    const allAppointments = getAppointments()
+    const allAppointments = await getAppointments()
     const clientAppts = allAppointments
       .filter((a) => a.clientId === clientId)
       .sort((a, b) => new Date(b.inicioUtc).getTime() - new Date(a.inicioUtc).getTime())
@@ -79,17 +88,11 @@ export async function getClientDetailAction(clientId: string): Promise<
     const noShowCount = clientAppts.filter((a) => a.estado === 'no_asistio').length
 
     return {
-      ok: true,
-      data: {
-        client,
-        appointments: clientAppts,
-        totalSpentCentavos,
-        totalAppointments: clientAppts.length,
-        noShowCount,
-      },
+      client,
+      appointments: clientAppts,
+      totalSpentCentavos,
+      totalAppointments: clientAppts.length,
+      noShowCount,
     }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al obtener detalle de la clienta'
-    return { ok: false, error: errorMsg }
   }
-}
+)

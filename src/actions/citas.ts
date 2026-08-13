@@ -1,7 +1,17 @@
 'use server'
 
-import { docGet, docSet, getAppointments, getClients, getProfessionals, getServices, transaccion } from '@/lib/db'
+import {
+  docGet,
+  docSet,
+  getAppointments,
+  getClients,
+  getProfessionals,
+  getServices,
+  reservarCitaConSlots,
+  liberarSlotsCita,
+} from '@/lib/db'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
+import { withAuth } from '@/lib/withAuth'
 import {
   claveDia,
   franjasDisponibles,
@@ -26,114 +36,135 @@ export type CrearCitaInput = {
   creadaPor: string
 }
 
+/**
+ * Creación de cita con Anti-Doble-Reserva atómica en Cloud Firestore (Técnica de Slots)
+ */
 export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResult<Appointment>> {
   try {
-    return transaccion(() => {
-      const services = getServices()
-      const professionals = getProfessionals()
-      const allAppointments = getAppointments()
-      const clients = getClients()
+    const services = await getServices()
+    const professionals = await getProfessionals()
+    const allAppointments = await getAppointments()
+    const clients = await getClients()
 
-      const svc = services.find((s) => s.id === input.serviceId)
-      const prof = professionals.find((p) => p.id === input.professionalId)
+    const svc = services.find((s) => s.id === input.serviceId)
+    const prof = professionals.find((p) => p.id === input.professionalId)
 
-      if (!svc || !prof) {
-        return { ok: false, error: 'Servicio o profesional no encontrado en el sistema' }
+    if (!svc || !prof) {
+      return { ok: false, error: 'Servicio o profesional no encontrado en el sistema' }
+    }
+
+    const val = validarReserva(
+      {
+        serviceId: input.serviceId,
+        professionalId: input.professionalId,
+        inicioUtc: input.inicioUtc,
+      },
+      allAppointments,
+      services,
+      professionals
+    )
+
+    if (!val.ok) {
+      if (val.error === 'cupo_ocupado') {
+        const alternativas = proximasFranjas(
+          input.serviceId,
+          input.professionalId,
+          new Date(input.inicioUtc),
+          14,
+          4,
+          allAppointments,
+          services,
+          professionals
+        )
+        return { ok: false, error: 'cupo_ocupado', alternativas }
       }
+      return { ok: false, error: val.error || 'No fue posible agendar la cita' }
+    }
 
-      const val = validarReserva(
+    let resolvedClientId = input.clientId
+    if (!resolvedClientId && input.clienteTelefono) {
+      const phoneE164 = normalizePhoneE164(input.clienteTelefono)
+      const existingClient = clients.find((c) => c.telefonoE164 === phoneE164)
+      if (existingClient) {
+        resolvedClientId = existingClient.id
+      } else {
+        resolvedClientId = `cli_${Date.now()}`
+        const newClient: Client = {
+          id: resolvedClientId,
+          nombre: input.clienteNombre || 'Clienta',
+          telefonoE164: phoneE164,
+          email: input.clienteEmail || '',
+          creadaEn: new Date().toISOString(),
+        }
+        await docSet('clients', resolvedClientId, newClient as unknown as Record<string, unknown>)
+      }
+    }
+
+    if (!resolvedClientId) {
+      return { ok: false, error: 'Información de la clienta requerida (teléfono o ID)' }
+    }
+
+    const precioCentavos = svc.precioCentavos
+    const durTotalMin = svc.duracionMin + svc.bufferMin
+    const inicioDate = new Date(input.inicioUtc)
+    const finDate = new Date(inicioDate.getTime() + durTotalMin * 60 * 1000)
+
+    const requiereConfirmacion = svc.requiereConfirmacion || precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos
+    const estadoInicial: AppointmentState = requiereConfirmacion ? 'pendiente' : 'agendada'
+
+    const citaId = `apt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+    const nuevaCita: Appointment = {
+      id: citaId,
+      clientId: resolvedClientId,
+      professionalId: input.professionalId,
+      serviceId: input.serviceId,
+      inicioUtc: inicioDate.toISOString(),
+      finUtc: finDate.toISOString(),
+      estado: estadoInicial,
+      origen: input.origen,
+      precioCentavos,
+      creadaPor: input.creadaPor,
+      googleEventId: null,
+      historial: [
         {
-          serviceId: input.serviceId,
-          professionalId: input.professionalId,
-          inicioUtc: input.inicioUtc,
+          estado: estadoInicial,
+          fechaUtc: new Date().toISOString(),
+          nota: requiereConfirmacion ? 'Agendada (pendiente de confirmación por valor > $200k)' : 'Agendada en el sistema',
+          cambiadoPor: input.creadaPor,
         },
+      ],
+    }
+
+    // Reserva atómica de slots en Firestore
+    const resReserva = await reservarCitaConSlots(nuevaCita, durTotalMin)
+    if (!resReserva.ok) {
+      const alternativas = proximasFranjas(
+        input.serviceId,
+        input.professionalId,
+        new Date(input.inicioUtc),
+        14,
+        4,
         allAppointments,
         services,
         professionals
       )
+      return { ok: false, error: 'cupo_ocupado', alternativas }
+    }
 
-      if (!val.ok) {
-        if (val.error === 'cupo_ocupado') {
-          const alternativas = proximasFranjas(
-            input.serviceId,
-            input.professionalId,
-            new Date(input.inicioUtc),
-            14,
-            4,
-            allAppointments,
-            services,
-            professionals
-          )
-          return { ok: false, error: 'cupo_ocupado', alternativas }
-        }
-        return { ok: false, error: val.error || 'No fue posible agendar la cita' }
-      }
-
-      let resolvedClientId = input.clientId
-      if (!resolvedClientId && input.clienteTelefono) {
-        const phoneE164 = normalizePhoneE164(input.clienteTelefono)
-        const existingClient = clients.find((c) => c.telefonoE164 === phoneE164)
-        if (existingClient) {
-          resolvedClientId = existingClient.id
-        } else {
-          resolvedClientId = `cli_${Date.now()}`
-          const newClient: Client = {
-            id: resolvedClientId,
-            nombre: input.clienteNombre || 'Clienta',
-            telefonoE164: phoneE164,
-            email: input.clienteEmail || '',
-            creadaEn: new Date().toISOString(),
-          }
-          docSet('clients', resolvedClientId, newClient as unknown as Record<string, unknown>)
-        }
-      }
-
-      if (!resolvedClientId) {
-        return { ok: false, error: 'Información de la clienta requerida (teléfono o ID)' }
-      }
-
-      const precioCentavos = svc.precioCentavos
-      const durTotalMin = svc.duracionMin + svc.bufferMin
-      const inicioDate = new Date(input.inicioUtc)
-      const finDate = new Date(inicioDate.getTime() + durTotalMin * 60 * 1000)
-
-      const requiereConfirmacion = svc.requiereConfirmacion || precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos
-      const estadoInicial: AppointmentState = requiereConfirmacion ? 'pendiente' : 'agendada'
-
-      const citaId = `apt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
-      const nuevaCita: Appointment = {
-        id: citaId,
-        clientId: resolvedClientId,
-        professionalId: input.professionalId,
-        serviceId: input.serviceId,
-        inicioUtc: inicioDate.toISOString(),
-        finUtc: finDate.toISOString(),
-        estado: estadoInicial,
-        origen: input.origen,
-        precioCentavos,
-        creadaPor: input.creadaPor,
-        historial: [
-          {
-            estado: estadoInicial,
-            fechaUtc: new Date().toISOString(),
-            nota: requiereConfirmacion ? 'Agendada (pendiente de confirmación por valor > $200k)' : 'Agendada en el sistema',
-            cambiadoPor: input.creadaPor,
-          },
-        ],
-      }
-
-      docSet('appointments', citaId, nuevaCita as unknown as Record<string, unknown>)
-      return { ok: true, data: nuevaCita }
-    })
+    return { ok: true, data: resReserva.data }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Error al procesar la cita'
     return { ok: false, error: errorMsg }
   }
 }
 
-export async function confirmarCitaAction(citaId: string, cambiadoPor = 'admin'): Promise<ActionResult<Appointment>> {
-  try {
-    const cita = docGet<Appointment>('appointments', citaId)
+/**
+ * Confirmación de cita (Protegida: Admin y Recepción)
+ */
+export const confirmarCitaAction = withAuth<Appointment, [citaId: string, cambiadoPor?: string]>(
+  ['admin', 'recepcion'],
+  async (ctx, citaId, cambiadoPor = 'admin') => {
+    const cita = await docGet<Appointment>('appointments', citaId)
     if (!cita) return { ok: false, error: 'Cita no encontrada' }
 
     if (cita.estado === 'cancelada' || cita.estado === 'completada') {
@@ -149,31 +180,35 @@ export async function confirmarCitaAction(citaId: string, cambiadoPor = 'admin')
           estado: 'confirmada',
           fechaUtc: new Date().toISOString(),
           nota: 'Cita confirmada',
-          cambiadoPor,
+          cambiadoPor: ctx.nombre || cambiadoPor,
         },
       ],
     }
 
-    docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
-    return { ok: true, data: updated }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al confirmar la cita'
-    return { ok: false, error: errorMsg }
+    await docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
+    return updated
   }
-}
+)
 
-export async function cancelarCitaAction(
-  citaId: string,
-  motivo = 'Cancelada por el usuario',
-  cambiadoPor = 'usuario'
-): Promise<ActionResult<Appointment>> {
-  try {
-    const cita = docGet<Appointment>('appointments', citaId)
+/**
+ * Cancelación de cita administrativa y liberación de slots (Protegida: Admin y Recepción)
+ */
+export const cancelarCitaAction = withAuth<Appointment, [citaId: string, motivo?: string, cambiadoPor?: string]>(
+  ['admin', 'recepcion'],
+  async (ctx, citaId, motivo = 'Cancelada por el administrador', cambiadoPor = 'admin') => {
+    const cita = await docGet<Appointment>('appointments', citaId)
     if (!cita) return { ok: false, error: 'Cita no encontrada' }
 
     if (cita.estado === 'completada' || cita.estado === 'cancelada') {
       return { ok: false, error: `La cita ya está ${cita.estado}` }
     }
+
+    const services = await getServices()
+    const svc = services.find((s) => s.id === cita.serviceId)
+    const durTotalMin = (svc?.duracionMin ?? 40) + (svc?.bufferMin ?? 10)
+
+    // Liberar slots en Firestore
+    await liberarSlotsCita(cita.professionalId, cita.inicioUtc, durTotalMin)
 
     const inicioTime = new Date(cita.inicioUtc).getTime()
     const horasParaInicio = (inicioTime - Date.now()) / (3600 * 1000)
@@ -192,22 +227,23 @@ export async function cancelarCitaAction(
           estado: 'cancelada',
           fechaUtc: new Date().toISOString(),
           nota: notaHistorial,
-          cambiadoPor,
+          cambiadoPor: ctx.nombre || cambiadoPor,
         },
       ],
     }
 
-    docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
-    return { ok: true, data: updated }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al cancelar la cita'
-    return { ok: false, error: errorMsg }
+    await docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
+    return updated
   }
-}
+)
 
-export async function marcarCompletadaAction(citaId: string, cambiadoPor = 'admin'): Promise<ActionResult<Appointment>> {
-  try {
-    const cita = docGet<Appointment>('appointments', citaId)
+/**
+ * Marca cita como completada (Protegida: Admin y Recepción)
+ */
+export const marcarCompletadaAction = withAuth<Appointment, [citaId: string, cambiadoPor?: string]>(
+  ['admin', 'recepcion'],
+  async (ctx, citaId, cambiadoPor = 'admin') => {
+    const cita = await docGet<Appointment>('appointments', citaId)
     if (!cita) return { ok: false, error: 'Cita no encontrada' }
 
     const updated: Appointment = {
@@ -219,22 +255,23 @@ export async function marcarCompletadaAction(citaId: string, cambiadoPor = 'admi
           estado: 'completada',
           fechaUtc: new Date().toISOString(),
           nota: 'Servicio realizado exitosamente',
-          cambiadoPor,
+          cambiadoPor: ctx.nombre || cambiadoPor,
         },
       ],
     }
 
-    docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
-    return { ok: true, data: updated }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al marcar completada'
-    return { ok: false, error: errorMsg }
+    await docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
+    return updated
   }
-}
+)
 
-export async function marcarNoAsistioAction(citaId: string, cambiadoPor = 'admin'): Promise<ActionResult<Appointment>> {
-  try {
-    const cita = docGet<Appointment>('appointments', citaId)
+/**
+ * Marca no-asistencia (Protegida: Admin y Recepción)
+ */
+export const marcarNoAsistioAction = withAuth<Appointment, [citaId: string, cambiadoPor?: string]>(
+  ['admin', 'recepcion'],
+  async (ctx, citaId, cambiadoPor = 'admin') => {
+    const cita = await docGet<Appointment>('appointments', citaId)
     if (!cita) return { ok: false, error: 'Cita no encontrada' }
 
     const updated: Appointment = {
@@ -246,103 +283,109 @@ export async function marcarNoAsistioAction(citaId: string, cambiadoPor = 'admin
           estado: 'no_asistio',
           fechaUtc: new Date().toISOString(),
           nota: 'Clienta no se presentó a la cita',
-          cambiadoPor,
+          cambiadoPor: ctx.nombre || cambiadoPor,
         },
       ],
     }
 
-    docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
-    return { ok: true, data: updated }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al marcar no asistió'
-    return { ok: false, error: errorMsg }
+    await docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
+    return updated
   }
-}
+)
 
-export async function reagendarCitaAction(
-  citaId: string,
-  nuevaInicioUtc: string,
-  cambiadoPor = 'admin'
-): Promise<ActionResult<Appointment>> {
-  try {
-    return transaccion(() => {
-      const cita = docGet<Appointment>('appointments', citaId)
-      if (!cita) return { ok: false, error: 'Cita no encontrada' }
+/**
+ * Reagendar cita en nueva fecha/hora liberando slots antiguos y reservando los nuevos (Protegida)
+ */
+export const reagendarCitaAction = withAuth<Appointment, [citaId: string, nuevaInicioUtc: string, cambiadoPor?: string]>(
+  ['admin', 'recepcion'],
+  async (ctx, citaId, nuevaInicioUtc, cambiadoPor = 'admin') => {
+    const cita = await docGet<Appointment>('appointments', citaId)
+    if (!cita) return { ok: false, error: 'Cita no encontrada' }
 
-      if (cita.estado === 'cancelada' || cita.estado === 'completada') {
-        return { ok: false, error: `No se puede reagendar una cita ${cita.estado}` }
+    if (cita.estado === 'cancelada' || cita.estado === 'completada') {
+      return { ok: false, error: `No se puede reagendar una cita ${cita.estado}` }
+    }
+
+    const services = await getServices()
+    const professionals = await getProfessionals()
+    const allAppointments = await getAppointments()
+
+    const svc = services.find((s) => s.id === cita.serviceId)
+    if (!svc) return { ok: false, error: 'Servicio de la cita no encontrado' }
+
+    const val = validarReserva(
+      {
+        serviceId: cita.serviceId,
+        professionalId: cita.professionalId,
+        inicioUtc: nuevaInicioUtc,
+      },
+      allAppointments,
+      services,
+      professionals,
+      citaId
+    )
+
+    if (!val.ok) {
+      if (val.error === 'cupo_ocupado') {
+        const alternativas = proximasFranjas(
+          cita.serviceId,
+          cita.professionalId,
+          new Date(nuevaInicioUtc),
+          14,
+          4,
+          allAppointments,
+          services,
+          professionals
+        )
+        return { ok: false, error: 'cupo_ocupado', alternativas }
       }
+      return { ok: false, error: val.error || 'No es posible reagendar en esta fecha/hora' }
+    }
 
-      const services = getServices()
-      const professionals = getProfessionals()
-      const allAppointments = getAppointments()
+    const durTotalMin = svc.duracionMin + svc.bufferMin
+    const inicioDate = new Date(nuevaInicioUtc)
+    const finDate = new Date(inicioDate.getTime() + durTotalMin * 60 * 1000)
 
-      const svc = services.find((s) => s.id === cita.serviceId)
-      if (!svc) return { ok: false, error: 'Servicio de la cita no encontrado' }
+    // Liberar slots anteriores
+    await liberarSlotsCita(cita.professionalId, cita.inicioUtc, durTotalMin)
 
-      const val = validarReserva(
+    const updated: Appointment = {
+      ...cita,
+      inicioUtc: inicioDate.toISOString(),
+      finUtc: finDate.toISOString(),
+      historial: [
+        ...(cita.historial || []),
         {
-          serviceId: cita.serviceId,
-          professionalId: cita.professionalId,
-          inicioUtc: nuevaInicioUtc,
+          estado: cita.estado,
+          fechaUtc: new Date().toISOString(),
+          nota: `Reagendada para ${inicioDate.toISOString()}`,
+          cambiadoPor: ctx.nombre || cambiadoPor,
         },
-        allAppointments,
-        services,
-        professionals,
-        citaId
-      )
+      ],
+    }
 
-      if (!val.ok) {
-        if (val.error === 'cupo_ocupado') {
-          const alternativas = proximasFranjas(
-            cita.serviceId,
-            cita.professionalId,
-            new Date(nuevaInicioUtc),
-            14,
-            4,
-            allAppointments,
-            services,
-            professionals
-          )
-          return { ok: false, error: 'cupo_ocupado', alternativas }
-        }
-        return { ok: false, error: val.error || 'No es posible reagendar en esta fecha/hora' }
-      }
+    // Reservar nuevos slots
+    const resReserva = await reservarCitaConSlots(updated, durTotalMin)
+    if (!resReserva.ok) {
+      // Si falla, restaurar slots previos
+      await reservarCitaConSlots(cita, durTotalMin)
+      return { ok: false, error: 'cupo_ocupado' }
+    }
 
-      const durTotalMin = svc.duracionMin + svc.bufferMin
-      const inicioDate = new Date(nuevaInicioUtc)
-      const finDate = new Date(inicioDate.getTime() + durTotalMin * 60 * 1000)
-
-      const updated: Appointment = {
-        ...cita,
-        inicioUtc: inicioDate.toISOString(),
-        finUtc: finDate.toISOString(),
-        historial: [
-          ...(cita.historial || []),
-          {
-            estado: cita.estado,
-            fechaUtc: new Date().toISOString(),
-            nota: `Reagendada para ${inicioDate.toISOString()}`,
-            cambiadoPor,
-          },
-        ],
-      }
-
-      docSet('appointments', citaId, updated as unknown as Record<string, unknown>)
-      return { ok: true, data: updated }
-    })
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al reagendar cita'
-    return { ok: false, error: errorMsg }
+    return updated
   }
-}
+)
 
-export async function getCitasAction(fechaIso?: string): Promise<ActionResult<Appointment[]>> {
-  try {
-    const appointments = getAppointments()
+/**
+ * Consulta de citas del día o completas (Protegida: Admin y Recepción)
+ */
+export const getCitasAction = withAuth<Appointment[], [fechaIso?: string]>(
+  ['admin', 'recepcion'],
+  async (ctx, fechaIso) => {
+    const appointments = await getAppointments()
 
     if (!fechaIso) {
-      return { ok: true, data: appointments }
+      return appointments
     }
 
     const dayStart = new Date(fechaIso)
@@ -355,23 +398,23 @@ export async function getCitasAction(fechaIso?: string): Promise<ActionResult<Ap
       return d >= dayStart && d < dayEnd
     })
 
-    return { ok: true, data: filtered }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Error al obtener citas'
-    return { ok: false, error: errorMsg }
+    return filtered
   }
-}
+)
 
+/**
+ * Consulta de citas por teléfono (Pública para clientas en consulta de reserva)
+ */
 export async function getCitasPorTelefonoAction(telefonoRaw: string): Promise<ActionResult<Appointment[]>> {
   try {
     const phoneE164 = normalizePhoneE164(telefonoRaw)
-    const clients = getClients()
+    const clients = await getClients()
     const client = clients.find((c) => c.telefonoE164 === phoneE164)
     if (!client) {
       return { ok: true, data: [] }
     }
 
-    const appointments = getAppointments()
+    const appointments = await getAppointments()
     const clientAppts = appointments
       .filter((a) => a.clientId === client.id)
       .sort((a, b) => new Date(a.inicioUtc).getTime() - new Date(b.inicioUtc).getTime())
@@ -384,15 +427,7 @@ export async function getCitasPorTelefonoAction(telefonoRaw: string): Promise<Ac
 }
 
 /**
- * Franjas libres de un servicio en un día concreto.
- *
- * Existe para que la página pública NO tenga que descargarse la tabla de
- * citas. Antes se enviaba `getCitasAction()` entera al navegador para calcular
- * la disponibilidad allí: eso exponía `clientId`, teléfono y precio de todas
- * las clientas a cualquiera que abriera la pestaña de red. El cálculo vive en
- * el servidor y solo viajan las horas libres.
- *
- * Spec: docs/specs/04-disponibilidad.md
+ * Franjas libres de un servicio en un día concreto (Pública para wizard)
  */
 export async function franjasDelDiaAction(
   serviceId: string,
@@ -400,9 +435,9 @@ export async function franjasDelDiaAction(
   professionalId?: string
 ): Promise<ActionResult<Array<{ inicioUtc: string; professionalId: string; professionalNombre: string }>>> {
   try {
-    const services = getServices()
-    const professionals = getProfessionals()
-    const appointments = getAppointments()
+    const services = await getServices()
+    const professionals = await getProfessionals()
+    const appointments = await getAppointments()
 
     const svc = services.find((s) => s.id === serviceId)
     if (!svc) return { ok: false, error: 'Servicio no encontrado' }
@@ -412,8 +447,6 @@ export async function franjasDelDiaAction(
       ? professionals.filter((p) => p.id === professionalId && p.activo)
       : profesionalesPara(serviceId, professionals)
 
-    // Un mismo minuto puede estar libre en dos profesionales. Se muestra una
-    // sola vez y se recuerda quién lo cubre, para no elegir al azar al agendar.
     const porMinuto = new Map<
       number,
       { inicioUtc: string; professionalId: string; professionalNombre: string }
@@ -451,8 +484,7 @@ export async function franjasDelDiaAction(
 }
 
 /**
- * Qué días de un rango tienen al menos un cupo. Alimenta la tira de fechas:
- * un día sin cupos se muestra apagado ANTES de que la clienta lo pulse.
+ * Qué días de un rango tienen al menos un cupo (Pública para wizard)
  */
 export async function diasConCuposAction(
   serviceId: string,
@@ -461,9 +493,9 @@ export async function diasConCuposAction(
   professionalId?: string
 ): Promise<ActionResult<Record<string, number>>> {
   try {
-    const services = getServices()
-    const professionals = getProfessionals()
-    const appointments = getAppointments()
+    const services = await getServices()
+    const professionals = await getProfessionals()
+    const appointments = await getAppointments()
 
     const candidatos = professionalId
       ? professionals.filter((p) => p.id === professionalId && p.activo)
@@ -500,15 +532,18 @@ export async function diasConCuposAction(
   }
 }
 
+/**
+ * Consulta de próximas alternativas disponibles (Pública)
+ */
 export async function consultarDisponibilidadAction(
   serviceId: string,
   desdeIso?: string,
   professionalId?: string
 ): Promise<ActionResult<SlotInfo[]>> {
   try {
-    const services = getServices()
-    const professionals = getProfessionals()
-    const appointments = getAppointments()
+    const services = await getServices()
+    const professionals = await getProfessionals()
+    const appointments = await getAppointments()
 
     const alternativas = proximasFranjas(
       serviceId,

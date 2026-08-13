@@ -85,8 +85,17 @@ export type Appointment = {
   origen: 'web' | 'admin' | 'whatsapp'
   precioCentavos: number // Congelado al agendarse
   creadaPor: string
+  googleEventId?: string | null
   historial: AppointmentHistoryItem[]
   _seed?: boolean
+}
+
+export type Slot = {
+  id: string // `${professionalId}_${inicioUtcISO}`
+  appointmentId: string
+  professionalId: string
+  inicioUtc: string
+  creadoEn: string
 }
 
 export type ConversationState = 'abierta' | 'en_atencion' | 'resuelta' | 'escalada'

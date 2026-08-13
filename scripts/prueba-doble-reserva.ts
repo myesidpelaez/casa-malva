@@ -1,19 +1,14 @@
 /**
  * Prueba del gate de DONE: **dos reservas sobre el mismo cupo, solo una vive.**
  *
- * Ejercita la Server Action real (`crearCitaAction`), no una copia de su lógica:
- * si mañana alguien quita la validación de solape, esta prueba se pone roja.
- * Esa es la condición que exige [[04-BIBLIOTECA/patrones/guardianes-que-no-guardan]]
- * — una prueba que no puede fallar no es una prueba.
+ * Ejercita la Server Action real (`crearCitaAction`) contra Cloud Firestore
+ * validando la técnica de slots atómica y transaccional (firestore-modelado §2).
  *
  * Ejecutar:  npm run prueba:doble-reserva
- *
- * Escribe en `casa-malva.db` y limpia lo que crea al terminar.
  */
 import { crearCitaAction } from '../src/actions/citas'
-import { getDb, getProfessionals, getServices } from '../src/lib/db'
+import { getDb, getProfessionals, getServices, getAppointments, liberarSlotsCita } from '../src/lib/db'
 import { franjasDisponibles } from '../src/lib/disponibilidad'
-import { getAppointments } from '../src/lib/db'
 
 const VERDE = '\x1b[32m'
 const ROJO = '\x1b[31m'
@@ -33,10 +28,10 @@ function comprobar(nombre: string, condicion: boolean, detalle = '') {
 }
 
 async function main() {
-  console.log('\n🔒 Prueba anti-doble-reserva — Casa Malva\n')
+  console.log('\n🔒 Prueba anti-doble-reserva (Firestore) — Casa Malva\n')
 
-  const servicios = getServices()
-  const equipo = getProfessionals()
+  const servicios = await getServices()
+  const equipo = await getProfessionals()
 
   // Servicio y profesional que de verdad se puedan combinar.
   const prof = equipo.find((p) => p.activo && p.serviceIds.length > 0)
@@ -44,13 +39,15 @@ async function main() {
   const svc = servicios.find((s) => s.activo && prof.serviceIds.includes(s.id))
   if (!svc) throw new Error('No hay servicio activo para esa profesional')
 
+  const citasActuales = await getAppointments()
+
   // Primer cupo libre a partir de mañana (evita el mínimo de antelación).
   let cupo: Date | null = null
   for (let i = 1; i <= 20 && !cupo; i++) {
     const dia = new Date()
     dia.setDate(dia.getDate() + i)
     dia.setHours(0, 0, 0, 0)
-    const libres = franjasDisponibles(svc.id, prof.id, dia, getAppointments(), servicios, equipo)
+    const libres = franjasDisponibles(svc.id, prof.id, dia, citasActuales, servicios, equipo)
     if (libres.length > 0) cupo = libres[0]
   }
   if (!cupo) throw new Error('No se encontró ningún cupo libre en 20 días')
@@ -68,7 +65,7 @@ async function main() {
     creadaPor: 'prueba_doble_reserva',
   }
 
-  // --- Las dos clientas piden el mismo cupo -------------------------------
+  // --- Las dos clientas piden el mismo cupo simultáneamente -----------------
   const [primera, segunda] = await Promise.all([
     crearCitaAction({ ...peticion, clienteNombre: 'Prueba Uno', clienteTelefono: '3001110001' }),
     crearCitaAction({ ...peticion, clienteNombre: 'Prueba Dos', clienteTelefono: '3001110002' }),
@@ -98,8 +95,9 @@ async function main() {
     'no llegaron alternativas'
   )
 
-  // --- En la base de datos hay UNA sola cita en ese instante ---------------
-  const enEseCupo = getAppointments().filter(
+  // --- En Firestore hay UNA sola cita en ese instante ----------------------
+  const citasTrasReserva = await getAppointments()
+  const enEseCupo = citasTrasReserva.filter(
     (a) =>
       a.professionalId === prof.id &&
       a.inicioUtc === cupo!.toISOString() &&
@@ -107,7 +105,7 @@ async function main() {
       a.estado !== 'no_asistio'
   )
   comprobar(
-    'en la base de datos queda una sola cita viva en ese cupo',
+    'en Firestore queda una sola cita viva en ese cupo',
     enEseCupo.length === 1,
     `hay ${enEseCupo.length}`
   )
@@ -129,7 +127,7 @@ async function main() {
     svc.id,
     prof.id,
     cupo,
-    getAppointments(),
+    await getAppointments(),
     servicios,
     equipo
   )
@@ -139,14 +137,33 @@ async function main() {
   )
 }
 
-function limpiar() {
+async function limpiar() {
   if (creadas.length === 0) return
   const db = getDb()
+  const batch = db.batch()
+
   for (const id of creadas) {
-    db.prepare('DELETE FROM appointments WHERE id = ?').run(id)
+    const snap = await db.collection('appointments').doc(id).get()
+    if (snap.exists) {
+      const data = snap.data()
+      if (data) {
+        await liberarSlotsCita(data.professionalId, data.inicioUtc, 60)
+      }
+      batch.delete(db.collection('appointments').doc(id))
+    }
   }
-  db.prepare("DELETE FROM clients WHERE telefonoE164 IN ('+573001110001','+573001110002','+573001110003')").run()
-  console.log(`\n${GRIS}  Limpieza: ${creadas.length} cita(s) de prueba eliminadas${FIN}`)
+
+  const clientsSnap = await db
+    .collection('clients')
+    .where('telefonoE164', 'in', ['+573001110001', '+573001110002', '+573001110003'])
+    .get()
+
+  for (const doc of clientsSnap.docs) {
+    batch.delete(doc.ref)
+  }
+
+  await batch.commit()
+  console.log(`\n${GRIS}  Limpieza: ${creadas.length} cita(s) de prueba eliminadas en Firestore${FIN}`)
 }
 
 main()
@@ -154,11 +171,11 @@ main()
     fallos++
     console.error(`\n${ROJO}Error inesperado:${FIN}`, err)
   })
-  .finally(() => {
-    limpiar()
+  .finally(async () => {
+    await limpiar()
     if (fallos > 0) {
       console.log(`\n${ROJO}✗ ${fallos} comprobación(es) fallidas${FIN}\n`)
       process.exit(1)
     }
-    console.log(`\n${VERDE}✓ Todas las comprobaciones pasaron${FIN}\n`)
+    console.log(`\n${VERDE}✓ Todas las comprobaciones pasaron en Cloud Firestore${FIN}\n`)
   })

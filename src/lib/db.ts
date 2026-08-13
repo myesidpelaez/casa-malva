@@ -1,5 +1,6 @@
-import { DatabaseSync } from 'node:sqlite'
-import path from 'path'
+import { initializeApp, getApps, cert, type App } from 'firebase-admin/app'
+import { getFirestore, type Firestore, Timestamp, type Transaction } from 'firebase-admin/firestore'
+import * as fs from 'fs'
 import type {
   Appointment,
   BusinessSettings,
@@ -9,6 +10,7 @@ import type {
   Message,
   Professional,
   Service,
+  Slot,
 } from '@/types'
 
 export type UserRow = {
@@ -19,310 +21,209 @@ export type UserRow = {
   rol: string
 }
 
-let instance: DatabaseSync | null = null
+let firestoreInstance: Firestore | null = null
 
-export function getDb(): DatabaseSync {
-  if (!instance) {
-    const dbPath = path.join(process.cwd(), 'casa-malva.db')
-    instance = new DatabaseSync(dbPath)
-    instance.exec('PRAGMA journal_mode = WAL;')
-    initTables(instance)
+export function getDb(): Firestore {
+  if (!firestoreInstance) {
+    let app: App
+    if (getApps().length === 0) {
+      const saPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
+      const projectId =
+        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+        process.env.FIREBASE_ADMIN_PROJECT_ID ||
+        'casa-malva-demo'
+
+      if (saPath && fs.existsSync(saPath)) {
+        try {
+          const sa = JSON.parse(fs.readFileSync(saPath, 'utf-8'))
+          app = initializeApp({ credential: cert(sa), projectId })
+        } catch {
+          app = initializeApp({ projectId })
+        }
+      } else {
+        app = initializeApp({ projectId })
+      }
+    } else {
+      app = getApps()[0]
+    }
+    firestoreInstance = getFirestore(app)
+    firestoreInstance.settings({ ignoreUndefinedProperties: true })
   }
-  return instance
+  return firestoreInstance
 }
 
-function initTables(db: DatabaseSync) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS categories (id TEXT PRIMARY KEY, nombre TEXT NOT NULL, orden INTEGER NOT NULL DEFAULT 0, activa INTEGER NOT NULL DEFAULT 1);
-    CREATE TABLE IF NOT EXISTS services (id TEXT PRIMARY KEY, categoryId TEXT NOT NULL, nombre TEXT NOT NULL, duracionMin INTEGER NOT NULL, bufferMin INTEGER NOT NULL, precioCentavos INTEGER NOT NULL, requiereConfirmacion INTEGER NOT NULL DEFAULT 0, activo INTEGER NOT NULL DEFAULT 1);
-    CREATE TABLE IF NOT EXISTS professionals (id TEXT PRIMARY KEY, nombre TEXT NOT NULL, rol TEXT NOT NULL, serviceIds TEXT NOT NULL, horario TEXT NOT NULL, excepciones TEXT NOT NULL DEFAULT '[]', activo INTEGER NOT NULL DEFAULT 1);
-    CREATE TABLE IF NOT EXISTS clients (id TEXT PRIMARY KEY, nombre TEXT NOT NULL, telefonoE164 TEXT UNIQUE, email TEXT DEFAULT '', notas TEXT DEFAULT '', creadaEn TEXT NOT NULL, _seed INTEGER DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS appointments (id TEXT PRIMARY KEY, clientId TEXT NOT NULL, professionalId TEXT NOT NULL, serviceId TEXT NOT NULL, inicioUtc TEXT NOT NULL, finUtc TEXT NOT NULL, estado TEXT NOT NULL, origen TEXT NOT NULL, precioCentavos INTEGER NOT NULL, creadaPor TEXT NOT NULL, historial TEXT NOT NULL DEFAULT '[]', _seed INTEGER DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, canal TEXT NOT NULL, clienteRef TEXT, estado TEXT NOT NULL, escaladaA TEXT, actualizadaEn TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, conversationId TEXT NOT NULL, rol TEXT NOT NULL, texto TEXT NOT NULL, herramientaUsada TEXT, enviadoEn TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, passwordHash TEXT NOT NULL, nombre TEXT NOT NULL, rol TEXT NOT NULL DEFAULT 'admin');
-    CREATE INDEX IF NOT EXISTS idx_appt_prof_fecha ON appointments (professionalId, inicioUtc);
-    CREATE INDEX IF NOT EXISTS idx_appt_cliente ON appointments (clientId);
-  `)
+function normalizeDocData<T>(docId: string, raw: Record<string, unknown>): T {
+  const data: Record<string, unknown> = { id: docId, ...raw }
+  // Convert any Firestore Timestamps to ISO strings for application compatibility
+  for (const key of Object.keys(data)) {
+    const val = data[key]
+    if (val && typeof val === 'object' && val instanceof Timestamp) {
+      data[key] = val.toDate().toISOString()
+    }
+  }
+  return data as T
 }
 
-function parseRow<T>(collection: string, row: Record<string, unknown>): T {
-  if (collection === 'settings') {
-    return JSON.parse(row.value as string) as T
-  }
-  if (collection === 'categories') {
-    return {
-      id: row.id,
-      nombre: row.nombre,
-      orden: Number(row.orden),
-      activa: Boolean(row.activa),
-    } as T
-  }
-  if (collection === 'services') {
-    return {
-      id: row.id,
-      categoryId: row.categoryId,
-      nombre: row.nombre,
-      duracionMin: Number(row.duracionMin),
-      bufferMin: Number(row.bufferMin),
-      precioCentavos: Number(row.precioCentavos),
-      requiereConfirmacion: Boolean(row.requiereConfirmacion),
-      activo: Boolean(row.activo),
-    } as T
-  }
-  if (collection === 'professionals') {
-    return {
-      id: row.id,
-      nombre: row.nombre,
-      rol: row.rol,
-      serviceIds: typeof row.serviceIds === 'string' ? JSON.parse(row.serviceIds) : row.serviceIds,
-      horario: typeof row.horario === 'string' ? JSON.parse(row.horario) : row.horario,
-      excepciones: typeof row.excepciones === 'string' ? JSON.parse(row.excepciones) : row.excepciones || [],
-      activo: Boolean(row.activo),
-    } as T
-  }
-  if (collection === 'clients') {
-    return {
-      id: row.id,
-      nombre: row.nombre,
-      telefonoE164: row.telefonoE164,
-      email: row.email || '',
-      notas: row.notas || '',
-      creadaEn: row.creadaEn,
-      _seed: Boolean(row._seed),
-    } as T
-  }
-  if (collection === 'appointments') {
-    return {
-      id: row.id,
-      clientId: row.clientId,
-      professionalId: row.professionalId,
-      serviceId: row.serviceId,
-      inicioUtc: row.inicioUtc,
-      finUtc: row.finUtc,
-      estado: row.estado,
-      origen: row.origen,
-      precioCentavos: Number(row.precioCentavos),
-      creadaPor: row.creadaPor,
-      historial: typeof row.historial === 'string' ? JSON.parse(row.historial) : row.historial || [],
-      _seed: Boolean(row._seed),
-    } as T
-  }
-  if (collection === 'conversations') {
-    return {
-      id: row.id,
-      canal: row.canal,
-      clienteRef: row.clienteRef,
-      estado: row.estado,
-      escaladaA: row.escaladaA,
-      actualizadaEn: row.actualizadaEn,
-    } as T
-  }
-  if (collection === 'messages') {
-    return {
-      id: row.id,
-      conversationId: row.conversationId,
-      rol: row.rol,
-      texto: row.texto,
-      herramientaUsada: row.herramientaUsada,
-      enviadoEn: row.enviadoEn,
-    } as T
-  }
-  if (collection === 'users') {
-    return {
-      id: row.id,
-      email: row.email,
-      passwordHash: row.passwordHash,
-      nombre: row.nombre,
-      rol: row.rol,
-    } as T
-  }
-  return row as T
-}
-
-export function docGet<T>(collection: string, docId: string): T | null {
+export async function docGet<T>(collection: string, docId: string): Promise<T | null> {
   const db = getDb()
-  const pkField = collection === 'settings' ? 'key' : 'id'
-  const stmt = db.prepare(`SELECT * FROM ${collection} WHERE ${pkField} = ?`)
-  const row = stmt.get(docId) as Record<string, unknown> | undefined
-  if (!row) return null
-  return parseRow<T>(collection, row)
+  const snap = await db.collection(collection).doc(docId).get()
+  if (!snap.exists) return null
+  return normalizeDocData<T>(snap.id, snap.data() || {})
 }
 
-export function docSet<T extends Record<string, unknown>>(
+export async function docSet<T extends Record<string, unknown>>(
   collection: string,
   docId: string,
   data: T
-): T {
+): Promise<T> {
   const db = getDb()
-  if (collection === 'settings') {
-    const stmt = db.prepare(`INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`)
-    stmt.run(docId, JSON.stringify(data))
-    return data
-  }
-  if (collection === 'categories') {
-    const cat = data as unknown as Category
-    const stmt = db.prepare(`INSERT OR REPLACE INTO categories (id, nombre, orden, activa) VALUES (?, ?, ?, ?)`)
-    stmt.run(docId, cat.nombre, cat.orden ?? 0, cat.activa ? 1 : 0)
-    return data
-  }
-  if (collection === 'services') {
-    const svc = data as unknown as Service
-    const stmt = db.prepare(
-      `INSERT OR REPLACE INTO services (id, categoryId, nombre, duracionMin, bufferMin, precioCentavos, requiereConfirmacion, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    stmt.run(
-      docId,
-      svc.categoryId,
-      svc.nombre,
-      svc.duracionMin,
-      svc.bufferMin,
-      svc.precioCentavos,
-      svc.requiereConfirmacion ? 1 : 0,
-      svc.activo ? 1 : 0
-    )
-    return data
-  }
-  if (collection === 'professionals') {
-    const prof = data as unknown as Professional
-    const stmt = db.prepare(
-      `INSERT OR REPLACE INTO professionals (id, nombre, rol, serviceIds, horario, excepciones, activo) VALUES (?, ?, ?, ?, ?, ?, ?)`
-    )
-    stmt.run(
-      docId,
-      prof.nombre,
-      prof.rol,
-      JSON.stringify(prof.serviceIds || []),
-      JSON.stringify(prof.horario || {}),
-      JSON.stringify(prof.excepciones || []),
-      prof.activo ? 1 : 0
-    )
-    return data
-  }
-  if (collection === 'clients') {
-    const cli = data as unknown as Client
-    const stmt = db.prepare(
-      `INSERT OR REPLACE INTO clients (id, nombre, telefonoE164, email, notas, creadaEn, _seed) VALUES (?, ?, ?, ?, ?, ?, ?)`
-    )
-    stmt.run(docId, cli.nombre, cli.telefonoE164 || null, cli.email || '', cli.notas || '', cli.creadaEn, cli._seed ? 1 : 0)
-    return data
-  }
-  if (collection === 'appointments') {
-    const apt = data as unknown as Appointment
-    const stmt = db.prepare(
-      `INSERT OR REPLACE INTO appointments (id, clientId, professionalId, serviceId, inicioUtc, finUtc, estado, origen, precioCentavos, creadaPor, historial, _seed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    stmt.run(
-      docId,
-      apt.clientId,
-      apt.professionalId,
-      apt.serviceId,
-      apt.inicioUtc,
-      apt.finUtc,
-      apt.estado,
-      apt.origen,
-      apt.precioCentavos,
-      apt.creadaPor,
-      JSON.stringify(apt.historial || []),
-      apt._seed ? 1 : 0
-    )
-    return data
-  }
-  if (collection === 'conversations') {
-    const conv = data as unknown as Conversation
-    const stmt = db.prepare(
-      `INSERT OR REPLACE INTO conversations (id, canal, clienteRef, estado, escaladaA, actualizadaEn) VALUES (?, ?, ?, ?, ?, ?)`
-    )
-    stmt.run(docId, conv.canal, conv.clienteRef || null, conv.estado, conv.escaladaA || null, conv.actualizadaEn)
-    return data
-  }
-  if (collection === 'messages') {
-    const msg = data as unknown as Message & { conversationId?: string }
-    const stmt = db.prepare(
-      `INSERT OR REPLACE INTO messages (id, conversationId, rol, texto, herramientaUsada, enviadoEn) VALUES (?, ?, ?, ?, ?, ?)`
-    )
-    stmt.run(docId, msg.conversationId || '', msg.rol, msg.texto, msg.herramientaUsada || null, msg.enviadoEn)
-    return data
-  }
-  if (collection === 'users') {
-    const u = data as unknown as UserRow
-    const stmt = db.prepare(`INSERT OR REPLACE INTO users (id, email, passwordHash, nombre, rol) VALUES (?, ?, ?, ?, ?)`)
-    stmt.run(docId, u.email, u.passwordHash, u.nombre, u.rol || 'admin')
-    return data
-  }
-
-  return data
+  const ref = db.collection(collection).doc(docId)
+  await ref.set(data, { merge: true })
+  return { id: docId, ...data }
 }
 
-export function docUpdate<T extends Record<string, unknown>>(
+export async function docUpdate<T extends Record<string, unknown>>(
   collection: string,
   docId: string,
   partialData: Partial<T>
-): T | null {
-  const existing = docGet<T>(collection, docId)
-  if (!existing) return null
-  const merged = { ...existing, ...partialData }
-  return docSet<T>(collection, docId, merged)
+): Promise<T | null> {
+  const db = getDb()
+  const ref = db.collection(collection).doc(docId)
+  const snap = await ref.get()
+  if (!snap.exists) return null
+  await ref.update(partialData as Record<string, unknown>)
+  const updatedSnap = await ref.get()
+  return normalizeDocData<T>(docId, updatedSnap.data() || {})
 }
 
-export function docDelete(collection: string, docId: string): boolean {
+export async function docDelete(collection: string, docId: string): Promise<boolean> {
   const db = getDb()
-  const pkField = collection === 'settings' ? 'key' : 'id'
-  const stmt = db.prepare(`DELETE FROM ${collection} WHERE ${pkField} = ?`)
-  const info = stmt.run(docId)
-  return info.changes > 0
+  await db.collection(collection).doc(docId).delete()
+  return true
 }
 
-export function listDocs<T>(collection: string): T[] {
+export async function listDocs<T>(collection: string): Promise<T[]> {
   const db = getDb()
-  const stmt = db.prepare(`SELECT * FROM ${collection}`)
-  const rows = stmt.all() as Record<string, unknown>[]
-  return rows.map((row) => parseRow<T>(collection, row))
+  const snap = await db.collection(collection).get()
+  return snap.docs.map((d) => normalizeDocData<T>(d.id, d.data()))
 }
 
-export function transaccion<T>(fn: () => T): T {
+export async function transaccion<T>(fn: (tx: Transaction) => Promise<T>): Promise<T> {
   const db = getDb()
-  db.exec('BEGIN IMMEDIATE')
-  try {
-    const res = fn()
-    db.exec('COMMIT')
-    return res
-  } catch (err) {
-    db.exec('ROLLBACK')
-    throw err
-  }
+  return await db.runTransaction(async (tx) => {
+    return await fn(tx)
+  })
 }
 
 // Helpers tipados
-export function getCategories(): Category[] {
-  return listDocs<Category>('categories').sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+export async function getCategories(): Promise<Category[]> {
+  const cats = await listDocs<Category>('categories')
+  return cats.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
 }
 
-export function getServices(): Service[] {
-  return listDocs<Service>('services')
+export async function getServices(): Promise<Service[]> {
+  return await listDocs<Service>('services')
 }
 
-export function getProfessionals(): Professional[] {
-  return listDocs<Professional>('professionals')
+export async function getProfessionals(): Promise<Professional[]> {
+  return await listDocs<Professional>('professionals')
 }
 
-export function getClients(): Client[] {
-  return listDocs<Client>('clients')
+export async function getClients(): Promise<Client[]> {
+  return await listDocs<Client>('clients')
 }
 
-export function getAppointments(): Appointment[] {
-  return listDocs<Appointment>('appointments')
+export async function getAppointments(): Promise<Appointment[]> {
+  return await listDocs<Appointment>('appointments')
 }
 
-export function getBusinessSettings(): BusinessSettings | null {
-  return docGet<BusinessSettings>('settings', 'business')
+export async function getBusinessSettings(): Promise<BusinessSettings | null> {
+  return await docGet<BusinessSettings>('settings', 'business')
 }
 
-export function getUserByEmail(email: string): UserRow | null {
+export async function getUserByEmail(email: string): Promise<UserRow | null> {
   const db = getDb()
-  const stmt = db.prepare(`SELECT * FROM users WHERE email = ?`)
-  const row = stmt.get(email) as Record<string, unknown> | undefined
-  if (!row) return null
-  return parseRow<UserRow>('users', row)
+  const snap = await db.collection('users').where('email', '==', email).limit(1).get()
+  if (snap.empty) return null
+  const d = snap.docs[0]
+  return normalizeDocData<UserRow>(d.id, d.data())
+}
+
+/**
+ * Calcula todas las franjas de 15 minutos que abarca un servicio (duración + buffer)
+ */
+export function calcularFranjasSlot(inicioUtcISO: string, duracionTotalMin: number, pasoMin = 15): string[] {
+  const franjas: string[] = []
+  const inicio = new Date(inicioUtcISO)
+  for (let m = 0; m < duracionTotalMin; m += pasoMin) {
+    const slotDate = new Date(inicio.getTime() + m * 60 * 1000)
+    franjas.push(slotDate.toISOString())
+  }
+  return franjas
+}
+
+/**
+ * Anti-Doble-Reserva atómica con la técnica de slots (skill firestore-modelado §2).
+ *
+ * 1) LECTURAS PRIMERO: Verifica la disponibilidad de todos los slots que cubrirá la cita.
+ * 2) ESCRITURAS DESPUÉS: Crea cada slot con ID determinista `${profId}_${slotISO}` + documento de cita.
+ * Si algún slot ya existe, la transacción de Firestore aborta automáticamente con error de colisión.
+ */
+export async function reservarCitaConSlots(
+  appointment: Appointment,
+  duracionTotalMin: number
+): Promise<{ ok: true; data: Appointment } | { ok: false; error: string }> {
+  const db = getDb()
+  const franjas = calcularFranjasSlot(appointment.inicioUtc, duracionTotalMin, 15)
+  const slotRefs = franjas.map((franja) => db.doc(`slots/${appointment.professionalId}_${franja}`))
+  const appointmentRef = db.doc(`appointments/${appointment.id}`)
+
+  try {
+    const result = await db.runTransaction(async (tx) => {
+      // 1. LECTURAS PRIMERO — Leer todos los slots para verificar si alguno ya está ocupado
+      const slotSnaps = await Promise.all(slotRefs.map((ref) => tx.get(ref)))
+      for (const snap of slotSnaps) {
+        if (snap.exists) {
+          throw new Error('cupo_ocupado')
+        }
+      }
+
+      // 2. ESCRITURAS DESPUÉS — Bloquear franjas y persistir la cita
+      for (let i = 0; i < franjas.length; i++) {
+        const slotData: Slot = {
+          id: `${appointment.professionalId}_${franjas[i]}`,
+          appointmentId: appointment.id,
+          professionalId: appointment.professionalId,
+          inicioUtc: franjas[i],
+          creadoEn: new Date().toISOString(),
+        }
+        tx.create(slotRefs[i], slotData)
+      }
+
+      tx.create(appointmentRef, appointment)
+      return appointment
+    })
+
+    return { ok: true, data: result }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('cupo_ocupado') || msg.includes('ALREADY_EXISTS') || msg.includes('already exists')) {
+      return { ok: false, error: 'cupo_ocupado' }
+    }
+    return { ok: false, error: msg }
+  }
+}
+
+/**
+ * Libera las franjas de slots al cancelar o completar una cita
+ */
+export async function liberarSlotsCita(professionalId: string, inicioUtcISO: string, duracionTotalMin: number): Promise<void> {
+  const db = getDb()
+  const franjas = calcularFranjasSlot(inicioUtcISO, duracionTotalMin, 15)
+  const batch = db.batch()
+  for (const franja of franjas) {
+    const ref = db.doc(`slots/${professionalId}_${franja}`)
+    batch.delete(ref)
+  }
+  await batch.commit()
 }

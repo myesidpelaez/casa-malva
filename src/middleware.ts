@@ -2,7 +2,14 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const SESSION_COOKIE_NAME = 'casamalva_session'
-const SESSION_SECRET = process.env.SESSION_SECRET || 'casamalva-local-secret-key-2026-xyz'
+
+function getSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET
+  if (!secret) {
+    throw new Error('Falta SESSION_SECRET en las variables de entorno. La aplicación no arranca sin él.')
+  }
+  return secret
+}
 
 // Lightweight crypto helper for Edge runtime in Next middleware using Web Crypto API
 async function verifySessionToken(token: string): Promise<boolean> {
@@ -20,7 +27,7 @@ async function verifySessionToken(token: string): Promise<boolean> {
     const encoder = new TextEncoder()
     const key = await crypto.subtle.importKey(
       'raw',
-      encoder.encode(SESSION_SECRET),
+      encoder.encode(getSessionSecret()),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['verify']

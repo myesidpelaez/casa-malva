@@ -1,0 +1,20 @@
+# Configuración de Firebase App Hosting para Casa Malva
+# Fuente: skill firebase-despliegue §2
+
+runConfig:
+  minInstances: 0          # Escala a cero: sin tráfico, sin costo de cómputo
+  maxInstances: 2          # Techo de gasto ante picos imprevistos
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  # Variables públicas expuestas al navegador y compilación
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: casa-malva-demo
+    availability: [BUILD, RUNTIME]
+
+  # Secretos referenciados desde Cloud Secret Manager (nunca valores en el repo)
+  - variable: SESSION_SECRET
+    secret: session-secret
+    availability: [RUNTIME]

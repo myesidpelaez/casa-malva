@@ -1,7 +1,7 @@
 # ADR 0002 — Adopción de SQLite embebido para desarrollo y ruta de migración a PostgreSQL
 
 - **Fecha:** 2026-08-13
-- **Estado:** aceptada
+- **Estado:** superado (por ADR 0003)
 - **Decide:** Mario Peláez
 - **Redacta:** Antigravity/gemini-3.6-flash
 - **Sustituye a:** la decisión #2 de `PROYECTO.md` (bóveda MEMORIA · `01-PROYECTOS/spa-demo/PROYECTO.md`) en lo referente al motor de persistencia durante la fase demo/prototipo
