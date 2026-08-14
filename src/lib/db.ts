@@ -9,6 +9,7 @@ import type {
   Professional,
   Service,
   Slot,
+  Charge,
 } from '@/types'
 import { type PlanDeSlots } from './ocupacion'
 
@@ -194,18 +195,25 @@ export async function getUserByEmail(email: string): Promise<UserRow | null> {
  */
 export async function aplicarCambioDeCita(
   cita: Appointment,
-  plan: PlanDeSlots
-): Promise<{ ok: true; data: Appointment } | { ok: false; error: 'cupo_ocupado' }> {
+  plan: PlanDeSlots,
+  cobro?: Charge
+): Promise<{ ok: true; data: Appointment } | { ok: false; error: 'cupo_ocupado' | 'ya_cobrada' }> {
   const db = getDb()
   const citaRef = db.doc(`appointments/${cita.id}`)
   const slotRefsCrear = plan.crear.map((id) => db.doc(`slots/${id}`))
   const slotRefsBorrar = plan.borrar.map((id) => db.doc(`slots/${id}`))
+  const chargeRef = cobro ? db.doc(`charges/${cobro.id}`) : null
 
   try {
     await db.runTransaction(async (tx) => {
       // 1. LECTURAS PRIMERO
       const snapsCrear = await Promise.all(slotRefsCrear.map((ref) => tx.get(ref)))
-      lecturas += snapsCrear.length
+      let chargeSnap = null
+      if (chargeRef) {
+        chargeSnap = await tx.get(chargeRef)
+      }
+
+      lecturas += snapsCrear.length + (chargeRef ? 1 : 0)
 
       for (const snap of snapsCrear) {
         if (snap.exists) {
@@ -214,6 +222,10 @@ export async function aplicarCambioDeCita(
             throw new Error('cupo_ocupado')
           }
         }
+      }
+
+      if (chargeSnap && chargeSnap.exists) {
+        throw new Error('ya_cobrada')
       }
 
       // 2. ESCRITURAS DESPUÉS
@@ -239,6 +251,9 @@ export async function aplicarCambioDeCita(
       }
 
       tx.set(citaRef, cita, { merge: true })
+      if (chargeRef && cobro) {
+        tx.set(chargeRef, cobro)
+      }
     })
 
     return { ok: true, data: cita }
@@ -246,6 +261,9 @@ export async function aplicarCambioDeCita(
     const msg = err instanceof Error ? err.message : String(err)
     if (msg.includes('cupo_ocupado') || msg.includes('ALREADY_EXISTS') || msg.includes('already exists')) {
       return { ok: false, error: 'cupo_ocupado' }
+    }
+    if (msg.includes('ya_cobrada')) {
+      return { ok: false, error: 'ya_cobrada' }
     }
     throw err
   }

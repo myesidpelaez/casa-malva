@@ -119,3 +119,22 @@ export type Message = {
   herramientaUsada?: string
   enviadoEn: string
 }
+
+export type MetodoPago = 'efectivo' | 'nequi' | 'daviplata' | 'tarjeta' | 'transferencia'
+
+export type Charge = {
+  id: string                    // `chg_${appointmentId}`
+  appointmentId: string
+  clientId: string
+  professionalId: string
+  serviceId: string
+  fechaUtc: string              // cuándo se cobró (ISO UTC)
+  precioListaCentavos: number   // el congelado en la cita
+  descuentoCentavos: number     // 0 si no hubo
+  cobradoCentavos: number       // lista − descuento. Esto es el ingreso
+  propinaCentavos: number       // NO es ingreso del negocio (D4)
+  metodoPago: MetodoPago
+  cobradoPor: string            // uid de la sesión que cerró
+  nota?: string
+  _seed?: boolean
+}

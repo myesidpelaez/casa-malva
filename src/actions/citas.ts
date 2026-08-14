@@ -23,7 +23,9 @@ import {
   type SlotInfo,
 } from '@/lib/disponibilidad'
 import { normalizePhoneE164 } from '@/lib/utils'
-import type { Appointment, AppointmentState, Client } from '@/types'
+import type { Appointment, AppointmentState, Client, Charge, MetodoPago } from '@/types'
+import { calcularCobro, idCobro } from '@/lib/cobros'
+import { formatCurrencyFromCents } from '@/lib/currency'
 import type { ActionResult } from './catalogo'
 
 export type CrearCitaInput = {
@@ -41,7 +43,7 @@ export type CrearCitaInput = {
 /**
  * Creación de cita con Anti-Doble-Reserva atómica en Cloud Firestore (Técnica de Slots)
  */
-export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResult<Appointment>> {
+async function _crearCitaBase(input: CrearCitaInput, omitirAntelacionMinima: boolean): Promise<ActionResult<Appointment>> {
   try {
     const services = await getServices()
     const professionals = await getProfessionals()
@@ -68,7 +70,9 @@ export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResu
       },
       allAppointments,
       services,
-      professionals
+      professionals,
+      undefined,
+      omitirAntelacionMinima
     )
 
     if (!val.ok) {
@@ -167,6 +171,17 @@ export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResu
   }
 }
 
+export async function crearCitaAction(input: CrearCitaInput): Promise<ActionResult<Appointment>> {
+  return _crearCitaBase(input, false)
+}
+
+export const crearCitaAdminAction = withAuth<Appointment, [input: CrearCitaInput]>(
+  'cita:crear',
+  async (ctx, input) => {
+    return _crearCitaBase({ ...input, origen: 'admin', creadaPor: ctx.nombre || 'admin' }, true)
+  }
+)
+
 /**
  * Confirmación de cita (Protegida: Admin y Recepción)
  */
@@ -243,14 +258,51 @@ export const cancelarCitaAction = withAuth<Appointment, [citaId: string, motivo?
   }
 )
 
+export type RegistrarCobroInput = {
+  descuentoCentavos: number
+  propinaCentavos: number
+  metodoPago: MetodoPago
+  nota?: string
+}
+
 /**
- * Marca cita como completada (Protegida: Admin y Recepción)
+ * Registra el cobro y completa la cita en la misma transacción
  */
-export const marcarCompletadaAction = withAuth<Appointment, [citaId: string, cambiadoPor?: string]>(
-  'cita:cambiar_estado',
-  async (ctx, citaId, cambiadoPor = 'admin') => {
+export const registrarCobroAction = withAuth<Appointment, [citaId: string, cobro: RegistrarCobroInput]>(
+  'cobro:registrar',
+  async (ctx, citaId, input) => {
     const cita = await docGet<Appointment>('appointments', citaId)
     if (!cita || !puedeTocarCita(ctx, cita)) return { ok: false, error: 'Cita no encontrada' }
+
+    if (cita.estado === 'cancelada' || cita.estado === 'no_asistio' || cita.estado === 'completada') {
+      return { ok: false, error: `No se puede cobrar una cita en estado '${cita.estado}'` }
+    }
+
+    const resultadoCobro = calcularCobro({
+      precioListaCentavos: cita.precioCentavos,
+      descuentoCentavos: input.descuentoCentavos,
+      propinaCentavos: input.propinaCentavos,
+    })
+
+    if (!resultadoCobro.ok) {
+      return { ok: false, error: resultadoCobro.error }
+    }
+
+    const newCharge: Charge = {
+      id: idCobro(citaId),
+      appointmentId: citaId,
+      clientId: cita.clientId,
+      professionalId: cita.professionalId,
+      serviceId: cita.serviceId,
+      fechaUtc: new Date().toISOString(),
+      precioListaCentavos: cita.precioCentavos,
+      descuentoCentavos: input.descuentoCentavos,
+      cobradoCentavos: resultadoCobro.cobradoCentavos,
+      propinaCentavos: input.propinaCentavos,
+      metodoPago: input.metodoPago,
+      cobradoPor: ctx.uid,
+      nota: input.nota,
+    }
 
     const updated: Appointment = {
       ...cita,
@@ -260,7 +312,45 @@ export const marcarCompletadaAction = withAuth<Appointment, [citaId: string, cam
         {
           estado: 'completada',
           fechaUtc: new Date().toISOString(),
-          nota: 'Servicio realizado exitosamente',
+          nota: `Cobrada y completada (${formatCurrencyFromCents(resultadoCobro.cobradoCentavos)}, ${input.metodoPago})`,
+          cambiadoPor: ctx.nombre || 'admin',
+        },
+      ],
+    }
+
+    const plan = planificarSlots(cita, updated, updated.duracionTotalMin)
+    const res = await aplicarCambioDeCita(updated, plan, newCharge)
+    if (!res.ok) return { ok: false, error: res.error }
+    
+    return updated
+  }
+)
+
+/**
+ * Marca cita como completada (Protegida: Admin y Recepción)
+ */
+export const marcarCompletadaAction = withAuth<Appointment, [citaId: string, cambiadoPor?: string]>(
+  'cita:cambiar_estado',
+  async (ctx, citaId, cambiadoPor = 'admin') => {
+    const cita = await docGet<Appointment>('appointments', citaId)
+    if (!cita || !puedeTocarCita(ctx, cita)) return { ok: false, error: 'Cita no encontrada' }
+
+    // Solo la profesional cierra una cita sin cobrarla: ella no tiene `cobro:registrar`.
+    // Para admin y recepción esta acción sería la puerta de atrás por la que se vacía la
+    // caja — completar sin dejar rastro del dinero. Ellos cierran con `registrarCobroAction`.
+    if (ctx.rol !== 'profesional') {
+      return { ok: false, error: 'Cierra la cita registrando el cobro' }
+    }
+
+    const updated: Appointment = {
+      ...cita,
+      estado: 'completada',
+      historial: [
+        ...(cita.historial || []),
+        {
+          estado: 'completada',
+          fechaUtc: new Date().toISOString(),
+          nota: 'Servicio realizado exitosamente (pendiente de cobro)',
           cambiadoPor: ctx.nombre || cambiadoPor,
         },
       ],

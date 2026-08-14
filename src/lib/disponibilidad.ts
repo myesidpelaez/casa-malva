@@ -326,7 +326,8 @@ export function validarReserva(
   allAppointments: Appointment[],
   services: Service[],
   professionals: Professional[],
-  excludeApptId?: string
+  excludeApptId?: string,
+  omitirAntelacionMinima: boolean = false
 ): { ok: boolean; error?: string } {
   const svc = services.find((s) => s.id === req.serviceId)
   const prof = professionals.find((p) => p.id === req.professionalId)
@@ -339,9 +340,11 @@ export function validarReserva(
   const inicio = typeof req.inicioUtc === 'string' ? new Date(req.inicioUtc) : req.inicioUtc
   if (isSunday(inicio)) return { ok: false, error: 'Los domingos el estudio se encuentra cerrado.' }
 
-  const minStartMs = Date.now() + REGLAS_NEGOCIO.minAntelacionMin * 60 * 1000
-  if (inicio.getTime() < minStartMs) {
-    return { ok: false, error: 'La reserva requiere mínimo 2 horas de antelación.' }
+  if (!omitirAntelacionMinima) {
+    const minStartMs = Date.now() + REGLAS_NEGOCIO.minAntelacionMin * 60 * 1000
+    if (inicio.getTime() < minStartMs) {
+      return { ok: false, error: 'La reserva requiere mínimo 2 horas de antelación.' }
+    }
   }
 
   const maxStartMs = Date.now() + REGLAS_NEGOCIO.maxAntelacionDias * 24 * 3600 * 1000

@@ -21,7 +21,6 @@ import {
   cancelarCitaAction,
   confirmarCitaAction,
   getCitasAction,
-  marcarCompletadaAction,
   marcarNoAsistioAction,
 } from '@/actions/citas'
 import { getServicesAction } from '@/actions/catalogo'
@@ -42,6 +41,7 @@ import { Field } from '@/components/ui/field'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/common/EmptyState'
 import type { Appointment, Client, Professional, Service } from '@/types'
+import { DrawerCobro, DrawerReagendar, DrawerNuevaCita } from './DrawersCita'
 
 const REFRESCO_MS = 3000
 
@@ -62,8 +62,14 @@ export default function AdminAgendaPage() {
   const [cargando, setCargando] = React.useState(true)
   const [filtro, setFiltro] = React.useState<Filtro>('todas')
   const [profesionalMovil, setProfesionalMovil] = React.useState<string>('todas')
+  /* El halo de la cita recién llegada. No es decoración: es LO que se ve cuando el dueño
+   * agenda desde su celular y la cita aparece en la pantalla delante de él — el momento
+   * que vende la demo (DISENO §11, paso 3). */
   const [recienLlegadas, setRecienLlegadas] = React.useState<Set<string>>(new Set())
   const [cancelando, setCancelando] = React.useState<Appointment | null>(null)
+  const [cobrando, setCobrando] = React.useState<Appointment | null>(null)
+  const [reagendando, setReagendando] = React.useState<Appointment | null>(null)
+  const [nuevaCitaOpen, setNuevaCitaOpen] = React.useState(false)
   const [motivo, setMotivo] = React.useState('')
   const [guardando, setGuardando] = React.useState(false)
 
@@ -140,6 +146,8 @@ export default function AdminAgendaPage() {
   }, [dia])
 
   React.useEffect(() => {
+    // La primera carga va aquí a propósito: esperar la primera vuelta del intervalo
+    // dejaría la agenda en blanco tres segundos al abrirla.
     refrescar()
     const id = window.setInterval(refrescar, REFRESCO_MS)
     return () => window.clearInterval(id)
@@ -226,18 +234,21 @@ export default function AdminAgendaPage() {
         title="Agenda del día"
         subtitle={<LivePulse label="En vivo · se actualiza sola cada 3 segundos" />}
       >
-        <Segmented
-          ariaLabel="Filtrar citas"
-          size="sm"
-          value={filtro}
-          onChange={setFiltro}
-          className="w-full sm:w-auto"
-          options={[
-            { value: 'todas', label: 'Todas', count: citasDelDia.length },
-            { value: 'activas', label: 'En pie', count: activas },
-            { value: 'pendientes', label: 'Por confirmar', count: pendientes },
-          ]}
-        />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+          <Button variant="primary" size="sm" onClick={() => setNuevaCitaOpen(true)}>Nueva cita</Button>
+          <Segmented
+            ariaLabel="Filtrar citas"
+            size="sm"
+            value={filtro}
+            onChange={setFiltro}
+            className="w-full sm:w-auto"
+            options={[
+              { value: 'todas', label: 'Todas', count: citasDelDia.length },
+              { value: 'activas', label: 'En pie', count: activas },
+              { value: 'pendientes', label: 'Por confirmar', count: pendientes },
+            ]}
+          />
+        </div>
       </AdminHeader>
 
       {/* ---------- Navegador de fecha + resumen (100% fluido) ---------- */}
@@ -372,38 +383,39 @@ export default function AdminAgendaPage() {
         ) : (
           <div className="space-y-2.5">
             <AnimatePresence initial={false} mode="popLayout">
-              {citasMovil.map((cita) => (
-                <TarjetaCita
-                  key={cita.id}
-                  cita={cita}
-                  servicio={servicios.find((s) => s.id === cita.serviceId)}
-                  clienta={clientas.find((c) => c.id === cita.clientId)}
-                  profesional={equipo.find((p) => p.id === cita.professionalId)}
-                  mostrarProfesional={profesionalMovil === 'todas'}
-                  nueva={recienLlegadas.has(cita.id)}
-                  onConfirmar={() =>
-                    transicion(cita, () => confirmarCitaAction(cita.id), 'Cita confirmada')
-                  }
-                  onCompletar={() =>
-                    transicion(
-                      cita,
-                      () => marcarCompletadaAction(cita.id),
-                      'Servicio marcado como realizado'
-                    )
-                  }
-                  onNoAsistio={() =>
-                    transicion(
-                      cita,
-                      () => marcarNoAsistioAction(cita.id),
-                      'Registrada como no-show'
-                    )
-                  }
-                  onCancelar={() => {
-                    setCancelando(cita)
-                    setMotivo('')
-                  }}
-                />
-              ))}
+              {citasMovil.map((cita) => {
+                const svc = servicios.find((s) => s.id === cita.serviceId)
+                const cli = clientas.find((c) => c.id === cita.clientId)
+                const prof = equipo.find((p) => p.id === cita.professionalId)
+                if (!svc || !cli || !prof) return null
+                return (
+                  <TarjetaCita
+                    key={cita.id}
+                    cita={cita}
+                    servicio={svc}
+                    clienta={cli}
+                    profesional={prof}
+                    mostrarProfesional={profesionalMovil === 'todas'}
+                    nueva={recienLlegadas.has(cita.id)}
+                    onConfirmar={() =>
+                      transicion(cita, () => confirmarCitaAction(cita.id), 'Cita confirmada')
+                    }
+                    onCancelar={() => {
+                      setCancelando(cita)
+                      setMotivo('')
+                    }}
+                    onCobrar={() => setCobrando(cita)}
+                    onNoAsistio={() =>
+                      transicion(
+                        cita,
+                        () => marcarNoAsistioAction(cita.id),
+                        'Registrada como no-show'
+                      )
+                    }
+                    onReagendar={() => setReagendando(cita)}
+                  />
+                )
+              })}
             </AnimatePresence>
           </div>
         )}
@@ -456,38 +468,37 @@ export default function AdminAgendaPage() {
                     )}
 
                     <AnimatePresence initial={false} mode="popLayout">
-                      {suyas.map((cita) => (
-                        <TarjetaCita
-                          key={cita.id}
-                          cita={cita}
-                          servicio={servicios.find((s) => s.id === cita.serviceId)}
-                          clienta={clientas.find((c) => c.id === cita.clientId)}
-                          profesional={prof}
-                          mostrarProfesional={false}
-                          nueva={recienLlegadas.has(cita.id)}
-                          onConfirmar={() =>
-                            transicion(cita, () => confirmarCitaAction(cita.id), 'Cita confirmada')
-                          }
-                          onCompletar={() =>
-                            transicion(
-                              cita,
-                              () => marcarCompletadaAction(cita.id),
-                              'Servicio marcado como realizado'
-                            )
-                          }
-                          onNoAsistio={() =>
-                            transicion(
-                              cita,
-                              () => marcarNoAsistioAction(cita.id),
-                              'Registrada como no-show'
-                            )
-                          }
-                          onCancelar={() => {
-                            setCancelando(cita)
-                            setMotivo('')
-                          }}
-                        />
-                      ))}
+                      {suyas.map((cita) => {
+                        const svc = servicios.find((s) => s.id === cita.serviceId)
+                        const cli = clientas.find((c) => c.id === cita.clientId)
+                        if (!svc || !cli) return null
+                        return (
+                          <TarjetaCita
+                            key={cita.id}
+                            cita={cita}
+                            servicio={svc}
+                            clienta={cli}
+                            profesional={prof}
+                            nueva={recienLlegadas.has(cita.id)}
+                            onConfirmar={() =>
+                              transicion(cita, () => confirmarCitaAction(cita.id), 'Cita confirmada')
+                            }
+                            onCancelar={() => {
+                              setCancelando(cita)
+                              setMotivo('')
+                            }}
+                            onCobrar={() => setCobrando(cita)}
+                            onNoAsistio={() =>
+                              transicion(
+                                cita,
+                                () => marcarNoAsistioAction(cita.id),
+                                'Registrada como no-show'
+                              )
+                            }
+                            onReagendar={() => setReagendando(cita)}
+                          />
+                        )
+                      })}
                     </AnimatePresence>
                   </div>
                 </Surface>
@@ -536,6 +547,28 @@ export default function AdminAgendaPage() {
           />
         </div>
       </Sheet>
+
+      <DrawerCobro
+        cita={cobrando}
+        servicio={cobrando ? servicios.find(s => s.id === cobrando.serviceId) : undefined}
+        onClose={() => setCobrando(null)}
+        onSuccess={() => refrescar(false)}
+      />
+
+      <DrawerReagendar
+        cita={reagendando}
+        onClose={() => setReagendando(null)}
+        onSuccess={() => refrescar(false)}
+      />
+
+      <DrawerNuevaCita
+        open={nuevaCitaOpen}
+        onClose={() => setNuevaCitaOpen(false)}
+        onSuccess={() => refrescar(false)}
+        clientas={clientas}
+        servicios={servicios}
+        profesionales={equipo}
+      />
     </>
   )
 }
@@ -549,22 +582,24 @@ function TarjetaCita({
   clienta,
   profesional,
   mostrarProfesional = false,
-  nueva,
+  nueva = false,
   onConfirmar,
-  onCompletar,
-  onNoAsistio,
   onCancelar,
+  onCobrar,
+  onNoAsistio,
+  onReagendar,
 }: {
   cita: Appointment
-  servicio?: Service
-  clienta?: Client
-  profesional?: Professional
+  servicio: Service
+  clienta: Client
+  profesional: Professional
   mostrarProfesional?: boolean
-  nueva: boolean
+  nueva?: boolean
   onConfirmar: () => void
-  onCompletar: () => void
-  onNoAsistio: () => void
   onCancelar: () => void
+  onCobrar: () => void
+  onNoAsistio: () => void
+  onReagendar: () => void
 }) {
   const meta = APPOINTMENT_STATE[cita.estado] ?? APPOINTMENT_STATE.agendada
   const Origen = ORIGEN_META[cita.origen]?.icon ?? Globe
@@ -603,10 +638,17 @@ function TarjetaCita({
 
       <div className="space-y-2 p-2.5 sm:p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="tnum inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-900">
-            <Clock className="h-3.5 w-3.5 text-malva-500" strokeWidth={2} />
-            {hora(cita.inicioUtc)}
-          </span>
+          {cita.estado === 'completada' ? (
+            <div className="flex items-center gap-1.5 text-[12px] font-medium text-emerald-700">
+              <Check className="h-3.5 w-3.5" />
+              {cita.historial?.find(h => h.estado === 'completada')?.nota || 'Completada'}
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[12px] font-medium text-ink-500">
+              <Clock className="h-3.5 w-3.5" />
+              {hora(cita.inicioUtc)} - {hora(cita.finUtc)}
+            </div>
+          )}
 
           <div className="flex items-center gap-1.5">
             {mostrarProfesional && profesional && (
@@ -664,7 +706,7 @@ function TarjetaCita({
                 <Button
                   variant="soft"
                   size="sm"
-                  onClick={onCompletar}
+                  onClick={onCobrar}
                   className="!h-8 !px-3 text-[12px]"
                 >
                   <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
@@ -680,6 +722,19 @@ function TarjetaCita({
                   No vino
                 </Button>
               </>
+            )}
+
+            {(cita.estado === 'agendada' || cita.estado === 'pendiente' || cita.estado === 'confirmada') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onReagendar}
+                className="!h-8 !px-2.5 !text-ink-400 hover:!text-ink-900 ml-auto"
+                aria-label="Reagendar"
+              >
+                <Calendar className="h-3.5 w-3.5" strokeWidth={2} />
+                Reagendar
+              </Button>
             )}
 
             <Button

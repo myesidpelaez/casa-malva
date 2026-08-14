@@ -32,6 +32,14 @@
         { "fieldPath": "activo", "order": "ASCENDING" },
         { "fieldPath": "orden", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "charges",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "professionalId", "order": "ASCENDING" },
+        { "fieldPath": "fechaUtc", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
