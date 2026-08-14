@@ -8,6 +8,7 @@ export const RUTAS_PROTEGIDAS: Record<string, Permiso> = {
   '/admin/profesionales': 'equipo:editar',
   '/admin/clientas': 'clienta:leer',
   '/admin/agente': 'catalogo:editar',
+  '/admin/reportes': 'cobro:leer',
 }
 
 /** La sesión, reducida a lo único que decide una ruta. */

@@ -40,6 +40,8 @@ caso('admin abre la Agenda', '/admin', admin, 'seguir')
 caso('recepción abre la Agenda', '/admin', recepcion, 'seguir')
 caso('profesional abre la Agenda', '/admin', profesional, 'seguir')
 caso('/admin/agenda también entra', '/admin/agenda', admin, 'seguir')
+caso('admin entra a Reportes', '/admin/reportes', admin, 'seguir')
+caso('recepción NO entra a Reportes', '/admin/reportes', recepcion, 'denegar')
 
 console.log('\n2. Sin sesión no se pasa')
 caso('sin sesión → login', '/admin', null, 'a_login')
