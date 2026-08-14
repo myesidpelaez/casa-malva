@@ -154,6 +154,19 @@ export async function getAppointmentsEnRango(
   return snap.docs.map((d) => normalizeDocData<Appointment>(d.id, d.data()))
 }
 
+export async function getChargesEnRango(
+  desdeUtcISO: string,
+  hastaUtcISO: string
+): Promise<Charge[]> {
+  const db = getDb()
+  const snap = await db.collection('charges')
+    .where('fechaUtc', '>=', desdeUtcISO)
+    .where('fechaUtc', '<', hastaUtcISO)
+    .get()
+  lecturas += snap.size
+  return snap.docs.map((d) => normalizeDocData<Charge>(d.id, d.data()))
+}
+
 export async function getAppointmentsDeCliente(clientId: string): Promise<Appointment[]> {
   const db = getDb()
   const snap = await db.collection('appointments').where('clientId', '==', clientId).get()

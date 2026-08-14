@@ -13,6 +13,7 @@ import {
   LogOut,
   UserCheck,
   Users,
+  BarChart3,
   type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -28,6 +29,7 @@ export const ADMIN_ITEMS: AdminNavItem[] = [
   { label: 'Catálogo', href: '/admin/catalogo', icon: BookOpen },
   { label: 'Equipo', href: '/admin/profesionales', icon: Users },
   { label: 'Clientas', href: '/admin/clientas', icon: UserCheck },
+  { label: 'Reportes', href: '/admin/reportes', icon: BarChart3 },
   { label: 'Agente IA', href: '/admin/agente', icon: Bot },
 ]
 
