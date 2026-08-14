@@ -81,9 +81,19 @@ export default function AdminAgendaPage() {
     )
   }, [])
 
-  /* --- Citas: sondeo continuo --- */
+  /* --- Citas: sondeo continuo, acotado al día que se está mirando ---
+   *
+   * Antes pedía `getCitasAction()` sin argumento, que devuelve la ventana de 67 días
+   * (−7/+60) entera. Cada 3 segundos. En la demo eran 15 citas y no se notaba; en un
+   * spa real son ~2.100 documentos por vuelta, ~25 millones de lecturas por jornada y
+   * una factura de Firestore mayor que la mensualidad del cliente.
+   *
+   * Cuando el día visible es hoy se piden dos días, para que una cita agendada "para
+   * mañana" desde WhatsApp siga avisando en pantalla — el momento que vende la demo.
+   */
   const refrescar = React.useCallback(async (silencioso = true) => {
-    const res = await getCitasAction()
+    const mirandoHoy = claveDia(dia) === claveDia(new Date())
+    const res = await getCitasAction(dia.toISOString(), mirandoHoy ? 2 : 1)
     if (!res.ok) {
       if (!silencioso) toast.error('No se pudo actualizar la agenda')
       return
@@ -120,7 +130,14 @@ export default function AdminAgendaPage() {
 
     idsVistos.current = actuales
     setCitas(res.data)
-  }, [])
+  }, [dia])
+
+  /* Al cambiar de día, los ids vistos son de otro día: sin este olvido, la primera
+   * vuelta del sondeo tomaría todas las citas del día nuevo por recién llegadas y
+   * lanzaría un aviso falso por cada una. Va antes del efecto del sondeo a propósito. */
+  React.useEffect(() => {
+    idsVistos.current = null
+  }, [dia])
 
   React.useEffect(() => {
     refrescar()

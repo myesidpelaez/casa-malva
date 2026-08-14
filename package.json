@@ -15,8 +15,9 @@
     "prueba:ocupacion": "tsx scripts/prueba-ocupacion.ts",
     "prueba:lecturas": "tsx scripts/prueba-lecturas.ts",
     "prueba:lecturas-nube": "tsx scripts/prueba-lecturas-nube.ts",
-    "verificar": "npm run tsc && npm run lint && npm run prueba:zona && npm run prueba:permisos && npm run prueba:ocupacion && npm run prueba:lecturas && npm run build",
-    "verificar:nube": "npm run prueba:doble-reserva && npm run prueba:lecturas-nube"
+    "verificar": "npm run tsc && npm run lint && npm run prueba:zona && npm run prueba:rutas && npm run prueba:permisos && npm run prueba:ocupacion && npm run prueba:lecturas && npm run build",
+    "verificar:nube": "npm run prueba:doble-reserva && npm run prueba:lecturas-nube",
+    "prueba:rutas": "tsx scripts/prueba-rutas.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

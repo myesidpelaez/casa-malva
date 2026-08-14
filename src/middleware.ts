@@ -12,7 +12,7 @@ function getSessionSecret(): string {
   return secret
 }
 
-import { PERMISOS, type Permiso } from '@/lib/permisos'
+import { decidirRuta } from '@/lib/rutas'
 
 // Lightweight crypto helper for Edge runtime in Next middleware using Web Crypto API
 async function verifySessionToken(token: string): Promise<any | null> {
@@ -47,57 +47,35 @@ async function verifySessionToken(token: string): Promise<any | null> {
   }
 }
 
-const ROUTE_PERMISSIONS: Record<string, Permiso> = {
-  '/admin/catalogo': 'catalogo:editar',
-  '/admin/profesionales': 'equipo:editar',
-  '/admin/clientas': 'clienta:leer',
-  '/admin/agente': 'catalogo:editar', // Solo admin puede ver agente, asumo catalogo:editar
-}
-
+/**
+ * El portero del panel.
+ *
+ * No decide nada por su cuenta: lee la cookie, la verifica, y le pregunta a
+ * `decidirRuta` — que es una función pura y **sí se puede probar desde un script**
+ * (`npm run prueba:rutas`). Aquí solo se traduce la decisión a una respuesta de Next.
+ *
+ * Que la decisión viviera dentro de esta función, inalcanzable para cualquier prueba, es
+ * lo que dejó la Agenda inaccesible para la dueña durante un día en producción.
+ */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Protected paths: /admin and any subpath except /admin/login
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value
-    const session = sessionCookie ? await verifySessionToken(sessionCookie) : null
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value
+  const session = sessionCookie ? await verifySessionToken(sessionCookie) : null
 
-    if (!session) {
-      const loginUrl = new URL('/admin/login', request.url)
-      return NextResponse.redirect(loginUrl)
-    }
+  const decision = decidirRuta(pathname, session)
 
-    // Si intenta entrar a la raíz /admin, redirigir al módulo principal del rol
-    if (pathname === '/admin') {
-      if (session.rol === 'admin') {
-        return NextResponse.redirect(new URL('/admin/catalogo', request.url))
-      }
-      // Los demás se quedan en /admin (agenda)
-    }
-
-    // Validar permisos por ruta
-    for (const [route, permiso] of Object.entries(ROUTE_PERMISSIONS)) {
-      if (pathname.startsWith(route)) {
-        const roles = PERMISOS[permiso]
-        if (!(roles as readonly string[]).includes(session.rol as string)) {
-          return new NextResponse(JSON.stringify({ error: 'Acceso denegado' }), { status: 403 })
-        }
-      }
-    }
+  switch (decision.tipo) {
+    case 'a_login':
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    case 'a_panel':
+      // Todos entran a la Agenda: es la pantalla del mostrador, la primera del día.
+      return NextResponse.redirect(new URL('/admin', request.url))
+    case 'denegar':
+      return new NextResponse(JSON.stringify({ error: 'Acceso denegado' }), { status: 403 })
+    case 'seguir':
+      return NextResponse.next()
   }
-
-  // If visiting /admin/login while already authenticated, redirect to their main module
-  if (pathname === '/admin/login') {
-    const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value
-    const session = sessionCookie ? await verifySessionToken(sessionCookie) : null
-    if (session) {
-      const redirectPath = session.rol === 'admin' ? '/admin/catalogo' : '/admin'
-      const adminUrl = new URL(redirectPath, request.url)
-      return NextResponse.redirect(adminUrl)
-    }
-  }
-
-  return NextResponse.next()
 }
 
 export const config = {

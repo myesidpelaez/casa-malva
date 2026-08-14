@@ -388,14 +388,16 @@ export const reagendarCitaAction = withAuth<Appointment, [citaId: string, nuevaI
 /**
  * Consulta de citas del día o completas (Protegida: Admin y Recepción)
  */
-export const getCitasAction = withAuth<Appointment[], [fechaIso?: string]>(
+export const getCitasAction = withAuth<Appointment[], [fechaIso?: string, dias?: number]>(
   'agenda:leer',
-  async (ctx, fechaIso) => {
+  async (ctx, fechaIso, dias = 1) => {
     let startIso: string
     let endIso: string
     if (fechaIso) {
+      // `startOfDay` da la medianoche del reloj del estudio (Bogotá), no la del servidor:
+      // es lo que hace que la franja de las 19:00 no se cuente en el día siguiente (F2).
       const dayStart = startOfDay(new Date(fechaIso))
-      const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000)
+      const dayEnd = new Date(dayStart.getTime() + Math.max(1, dias) * 24 * 3600 * 1000)
       startIso = dayStart.toISOString()
       endIso = dayEnd.toISOString()
     } else {
