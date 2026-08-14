@@ -119,8 +119,18 @@ export function minutosDisponibles(prof: Professional, rango: Rango): number
 - Enteros de centavos en todo. Ninguna división que produzca decimales de dinero: el ticket
   promedio se redondea **al entero de centavo más cercano**, y se documenta.
 - `ingresoPorHoraCentavos` usa `duracionMin + bufferMin` (el tiempo que el servicio **bloquea
-  de verdad** en la agenda), no solo la duración. Un balayage de $420.000 que ocupa cuatro
-  horas y veinte minutos rinde menos por hora que tres manicures semipermanentes.
+  de verdad** en la agenda), no solo la duración.
+
+  > **Corrección del arquitecto (2026-08-13).** La primera versión de este plano afirmaba
+  > que un balayage de $420.000 en 260 min rinde *menos* por hora que una manicure de
+  > $55.000 en 70 min. **Es falso**: 96.923 $/h contra 47.143 $/h — el balayage rinde el
+  > doble. Lo detuvo el implementador en vez de reescribir el criterio para poder cumplirlo,
+  > que es exactamente lo que se le pide en la sección 6.
+  >
+  > El ejemplo correcto con el catálogo real es **el diseño de cejas**: $35.000 en 35 min
+  > = **60.000 $/h**, contra el corte y peinado, $65.000 en 70 min = **55.714 $/h**. El
+  > servicio que cuesta **casi la mitad rinde más por hora**. Esa es la lección que el
+  > reporte tiene que hacer visible: *el precio no ordena el rendimiento*.
 - `ocupacionPorcentaje` = minutos vendidos / minutos disponibles del horario del profesional
   en el rango, descontando domingos, almuerzo y sus `excepciones`. Si `minutosDisponibles`
   es 0 → ocupación 0, **nunca** división por cero.
@@ -199,8 +209,12 @@ resultados calculados a mano en un comentario. Casos que no pueden faltar:
 2. Un cobro con 10.000 de propina → **el ingreso no cambia**; la propina sale en su fila
 3. Un cobro con descuento → ingreso = cobrado, y el descuento aparece en su total
 4. Ranking: dos profesionales, una con el doble de ingreso → orden y porcentajes correctos
-5. `ingresoPorHora`: un servicio de $420.000 que ocupa 260 min **rinde menos** que uno de
-   $55.000 que ocupa 70 min. La prueba lo afirma explícitamente
+5. `ingresoPorHora`, **con los números del catálogo real** y en este orden:
+   - diseño de cejas ($35.000 en 35 min) → 60.000 $/h
+   - corte y peinado ($65.000 en 70 min) → 55.714 $/h
+   - **el de cejas rinde más aunque cueste casi la mitad** — la prueba lo afirma
+   - y balayage ($420.000 en 260 min) → 96.923 $/h, **el que más rinde**: la prueba lo
+     afirma también, para dejar por escrito que el plano se equivocó aquí
 6. Ocupación con `minutosDisponibles = 0` → 0, sin `NaN` ni `Infinity`
 7. Un cobro a las 19:00 hora de Bogotá **cae en ese día**, no en el siguiente (F2)
 8. Sin datos → todo en cero, sin excepciones lanzadas

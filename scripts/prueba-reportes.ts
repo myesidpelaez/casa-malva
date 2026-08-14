@@ -44,7 +44,7 @@ const mockProfesionales: Professional[] = [
 console.log('\nReportes\n')
 
 const caja = resumenCaja(mockCobros)
-afirmar('Tres cobros de 55.000, 28.000 y 45.000 (wait, plus 4th is 420.000) - total 543.000', caja.ingresoCentavos === 54300000, 54300000, caja.ingresoCentavos)
+afirmar('Cuatro cobros: 55.000 + 28.000 + 45.000 + 420.000 = 543.000 de ingreso', caja.ingresoCentavos === 54300000, 54300000, caja.ingresoCentavos)
 afirmar('Ticket promedio se redondea', caja.ticketPromedioCentavos === Math.round(54300000 / 4), Math.round(54300000 / 4), caja.ticketPromedioCentavos)
 afirmar('Propina no cambia el ingreso', caja.propinaCentavos === 1000000 && caja.ingresoCentavos === 54300000)
 afirmar('Descuento en chg_3 reduce ingreso a 40.000', caja.descuentoCentavos === 500000)
@@ -58,7 +58,32 @@ afirmar('Ocupación calcula correctamente', rankingProf[0].minutosVendidos === 2
 const rankingSvc = rankingServicios(mockCobros, mockCitas, mockServicios)
 const s4 = rankingSvc.find(s => s.serviceId === 's_4')!
 const s1 = rankingSvc.find(s => s.serviceId === 's_1')!
-afirmar('Servicio 420.000 que ocupa 260 min rinde MÁS por hora que 55.000 ocupando 70 min (corrección de matemática errónea en spec)', s4.ingresoPorHoraCentavos > s1.ingresoPorHoraCentavos)
+/* El plano del arquitecto afirmaba lo contrario y era falso: 420.000 en 260 min son
+ * 96.923 $/h, contra 47.143 $/h de 55.000 en 70 min. Lo detectó el implementador y paró
+ * en vez de reescribir el criterio. Queda escrito aquí para que no vuelva a colarse. */
+afirmar('El de 420.000 en 260 min rinde MÁS por hora que el de 55.000 en 70 min (96.923 vs 47.143)', s4.ingresoPorHoraCentavos > s1.ingresoPorHoraCentavos)
+
+/* Y la lección que el reporte tiene que hacer visible, con el catálogo real:
+ * el precio NO ordena el rendimiento. Diseño de cejas ($35.000 en 35 min) = 60.000 $/h
+ * contra corte y peinado ($65.000 en 70 min) = 55.714 $/h — el barato rinde más. */
+const rankingReal = rankingServicios(
+  [
+    { ...mockCobros[0], id: 'chg_cejas', appointmentId: 'app_cejas', serviceId: 's_cejas', cobradoCentavos: 3500000, precioListaCentavos: 3500000 },
+    { ...mockCobros[0], id: 'chg_corte', appointmentId: 'app_corte', serviceId: 's_corte', cobradoCentavos: 6500000, precioListaCentavos: 6500000 },
+  ],
+  [
+    { ...mockCitas[0], id: 'app_cejas', serviceId: 's_cejas', duracionTotalMin: 35 },
+    { ...mockCitas[0], id: 'app_corte', serviceId: 's_corte', duracionTotalMin: 70 },
+  ],
+  [
+    { id: 's_cejas', categoryId: 'c_1', nombre: 'Diseño de cejas', duracionMin: 30, bufferMin: 5, precioCentavos: 3500000, requiereConfirmacion: false, activo: true },
+    { id: 's_corte', categoryId: 'c_2', nombre: 'Corte y peinado', duracionMin: 60, bufferMin: 10, precioCentavos: 6500000, requiereConfirmacion: false, activo: true },
+  ]
+)
+const cejas = rankingReal.find((f) => f.serviceId === 's_cejas')!
+const corte = rankingReal.find((f) => f.serviceId === 's_corte')!
+afirmar('Diseño de cejas rinde 60.000 $/h', cejas.ingresoPorHoraCentavos === 6000000, 6000000, cejas.ingresoPorHoraCentavos)
+afirmar('El de cejas rinde MÁS por hora que el corte, costando casi la mitad', cejas.ingresoPorHoraCentavos > corte.ingresoPorHoraCentavos)
 
 const mapa = mapaDeFranjas(mockCobros, mockCitas)
 // chg_4 starts at 2026-08-11T00:00:00Z which is 19:00 Bogota on 2026-08-10 (Monday = 1)
