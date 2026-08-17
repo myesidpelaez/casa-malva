@@ -520,9 +520,26 @@ html.reveal-todo .reveal {
 }
 
 @media print {
+  @page {
+    margin: 10mm;
+    size: auto;
+  }
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   .aurora,
   nav,
+  aside.no-print,
   .no-print {
     display: none !important;
+  }
+  .flyer-sheet {
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
   }
 }
