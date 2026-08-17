@@ -22,6 +22,8 @@ type CategoryLook = {
   tile: string
   /** Frase corta de apoyo, editorial. */
   claim: string
+  /** Imagen editorial de alta resolución */
+  image: string
 }
 
 const LOOKS: Record<string, CategoryLook> = {
@@ -29,21 +31,25 @@ const LOOKS: Record<string, CategoryLook> = {
     icon: Hand,
     tile: 'bg-malva-100 text-malva-600',
     claim: 'Manos y pies impecables, con acabado que dura.',
+    image: '/images/cat_unas.jpg',
   },
   cat_cabello: {
     icon: Scissors,
     tile: 'bg-blush/40 text-malva-700',
     claim: 'Corte, color y tratamiento con diagnóstico previo.',
+    image: '/images/cat_cabello.jpg',
   },
   cat_maquillaje: {
     icon: Brush,
     tile: 'bg-champagne/45 text-warning',
     claim: 'Para el día que quieres recordar en fotos.',
+    image: '/images/cat_maquillaje.jpg',
   },
   cat_cejas: {
     icon: Eye,
     tile: 'bg-sage/40 text-success',
     claim: 'La mirada primero: diseño, laminado y lifting.',
+    image: '/images/cat_cejas.jpg',
   },
 }
 
@@ -51,10 +57,22 @@ const FALLBACK: CategoryLook = {
   icon: Sparkles,
   tile: 'bg-malva-100 text-malva-600',
   claim: 'Servicios del estudio.',
+  image: '/images/hero.jpg',
 }
 
 export function categoryLook(categoryId: string): CategoryLook {
   return LOOKS[categoryId] ?? FALLBACK
+}
+
+/** Obtiene la foto de perfil asignada a un profesional */
+export function getProfessionalAvatar(prof: { id?: string; nombre?: string }): string | null {
+  const norm = `${prof.id ?? ''} ${prof.nombre ?? ''}`.toLowerCase();
+  if (norm.includes('valentina')) return '/images/pro_valentina.jpg';
+  if (norm.includes('daniela')) return '/images/pro_daniela.jpg';
+  if (norm.includes('sara')) return '/images/pro_sara.jpg';
+  if (norm.includes('camila')) return '/images/pro_camila.jpg';
+  if (norm.includes('marcela')) return '/images/pro_marcela.jpg';
+  return null;
 }
 
 /**

@@ -22,7 +22,8 @@ import { formatCurrencyFromCents } from '@/lib/currency'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
 import { claveDia, isSunday, startOfDay } from '@/lib/disponibilidad'
 import { fechaLarga, hora as horaCorta } from '@/lib/fechas'
-import { humanDuration, cleanCategoryName } from '@/lib/catalogo-ui'
+import { humanDuration, cleanCategoryName, getProfessionalAvatar } from '@/lib/catalogo-ui'
+import Image from 'next/image'
 import { normalizePhoneE164 } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { spring, tween } from '@/lib/motion'
@@ -529,9 +530,18 @@ function PasoProfesional({
               )}
             >
               <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-malva-500 to-malva-700 font-display text-lg font-semibold text-white">
-                  {p.nombre.charAt(0)}
-                </span>
+                {(() => {
+                const avatar = getProfessionalAvatar(p)
+                return avatar ? (
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 border-malva-200 shadow-sm">
+                    <Image src={avatar} alt={p.nombre} fill sizes="48px" className="object-cover" />
+                  </div>
+                ) : (
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-malva-500 to-malva-700 font-display text-lg font-semibold text-white">
+                    {p.nombre.charAt(0)}
+                  </span>
+                )
+              })()}
                 <div className="min-w-0">
                   <h3 className="truncate text-[14.5px] font-semibold text-ink-900">
                     {p.nombre}

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CalendarPlus, Clock, Info } from 'lucide-react'
@@ -61,21 +62,31 @@ export default async function ServiciosPage() {
 
             return (
               <section key={cat.id} id={cat.id} className="scroll-mt-24">
-                <Reveal className="flex items-center gap-3 border-b border-malva-100 pb-3">
-                  <span
-                    className={cn('grid h-11 w-11 place-items-center rounded-[14px]', look.tile)}
-                  >
-                    <Icon className="h-[21px] w-[21px]" strokeWidth={1.6} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="font-display text-[22px] font-semibold text-ink-900">
-                      {cleanCategoryName(cat.nombre)}
-                    </h2>
-                    <p className="text-[12.5px] text-ink-400">{look.claim}</p>
+                <Reveal className="space-y-3 border-b border-malva-100 pb-4">
+                  {/* Banner visual sutil */}
+                  <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-2xl bg-malva-100 shadow-sm">
+                    <Image
+                      src={look.image}
+                      alt={cleanCategoryName(cat.nombre)}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 800px"
+                      className="object-cover object-center"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-ink-950/70 via-ink-950/40 to-transparent" />
+                    <div className="absolute inset-0 flex items-center p-5 sm:p-6">
+                      <div className="flex items-center gap-3.5">
+                        <span className={cn('grid h-12 w-12 shrink-0 place-items-center rounded-2xl backdrop-blur-md border border-white/30', look.tile)}>
+                          <Icon className="h-6 w-6" strokeWidth={1.75} />
+                        </span>
+                        <div>
+                          <h2 className="font-display text-[24px] sm:text-[28px] font-semibold text-white">
+                            {cleanCategoryName(cat.nombre)}
+                          </h2>
+                          <p className="text-[13px] text-white/85">{look.claim}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <span className="tnum shrink-0 text-[12px] text-ink-400">
-                    {catServices.length} servicios
-                  </span>
                 </Reveal>
 
                 <RevealGroup className="mt-4 grid gap-3 md:grid-cols-2">
