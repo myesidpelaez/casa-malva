@@ -100,6 +100,48 @@
 
 * {
   border-color: var(--color-ink-100);
+  /* Firefox y navegadores con soporte estándar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-malva-300) transparent;
+}
+
+/* Selección de texto en armonía con la paleta de Casa Malva */
+::selection {
+  background-color: var(--color-malva-200);
+  color: var(--color-malva-900);
+}
+
+/* ============================================================================
+   Scrollbars WebKit (Chrome, Edge, Safari, Brave, Opera) — Estilo Casa Malva
+   Píldora flotante elegante, ultrafina, tonos malva cálidos
+   ========================================================================= */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-malva-300);
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 200ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-malva-500);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--color-malva-700);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 html {
@@ -265,24 +307,38 @@ body {
   min-width: 44px;
 }
 
-/* Scrollbars discretas */
-.scrollbar-none {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+/* Scrollbars discretas y personalizadas para contenedores y drawers */
+.scrollbar-none,
+.no-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-.scrollbar-slim::-webkit-scrollbar {
-  height: 6px;
-  width: 6px;
+.scrollbar-slim::-webkit-scrollbar,
+.scrollbar-malva::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
 }
-.scrollbar-slim::-webkit-scrollbar-thumb {
-  background: var(--color-ink-200);
-  border-radius: 999px;
+.scrollbar-slim::-webkit-scrollbar-thumb,
+.scrollbar-malva::-webkit-scrollbar-thumb {
+  background-color: var(--color-malva-200);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 150ms ease;
 }
-.scrollbar-slim::-webkit-scrollbar-track {
+.scrollbar-slim::-webkit-scrollbar-thumb:hover,
+.scrollbar-malva::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-malva-400);
+}
+.scrollbar-slim::-webkit-scrollbar-track,
+.scrollbar-malva::-webkit-scrollbar-track {
   background: transparent;
 }
 

@@ -133,7 +133,7 @@ export function RightDrawer({
                 </div>
 
                 {/* Scrollable Body (Cero Scroll compliant: min-h-0 flex-1 overflow-y-auto) */}
-                <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-5">
+                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-malva px-6 py-5 space-y-5">
                   {children}
                 </div>
 
