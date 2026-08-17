@@ -1,8 +1,8 @@
 'use server'
 
-import { docGet, docSet, getCategories, getServices } from '@/lib/db'
+import { docGet, docSet, getCategories, getServices, getProfessionals } from '@/lib/db'
 import { withAuth } from '@/lib/withAuth'
-import type { Category, Service } from '@/types'
+import type { Category, Service, Professional } from '@/types'
 import type { SlotInfo } from '@/lib/disponibilidad'
 
 export type ActionResult<T> =
@@ -57,29 +57,63 @@ export const upsertCategoryAction = withAuth<Category, [categoryData: Partial<Ca
 )
 
 /**
- * Mutación administrativa de servicios y precios (Protegida)
+ * Mutación administrativa de servicios, precios y asignación de equipo (Protegida)
  */
-export const upsertServiceAction = withAuth<Service, [serviceData: Partial<Service> & { id?: string }]>(
-  'catalogo:editar',
-  async (ctx, serviceData) => {
-    const id = serviceData.id || `srv_${Date.now()}`
-    const existing = serviceData.id ? await docGet<Service>('services', serviceData.id) : null
-
-    const service: Service = {
-      id,
-      categoryId: serviceData.categoryId || existing?.categoryId || 'cat_unas',
-      nombre: serviceData.nombre || existing?.nombre || 'Nuevo Servicio',
-      duracionMin: serviceData.duracionMin ?? existing?.duracionMin ?? 40,
-      bufferMin: serviceData.bufferMin ?? existing?.bufferMin ?? 10,
-      precioCentavos: serviceData.precioCentavos ?? existing?.precioCentavos ?? 3000000,
-      requiereConfirmacion:
-        serviceData.requiereConfirmacion ??
-        existing?.requiereConfirmacion ??
-        (serviceData.precioCentavos ?? 0) > 20000000,
-      activo: serviceData.activo ?? existing?.activo ?? true,
+export const upsertServiceAction = withAuth<
+  Service,
+  [
+    serviceData: Partial<Service> & {
+      id?: string
+      assignedProfessionalIds?: string[]
     }
+  ]
+>('catalogo:editar', async (ctx, serviceData) => {
+  const id = serviceData.id || `srv_${Date.now()}`
+  const existing = serviceData.id ? await docGet<Service>('services', serviceData.id) : null
 
-    await docSet('services', id, service as unknown as Record<string, unknown>)
-    return service
+  const service: Service = {
+    id,
+    categoryId: serviceData.categoryId || existing?.categoryId || 'cat_unas',
+    nombre: serviceData.nombre || existing?.nombre || 'Nuevo Servicio',
+    duracionMin: serviceData.duracionMin ?? existing?.duracionMin ?? 40,
+    bufferMin: serviceData.bufferMin ?? existing?.bufferMin ?? 10,
+    precioCentavos: serviceData.precioCentavos ?? existing?.precioCentavos ?? 3000000,
+    requiereConfirmacion:
+      serviceData.requiereConfirmacion ??
+      existing?.requiereConfirmacion ??
+      (serviceData.precioCentavos ?? 0) > 20000000,
+    activo: serviceData.activo ?? existing?.activo ?? true,
   }
-)
+
+  await docSet('services', id, service as unknown as Record<string, unknown>)
+
+  // Si se envió lista de profesionales asignados, sincronizar bidireccionalmente
+  if (Array.isArray(serviceData.assignedProfessionalIds)) {
+    const allProfs = await getProfessionals()
+    const targetSet = new Set(serviceData.assignedProfessionalIds)
+
+    for (const prof of allProfs) {
+      const currentServiceIds = prof.serviceIds ?? []
+      const shouldHave = targetSet.has(prof.id)
+      const has = currentServiceIds.includes(id)
+
+      if (shouldHave && !has) {
+        // Agregar servicio al array de la profesional
+        const updatedIds = [...currentServiceIds, id]
+        await docSet('professionals', prof.id, {
+          ...prof,
+          serviceIds: updatedIds,
+        } as unknown as Record<string, unknown>)
+      } else if (!shouldHave && has) {
+        // Quitar servicio de la profesional
+        const updatedIds = currentServiceIds.filter((sId) => sId !== id)
+        await docSet('professionals', prof.id, {
+          ...prof,
+          serviceIds: updatedIds,
+        } as unknown as Record<string, unknown>)
+      }
+    }
+  }
+
+  return service
+})
