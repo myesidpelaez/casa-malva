@@ -35,6 +35,7 @@ export type Service = {
   precioCentavos: number
   requiereConfirmacion: boolean
   activo: boolean
+  imagenUrl?: string
 }
 
 export type ProfessionalSchedule = Record<number, [number, number]> // 1=Lunes, 7=Domingo -> [horaInicio, horaFin]

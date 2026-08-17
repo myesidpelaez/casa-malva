@@ -8,7 +8,7 @@ import { getCategoriesAction, getServicesAction, upsertServiceAction } from '@/a
 import { getProfessionalsAction } from '@/actions/profesionales'
 import { formatCurrencyFromCents, fromCents, toCents } from '@/lib/currency'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
-import { categoryLook, cleanCategoryName, humanDuration, servicesOf, getProfessionalAvatar } from '@/lib/catalogo-ui'
+import { categoryLook, cleanCategoryName, humanDuration, servicesOf, getProfessionalAvatar, getServiceImage } from '@/lib/catalogo-ui'
 import { cn } from '@/lib/utils'
 import { AdminHeader } from '@/components/layout/AdminShell'
 import { Button } from '@/components/ui/button'

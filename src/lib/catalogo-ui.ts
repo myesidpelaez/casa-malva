@@ -10,13 +10,8 @@ import type { Category, Service } from '@/types'
 
 /**
  * Presentación de las categorías del catálogo.
- *
- * Por qué existe: el nombre de la categoría lo edita el administrador, así que
- * no puede cargar con la parte visual. El icono y el acento viven aquí, atados
- * al `id`, y el nombre se muestra tal como lo escribió el dueño del estudio
- * — sin emojis dentro del dato.
  */
-type CategoryLook = {
+export type CategoryLook = {
   icon: LucideIcon
   /** Clases de fondo del "azulejo" del icono. */
   tile: string
@@ -76,8 +71,40 @@ export function getProfessionalAvatar(prof: { id?: string; nombre?: string }): s
 }
 
 /**
+ * Resuelve la imagen fotográfica editorial adecuada para cada servicio (Lookbook).
+ */
+export function getServiceImage(service: { id?: string; nombre?: string; categoryId?: string; imagenUrl?: string }): string {
+  if (service.imagenUrl && service.imagenUrl.trim().length > 0) {
+    return service.imagenUrl;
+  }
+  
+  const norm = `${service.id ?? ''} ${service.nombre ?? ''}`.toLowerCase();
+  
+  // Uñas
+  if (norm.includes('retoque') || norm.includes('mantenimiento')) return '/images/services/retoques.jpg';
+  if (norm.includes('semipermanente') || norm.includes('manicure') || norm.includes('acrilic') || norm.includes('nail art')) return '/images/services/manicure_semipermanente.jpg';
+  if (norm.includes('pedicure') || norm.includes('pies')) return '/images/services/pedicure_spa.jpg';
+  
+  // Cabello
+  if (norm.includes('balayage') || norm.includes('color') || norm.includes('ilumina')) return '/images/services/cabello_balayage.jpg';
+  if (norm.includes('corte') || norm.includes('cepillado') || norm.includes('blower')) return '/images/services/cabello_corte.jpg';
+  
+  // Maquillaje
+  if (norm.includes('maquillaje') || norm.includes('social') || norm.includes('novia') || norm.includes('makeup')) return '/images/services/maquillaje_social.jpg';
+  
+  // Cejas y Pestañas
+  if (norm.includes('cejas') || norm.includes('pestañas') || norm.includes('laminado') || norm.includes('lifting')) return '/images/services/cejas_laminado.jpg';
+  
+  // Fallback a la imagen de la categoría
+  if (service.categoryId && LOOKS[service.categoryId]) {
+    return LOOKS[service.categoryId].image;
+  }
+  
+  return '/images/cat_unas.jpg';
+}
+
+/**
  * Limpia emojis y espacios sobrantes de un nombre de categoría.
- * Tolera datos antiguos donde el emoji viajaba dentro del nombre.
  */
 export function cleanCategoryName(nombre: string): string {
   return nombre
@@ -98,10 +125,10 @@ export function servicesOf(services: Service[], category: Category): Service[] {
 }
 
 /** "1 h 30 min" en vez de "90 minutos": así lo dice una recepcionista. */
-export function humanDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
+export function humanDuration(duracionMin: number): string {
+  if (duracionMin < 60) return `${duracionMin} min`
+  const h = Math.floor(duracionMin / 60)
+  const m = duracionMin % 60
   if (m === 0) return `${h} h`
   return `${h} h ${m} min`
 }
