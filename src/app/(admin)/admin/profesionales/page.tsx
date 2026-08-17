@@ -1,18 +1,23 @@
 'use client'
 
 import * as React from 'react'
-import { Pencil, Clock, Check, Sparkles } from 'lucide-react'
+import Image from 'next/image'
+import { Pencil, Clock, Check, Sparkles, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
-import { getProfessionalsAction, updateProfessionalAction } from '@/actions/profesionales'
+import { 
+  getProfessionalsAction, 
+  updateProfessionalAction, 
+  createProfessionalAction 
+} from '@/actions/profesionales'
 import { getCategoriesAction, getServicesAction } from '@/actions/catalogo'
-import { categoryLook } from '@/lib/catalogo-ui'
+import { categoryLook, cleanCategoryName, getProfessionalAvatar } from '@/lib/catalogo-ui'
 import { cn } from '@/lib/utils'
 import { AdminHeader } from '@/components/layout/AdminShell'
 import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/ui/surface'
 import { Badge } from '@/components/ui/badge'
 import { Field, Toggle } from '@/components/ui/field'
-import { Sheet } from '@/components/ui/sheet'
+import { RightDrawer } from '@/components/ui/drawer'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RevealGroup, RevealItem } from '@/components/common/Reveal'
 import type { Category, Professional, ProfessionalSchedule, Service } from '@/types'
@@ -26,22 +31,17 @@ const DIAS: Array<{ n: number; largo: string; corto: string }> = [
   { n: 6, largo: 'Sábado', corto: 'Sáb' },
 ]
 
-/**
- * Equipo del estudio.
- *
- * Aquí es donde la demo se gana la frase *"esto sí entiende mi negocio"*: no
- * todas hacen todo, y no todas trabajan los mismos días. Esa restricción es lo
- * que hace que la disponibilidad sea un problema real (DISENO.md §4).
- *
- * Spec: docs/specs/03-profesionales.md
- */
 export default function AdminProfesionalesPage() {
   const [equipo, setEquipo] = React.useState<Professional[]>([])
   const [servicios, setServicios] = React.useState<Service[]>([])
   const [categorias, setCategorias] = React.useState<Category[]>([])
   const [cargando, setCargando] = React.useState(true)
 
+  // Drawer state
+  const [drawerAbierto, setDrawerAbierto] = React.useState(false)
   const [editando, setEditando] = React.useState<Professional | null>(null)
+  
+  // Form fields
   const [nombre, setNombre] = React.useState('')
   const [cargo, setCargo] = React.useState('')
   const [serviceIds, setServiceIds] = React.useState<string[]>([])
@@ -62,17 +62,29 @@ export default function AdminProfesionalesPage() {
   }, [])
 
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     cargar()
   }, [cargar])
 
-  function abrir(prof: Professional) {
+  function abrirNuevo() {
+    setEditando(null)
+    setNombre('')
+    setCargo('')
+    setServiceIds([])
+    const standard: ProfessionalSchedule = {}
+    for (let i = 1; i <= 6; i++) standard[i] = [9, 18]
+    setHorario(standard)
+    setActivo(true)
+    setDrawerAbierto(true)
+  }
+
+  function abrirEditar(prof: Professional) {
     setEditando(prof)
     setNombre(prof.nombre)
     setCargo(prof.cargo)
     setServiceIds(prof.serviceIds ?? [])
     setHorario(prof.horario ?? {})
     setActivo(prof.activo)
+    setDrawerAbierto(true)
   }
 
   function alternarDia(dia: number) {
@@ -114,407 +126,323 @@ export default function AdminProfesionalesPage() {
     const todosSeleccionados = svcsIds.every((id) => serviceIds.includes(id))
 
     if (todosSeleccionados) {
-      // Desmarcar todos los de la categoría
       setServiceIds((prev) => prev.filter((id) => !svcsIds.includes(id)))
     } else {
-      // Marcar todos los de la categoría
       setServiceIds((prev) => Array.from(new Set([...prev, ...svcsIds])))
     }
   }
 
   async function guardar() {
-    if (!editando) return
     if (nombre.trim().length < 2) {
-      toast.error('El nombre es demasiado corto')
+      toast.error('El nombre de la profesional es obligatorio')
       return
     }
 
-    // Una franja invertida deja al profesional sin horas y sin explicación.
     const invertido = Object.entries(horario).find(([, [inicio, fin]]) => fin <= inicio)
     if (invertido) {
       const dia = DIAS.find((d) => d.n === Number(invertido[0]))
-      toast.error(`La salida del ${dia?.largo.toLowerCase()} debe ser después de la entrada`)
+      toast.error(`La salida del ${dia?.largo.toLowerCase()} debe ser posterior a la hora de entrada`)
       return
     }
 
     setGuardando(true)
-    const res = await updateProfessionalAction({
-      id: editando.id,
-      nombre: nombre.trim(),
-      cargo: cargo.trim(),
-      serviceIds,
-      horario,
-      activo,
-    })
-    setGuardando(false)
 
-    if (res.ok) {
-      toast.success('Equipo actualizado', {
-        description: 'La disponibilidad se recalcula sola en la próxima consulta.',
+    if (editando) {
+      const res = await updateProfessionalAction({
+        id: editando.id,
+        nombre: nombre.trim(),
+        cargo: cargo.trim(),
+        serviceIds,
+        horario,
+        activo,
       })
-      setEditando(null)
-      cargar()
+      setGuardando(false)
+
+      if (res.ok) {
+        toast.success('Profesional actualizada con éxito')
+        setDrawerAbierto(false)
+        cargar()
+      } else {
+        toast.error(res.error)
+      }
     } else {
-      toast.error(res.error)
+      const res = await createProfessionalAction({
+        nombre: nombre.trim(),
+        cargo: cargo.trim() || 'Especialista de belleza',
+        serviceIds,
+        horario,
+        activo,
+      })
+      setGuardando(false)
+
+      if (res.ok) {
+        toast.success('Profesional agregada al equipo', {
+          description: 'Ya puede recibir citas y gestionar servicios.',
+        })
+        setDrawerAbierto(false)
+        cargar()
+      } else {
+        toast.error(res.error)
+      }
     }
   }
 
   return (
     <>
       <AdminHeader
-        title="Equipo"
-        subtitle="Quién hace qué y en qué horario. La agenda solo ofrece lo que aquí esté habilitado."
-      />
+        title="Equipo de Profesionales"
+        subtitle="Gestiona el talento del estudio, horarios semanales y habilidades multicategoría."
+      >
+        <Button variant="primary" size="md" onClick={abrirNuevo}>
+          <UserPlus className="h-4 w-4" />
+          Nueva profesional
+        </Button>
+      </AdminHeader>
 
       {cargando ? (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-64 rounded-[var(--radius-lg)]" />
+            <Skeleton key={i} className="h-48 rounded-[var(--radius-lg)]" />
           ))}
         </div>
       ) : (
-        <RevealGroup className="grid gap-3 md:grid-cols-2">
-          {equipo.map((prof) => (
-            <RevealItem key={prof.id} variant="pop">
-              <Surface
-                pad="md"
-                radius="lg"
-                className={cn('flex h-full flex-col', !prof.activo && 'opacity-60')}
-              >
-                <div className="flex items-start gap-3">
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-malva-500 to-malva-700 font-display text-lg font-semibold text-white shadow-[var(--shadow-malva)]">
-                    {prof.nombre.charAt(0)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="truncate font-display text-[17px] font-semibold text-ink-900">
-                      {prof.nombre}
-                    </h2>
-                    <p className="truncate text-[12.5px] text-ink-500">{prof.cargo}</p>
-                  </div>
-                  <Badge tone={prof.activo ? 'success' : 'neutral'} size="sm">
-                    {prof.activo ? 'Activa' : 'Inactiva'}
-                  </Badge>
-                </div>
+        <RevealGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {equipo.map((prof) => {
+            const diasActivos = Object.keys(prof.horario ?? {})
+              .map((d) => DIAS.find((item) => item.n === Number(d))?.corto)
+              .filter(Boolean)
 
-                {/* Horario en línea: se lee de un vistazo qué días libra */}
-                <div className="mt-3.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-400">
-                    Horario
-                  </p>
-                  <div className="mt-1.5 flex gap-1">
-                    {DIAS.map((d) => {
-                      const franja = prof.horario?.[d.n]
-                      return (
-                        <div
-                          key={d.n}
-                          title={
-                            franja
-                              ? `${d.largo}: ${franja[0]}:00–${franja[1]}:00`
-                              : `${d.largo}: libre`
-                          }
-                          className={cn(
-                            'flex-1 rounded-[var(--radius-xs)] px-1 py-1.5 text-center',
-                            franja ? 'bg-malva-100 text-malva-700' : 'bg-ink-50 text-ink-300'
+            const avatar = getProfessionalAvatar(prof)
+            
+            const categoriasCubiertas = categorias.filter((c) =>
+              servicios.some((s) => s.categoryId === c.id && (prof.serviceIds ?? []).includes(s.id))
+            )
+
+            return (
+              <RevealItem key={prof.id} variant="pop">
+                <Surface
+                  pad="md"
+                  radius="lg"
+                  className={cn(
+                    'flex h-full flex-col justify-between transition-all group hover:shadow-[var(--shadow-malva)]',
+                    !prof.activo && 'opacity-60'
+                  )}
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-malva-200 shadow-sm">
+                          {avatar ? (
+                            <Image
+                              src={avatar}
+                              alt={prof.nombre}
+                              fill
+                              sizes="56px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <span className="grid h-full w-full place-items-center bg-gradient-to-br from-malva-500 to-malva-700 font-display text-xl font-semibold text-white">
+                              {prof.nombre.charAt(0)}
+                            </span>
                           )}
-                        >
-                          <span className="block text-[10px] font-semibold">{d.corto}</span>
-                          <span className="tnum block text-[9.5px]">
-                            {franja ? `${franja[0]}–${franja[1]}` : '—'}
-                          </span>
                         </div>
-                      )
-                    })}
-                  </div>
-                </div>
 
-                <div className="mt-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-400">
-                    Servicios ({prof.serviceIds?.length ?? 0})
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap gap-1">
-                    {(prof.serviceIds ?? []).slice(0, 6).map((sid) => (
-                      <Badge key={sid} tone="glass" size="sm">
-                        {servicios.find((s) => s.id === sid)?.nombre ?? sid}
-                      </Badge>
-                    ))}
-                    {(prof.serviceIds ?? []).slice(0, 6).length < (prof.serviceIds?.length ?? 0) && (
-                      <Badge tone="neutral" size="sm">
-                        +{(prof.serviceIds?.length ?? 0) - 6}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+                        <div>
+                          <h3 className="font-display text-[17px] font-semibold text-ink-900 leading-snug">
+                            {prof.nombre}
+                          </h3>
+                          <p className="text-[13px] text-ink-500">{prof.cargo}</p>
+                        </div>
+                      </div>
 
-                <div className="mt-auto pt-4">
-                  <Button variant="glass" size="sm" full onClick={() => abrir(prof)}>
-                    <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} />
-                    Editar
-                  </Button>
-                </div>
-              </Surface>
-            </RevealItem>
-          ))}
+                      <Badge tone={prof.activo ? 'success' : 'neutral'} size="sm">
+                        {prof.activo ? 'Activa' : 'Inactiva'}
+                      </Badge>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {categoriasCubiertas.map((cat) => (
+                        <span
+                          key={cat.id}
+                          className="inline-flex items-center gap-1 rounded-md bg-malva-50 border border-malva-100 px-2 py-0.5 text-[11px] font-medium text-malva-700"
+                        >
+                          <Sparkles className="h-2.5 w-2.5" />
+                          {cleanCategoryName(cat.nombre)}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="mt-3.5 space-y-1.5 border-t border-malva-100 pt-3 text-[12.5px] text-ink-500">
+                      <p className="flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-malva-500 shrink-0" />
+                        <span>
+                          {diasActivos.length > 0
+                            ? diasActivos.join(', ')
+                            : 'Sin horario asignado'}
+                        </span>
+                      </p>
+                      <p className="text-ink-400">
+                        {(prof.serviceIds ?? []).length} servicios habilitados en su perfil
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-2">
+                    <Button
+                      variant="soft"
+                      size="sm"
+                      full
+                      onClick={() => abrirEditar(prof)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Editar datos y servicios
+                    </Button>
+                  </div>
+                </Surface>
+              </RevealItem>
+            )
+          })}
         </RevealGroup>
       )}
 
-      {/* ---------- Editor ---------- */}
-      <Sheet
-        open={!!editando}
-        onOpenChange={(abierto) => !abierto && setEditando(null)}
-        title="Editar profesional"
-        description="Los cambios afectan a las citas futuras. Las ya agendadas se respetan."
+      {/* ===================================================================
+          RIGHT DRAWER: CREAR / EDITAR PROFESIONAL (CERO SCROLL)
+          =================================================================== */}
+      <RightDrawer
+        open={drawerAbierto}
+        onOpenChange={setDrawerAbierto}
         size="lg"
+        title={editando ? `Editar a ${editando.nombre}` : 'Nueva profesional'}
+        description="Configura sus datos de contacto, especialidades integrales y horario de atención."
         footer={
-          <div className="flex gap-2.5 sm:gap-3">
+          <div className="flex items-center justify-end gap-3">
             <Button
               variant="glass"
-              size="lg"
-              className="h-11 flex-1 sm:h-10"
-              onClick={() => setEditando(null)}
+              size="md"
+              onClick={() => setDrawerAbierto(false)}
               disabled={guardando}
             >
               Cancelar
             </Button>
             <Button
-              size="lg"
-              className="h-11 flex-1 sm:h-10"
+              variant="primary"
+              size="md"
               loading={guardando}
-              loadingText="Guardando…"
               onClick={guardar}
             >
-              Guardar cambios
+              {editando ? 'Guardar cambios' : 'Crear profesional'}
             </Button>
           </div>
         }
       >
-        <div className="space-y-[var(--spacing-fib-3)] pb-4">
-          {/* Datos básicos */}
-          <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-6">
+          {/* Bloque 1: Datos Personales */}
+          <div className="space-y-3.5">
+            <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
+              1. Información básica
+            </h3>
+            
             <Field
-              label="Nombre"
-              required
+              label="Nombre completo"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: Valentina Ruiz"
+              placeholder="Ej. Laura Morales"
             />
+
             <Field
-              label="Cargo"
+              label="Cargo o título"
               value={cargo}
               onChange={(e) => setCargo(e.target.value)}
-              placeholder="Ej: Manicurista sénior"
+              placeholder="Ej. Manicurista sénior y Maquilladora"
+            />
+
+            <Toggle
+              label="Profesional disponible"
+              description="Si se desactiva, no aparecerá en el flujo de reservas ni en la agenda."
+              checked={activo}
+              onChange={setActivo}
             />
           </div>
 
-          {/* Horario semanal */}
-          <div className="space-y-2.5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4 text-malva-600" />
-                <p className="text-[13px] font-semibold text-ink-900">Horario semanal</p>
-              </div>
-              {/* Atajos rápidos */}
-              <div className="flex items-center gap-1.5 text-[11px]">
-                <span className="text-ink-400">Estándar:</span>
-                <button
-                  type="button"
-                  onClick={() => aplicarHorarioEstandar('lun_sab')}
-                  className="rounded px-1.5 py-0.5 font-medium text-malva-700 bg-malva-50 hover:bg-malva-100 transition-colors"
-                >
-                  Lun–Sáb
-                </button>
-                <button
-                  type="button"
-                  onClick={() => aplicarHorarioEstandar('lun_vie')}
-                  className="rounded px-1.5 py-0.5 font-medium text-malva-700 bg-malva-50 hover:bg-malva-100 transition-colors"
-                >
-                  Lun–Vie
-                </button>
+          {/* Bloque 2: Servicios Multicategoría (Integral) */}
+          <div className="space-y-3.5 border-t border-malva-100 pt-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
+                  2. Servicios que puede prestar
+                </h3>
+                <p className="text-[12.5px] text-ink-500">
+                  Selecciona los servicios que domina ({serviceIds.length} seleccionados).
+                </p>
               </div>
             </div>
 
-            <div className="space-y-2 rounded-[var(--radius-md)] border border-ink-100 bg-white/70 p-2.5 sm:p-3">
-              {DIAS.map((d) => {
-                const franja = horario[d.n]
-                const trabaja = !!franja
-
-                return (
-                  <div
-                    key={d.n}
-                    className={cn(
-                      'rounded-[var(--radius-sm)] border p-2 transition-all sm:flex sm:items-center sm:gap-3 sm:border-0 sm:p-1.5',
-                      trabaja
-                        ? 'border-malva-200/80 bg-malva-50/40 sm:bg-transparent'
-                        : 'border-ink-100/70 bg-ink-50/40 sm:bg-transparent'
-                    )}
-                  >
-                    {/* Botón de estado del día */}
-                    <div className="flex items-center justify-between sm:justify-start">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={trabaja}
-                        onClick={() => alternarDia(d.n)}
-                        className={cn(
-                          'flex items-center gap-2 rounded-[var(--radius-xs)] px-2.5 py-1.5 text-[13px] font-semibold transition-colors sm:w-[110px] sm:shrink-0 sm:px-2 sm:py-1.5 sm:text-[12.5px]',
-                          trabaja
-                            ? 'bg-malva-100 text-malva-700'
-                            : 'bg-ink-100 text-ink-500 hover:bg-ink-200'
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            'grid h-4 w-4 shrink-0 place-items-center rounded-[5px] border transition-colors',
-                            trabaja
-                              ? 'border-malva-600 bg-malva-600 text-white'
-                              : 'border-ink-300 bg-white text-transparent'
-                          )}
-                        >
-                          <Check className="h-3 w-3" strokeWidth={3} />
-                        </span>
-                        {d.largo}
-                      </button>
-
-                      {/* En móvil: indicador cuando libra */}
-                      {!trabaja && (
-                        <span className="text-[12px] font-medium text-ink-400 sm:hidden">
-                          Día libre
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Selectores de hora: En móvil van en 2 columnas claras con label */}
-                    {trabaja ? (
-                      <div className="mt-2.5 grid grid-cols-2 gap-2 sm:mt-0 sm:flex sm:flex-1 sm:items-center sm:gap-2">
-                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-1.5">
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-400 sm:hidden">
-                            Entrada
-                          </span>
-                          <HoraSelect
-                            label={`Entrada ${d.largo}`}
-                            value={franja[0]}
-                            desde={6}
-                            hasta={20}
-                            onChange={(v) => cambiarHora(d.n, 0, v)}
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-1.5">
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-400 sm:hidden">
-                            Salida
-                          </span>
-                          <HoraSelect
-                            label={`Salida ${d.largo}`}
-                            value={franja[1]}
-                            desde={7}
-                            hasta={22}
-                            onChange={(v) => cambiarHora(d.n, 1, v)}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="hidden flex-1 text-[12px] text-ink-300 sm:block">
-                        Día libre
-                      </span>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-            <p className="text-[11.5px] text-ink-400">
-              Los domingos el estudio permanece cerrado para todo el equipo.
-            </p>
-          </div>
-
-          {/* Servicios habilitados (Agrupados por categoría, sin scroll trap) */}
-          <div className="space-y-3">
-            <div className="flex items-baseline justify-between border-b border-ink-100 pb-2">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-malva-600" />
-                <p className="text-[13px] font-semibold text-ink-900">Servicios que realiza</p>
-              </div>
-              <Badge tone={serviceIds.length > 0 ? 'malva' : 'neutral'} size="sm">
-                {serviceIds.length} de {servicios.length} activos
-              </Badge>
-            </div>
-
-            {/* Listado agrupado por categorías */}
             <div className="space-y-4">
               {categorias.map((cat) => {
-                const svcsCat = servicios.filter((s) => s.categoryId === cat.id)
+                const svcsCat = servicios.filter((s) => s.categoryId === cat.id && s.activo)
                 if (svcsCat.length === 0) return null
 
                 const look = categoryLook(cat.id)
                 const Icon = look.icon
-                const marcadosCat = svcsCat.filter((s) => serviceIds.includes(s.id))
-                const todosCat = marcadosCat.length === svcsCat.length
+                const svcsIds = svcsCat.map((s) => s.id)
+                const todos = svcsIds.every((id) => serviceIds.includes(id))
 
                 return (
                   <div
                     key={cat.id}
-                    className="rounded-[var(--radius-md)] border border-ink-100 bg-white/60 p-3"
+                    className="rounded-xl border border-malva-100 bg-malva-50/30 p-3.5 space-y-3"
                   >
-                    {/* Encabezado de la categoría */}
-                    <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-ink-100/60 pb-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span
-                          className={cn(
-                            'grid h-6 w-6 shrink-0 place-items-center rounded-md text-xs',
-                            look.tile
-                          )}
-                        >
-                          <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={cn('grid h-7 w-7 place-items-center rounded-lg text-xs', look.tile)}>
+                          <Icon className="h-3.5 w-3.5" />
                         </span>
-                        <h4 className="truncate text-[13px] font-semibold text-ink-900">
-                          {cat.nombre}
-                        </h4>
-                        <span className="text-[11.5px] text-ink-400">
-                          ({marcadosCat.length}/{svcsCat.length})
+                        <span className="font-display text-[15px] font-semibold text-ink-900">
+                          {cleanCategoryName(cat.nombre)}
                         </span>
                       </div>
 
-                      {/* Botón rápido por categoría */}
                       <button
                         type="button"
                         onClick={() => toggleCategoriaServicios(cat.id, svcsCat)}
-                        className="shrink-0 text-[11.5px] font-medium text-malva-700 hover:text-malva-900 transition-colors"
+                        className="text-[12px] font-semibold text-malva-600 hover:text-malva-800 transition-colors"
                       >
-                        {todosCat ? 'Desmarcar' : 'Marcar todos'}
+                        {todos ? 'Desmarcar todos' : 'Marcar todos'}
                       </button>
                     </div>
 
-                    {/* Chips de servicios */}
-                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                    <div className="grid gap-2 sm:grid-cols-2">
                       {svcsCat.map((s) => {
                         const marcado = serviceIds.includes(s.id)
+
                         return (
                           <button
                             key={s.id}
                             type="button"
-                            role="checkbox"
-                            aria-checked={marcado}
                             onClick={() => alternarServicio(s.id)}
                             className={cn(
-                              'flex min-h-[44px] w-full items-center gap-2.5 rounded-[var(--radius-xs)] border px-3 py-2 text-left text-[12.5px] transition-all',
+                              'flex items-center justify-between gap-2 rounded-lg border p-2.5 text-left text-[13px] transition-all touch-target',
                               marcado
-                                ? 'border-malva-400/80 bg-malva-100/60 font-semibold text-malva-900 shadow-xs'
-                                : 'border-ink-100 bg-white text-ink-600 hover:border-ink-200 hover:bg-ink-50/50'
+                                ? 'border-malva-500 bg-white text-ink-900 shadow-sm ring-1 ring-malva-500'
+                                : 'border-malva-200/60 bg-white/70 text-ink-600 hover:bg-white hover:border-malva-300'
                             )}
                           >
-                            <span
-                              className={cn(
-                                'grid h-4 w-4 shrink-0 place-items-center rounded-[5px] border transition-colors',
-                                marcado
-                                  ? 'border-malva-600 bg-malva-600 text-white'
-                                  : 'border-ink-300 bg-white text-transparent'
-                              )}
-                            >
-                              <Check className="h-3 w-3" strokeWidth={3} />
-                            </span>
-                            <span className="flex-1 truncate">{s.nombre}</span>
-                            {!s.activo && (
-                              <Badge tone="neutral" size="sm" className="ml-1 shrink-0 text-[10px]">
-                                pausado
-                              </Badge>
-                            )}
+                            <span className="truncate font-medium">{s.nombre}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[11px] text-ink-400">
+                                {s.duracionMin}m
+                              </span>
+                              <div
+                                className={cn(
+                                  'grid h-4 w-4 place-items-center rounded border transition-colors',
+                                  marcado
+                                    ? 'border-malva-600 bg-malva-600 text-white'
+                                    : 'border-ink-300 bg-white'
+                                )}
+                              >
+                                {marcado && <Check className="h-3 w-3" strokeWidth={3} />}
+                              </div>
+                            </div>
                           </button>
                         )
                       })}
@@ -525,46 +453,99 @@ export default function AdminProfesionalesPage() {
             </div>
           </div>
 
-          {/* Toggle de estado activo */}
-          <div className="rounded-[var(--radius-md)] border border-ink-100 bg-white/70 p-3">
-            <Toggle
-              label="Disponible para agendar"
-              description="Al apagarlo deja de aparecer en el sitio público. Sus citas ya agendadas siguen en la agenda."
-              checked={activo}
-              onChange={setActivo}
-            />
+          {/* Bloque 3: Horario Semanal */}
+          <div className="space-y-3.5 border-t border-malva-100 pt-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
+                  3. Horario de atención
+                </h3>
+                <p className="text-[12.5px] text-ink-500">
+                  Define qué días trabaja y sus horas de inicio y fin.
+                </p>
+              </div>
+
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => aplicarHorarioEstandar('lun_sab')}
+                  className="rounded-md bg-malva-100 px-2 py-1 text-[11px] font-medium text-malva-800 hover:bg-malva-200 transition-colors"
+                >
+                  Lun–Sáb (9–18)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => aplicarHorarioEstandar('lun_vie')}
+                  className="rounded-md bg-malva-100 px-2 py-1 text-[11px] font-medium text-malva-800 hover:bg-malva-200 transition-colors"
+                >
+                  Lun–Vie (9–18)
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {DIAS.map((d) => {
+                const activoDia = Boolean(horario[d.n])
+                const [inicio, fin] = horario[d.n] ?? [9, 18]
+
+                return (
+                  <div
+                    key={d.n}
+                    className={cn(
+                      'flex items-center justify-between gap-3 rounded-xl border p-3 transition-colors',
+                      activoDia
+                        ? 'border-malva-200 bg-white'
+                        : 'border-ink-100 bg-ink-50/60 opacity-60'
+                    )}
+                  >
+                    <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={activoDia}
+                        onChange={() => alternarDia(d.n)}
+                        className="h-4 w-4 rounded border-ink-300 text-malva-600 focus:ring-malva-500"
+                      />
+                      <span className="text-[14px] font-semibold text-ink-900">
+                        {d.largo}
+                      </span>
+                    </label>
+
+                    {activoDia ? (
+                      <div className="flex items-center gap-2 text-[13px]">
+                        <select
+                          value={inicio}
+                          onChange={(e) => cambiarHora(d.n, 0, Number(e.target.value))}
+                          className="rounded-md border border-malva-200 bg-white px-2 py-1 font-medium text-ink-900 shadow-sm"
+                        >
+                          {Array.from({ length: 12 }, (_, i) => i + 8).map((h) => (
+                            <option key={h} value={h}>
+                              {`${String(h).padStart(2, '0')}:00`}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="text-ink-400">a</span>
+                        <select
+                          value={fin}
+                          onChange={(e) => cambiarHora(d.n, 1, Number(e.target.value))}
+                          className="rounded-md border border-malva-200 bg-white px-2 py-1 font-medium text-ink-900 shadow-sm"
+                        >
+                          {Array.from({ length: 14 }, (_, i) => i + 9).map((h) => (
+                            <option key={h} value={h}>
+                              {`${String(h).padStart(2, '0')}:00`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <span className="text-[12px] text-ink-400">Día libre / No atiende</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
-      </Sheet>
+      </RightDrawer>
     </>
-  )
-}
-
-function HoraSelect({
-  label,
-  value,
-  desde,
-  hasta,
-  onChange,
-}: {
-  label: string
-  value: number
-  desde: number
-  hasta: number
-  onChange: (v: number) => void
-}) {
-  return (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(e) => onChange(parseInt(e.target.value, 10))}
-      className="tnum h-11 w-full rounded-[var(--radius-xs)] border border-ink-200 bg-white px-2.5 text-[13px] font-semibold text-ink-900 focus:border-malva-500 focus:outline-none sm:h-9 sm:text-[12.5px]"
-    >
-      {Array.from({ length: hasta - desde + 1 }, (_, i) => desde + i).map((h) => (
-        <option key={h} value={h}>
-          {String(h).padStart(2, '0')}:00
-        </option>
-      ))}
-    </select>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Clock, Info, Pencil, Timer } from 'lucide-react'
+import { Clock, Info, Pencil, Plus, Timer } from 'lucide-react'
 import { toast } from 'sonner'
 import { getCategoriesAction, getServicesAction, upsertServiceAction } from '@/actions/catalogo'
 import { formatCurrencyFromCents, fromCents, toCents } from '@/lib/currency'
@@ -13,32 +13,29 @@ import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/ui/surface'
 import { Badge } from '@/components/ui/badge'
 import { Field, Toggle } from '@/components/ui/field'
-import { Sheet } from '@/components/ui/sheet'
+import { RightDrawer } from '@/components/ui/drawer'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RevealGroup, RevealItem } from '@/components/common/Reveal'
 import type { Category, Service } from '@/types'
 
-/**
- * Catálogo del estudio.
- *
- * El argumento de venta del lunes está en esta pantalla: *"esto lo configuras
- * tú, no dependes de mí"*. Por eso el cambio de precio se ve reflejado en el
- * sitio público de inmediato — nada está escrito a fuego en el código.
- *
- * Spec: docs/specs/02-catalogo.md
- */
 export default function AdminCatalogoPage() {
   const [categorias, setCategorias] = React.useState<Category[]>([])
   const [servicios, setServicios] = React.useState<Service[]>([])
   const [cargando, setCargando] = React.useState(true)
 
+  // Drawer state
+  const [drawerAbierto, setDrawerAbierto] = React.useState(false)
   const [editando, setEditando] = React.useState<Service | null>(null)
+  
+  // Form fields
   const [form, setForm] = React.useState({
+    categoryId: 'cat_unas',
     nombre: '',
     duracionMin: 40,
     bufferMin: 10,
-    precioCop: 30000,
+    precioCop: 35000,
     activo: true,
+    requiereConfirmacion: false,
   })
   const [guardando, setGuardando] = React.useState(false)
 
@@ -50,62 +47,81 @@ export default function AdminCatalogoPage() {
   }, [])
 
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     cargar()
   }, [cargar])
 
-  function abrir(svc: Service) {
+  function abrirNuevo(categoryId?: string) {
+    setEditando(null)
+    setForm({
+      categoryId: categoryId || categorias[0]?.id || 'cat_unas',
+      nombre: '',
+      duracionMin: 45,
+      bufferMin: 10,
+      precioCop: 40000,
+      activo: true,
+      requiereConfirmacion: false,
+    })
+    setDrawerAbierto(true)
+  }
+
+  function abrirEditar(svc: Service) {
     setEditando(svc)
     setForm({
+      categoryId: svc.categoryId,
       nombre: svc.nombre,
       duracionMin: svc.duracionMin,
       bufferMin: svc.bufferMin,
       precioCop: fromCents(svc.precioCentavos),
       activo: svc.activo,
+      requiereConfirmacion: svc.requiereConfirmacion,
     })
+    setDrawerAbierto(true)
   }
 
   async function guardar() {
-    if (!editando) return
     if (form.nombre.trim().length < 3) {
-      toast.error('El nombre del servicio es demasiado corto')
+      toast.error('El nombre del servicio debe tener al menos 3 caracteres')
       return
     }
 
     setGuardando(true)
     const precioCentavos = toCents(form.precioCop)
+
     const res = await upsertServiceAction({
-      id: editando.id,
-      categoryId: editando.categoryId,
+      id: editando?.id,
+      categoryId: form.categoryId,
       nombre: form.nombre.trim(),
       duracionMin: form.duracionMin,
       bufferMin: form.bufferMin,
       precioCentavos,
-      requiereConfirmacion: precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos,
+      requiereConfirmacion:
+        form.requiereConfirmacion || precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos,
       activo: form.activo,
     })
     setGuardando(false)
 
     if (res.ok) {
-      toast.success('Servicio actualizado', {
-        description: 'El cambio ya se ve en el sitio público.',
+      toast.success(editando ? 'Servicio actualizado' : 'Servicio creado con éxito', {
+        description: 'Ya está disponible en la web pública de Casa Malva.',
       })
-      setEditando(null)
+      setDrawerAbierto(false)
       cargar()
     } else {
       toast.error(res.error)
     }
   }
 
-  const precioCentavos = toCents(form.precioCop)
-  const requiereConfirmacion = precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos
-
   return (
     <>
       <AdminHeader
-        title="Catálogo"
-        subtitle="Precios, duraciones y disponibilidad. Lo que cambies aquí se ve al instante en el sitio."
-      />
+        title="Catálogo de Servicios"
+        subtitle="Precios, duraciones en silla y tiempos de preparación para todas las categorías."
+      >
+        <Button variant="primary" size="md" onClick={() => abrirNuevo()}>
+          <Plus className="h-4 w-4" />
+          Nuevo servicio
+        </Button>
+      </AdminHeader>
 
       {cargando ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -114,65 +130,91 @@ export default function AdminCatalogoPage() {
           ))}
         </div>
       ) : (
-        <div className="space-y-[var(--spacing-fib-4)]">
+        <div className="space-y-[var(--spacing-fib-5)]">
           {categorias.map((cat) => {
             const items = servicesOf(servicios, cat)
-            if (items.length === 0) return null
             const look = categoryLook(cat.id)
             const Icon = look.icon
 
             return (
-              <section key={cat.id}>
-                <div className="flex items-center gap-2.5 border-b border-malva-100 pb-2.5">
-                  <span
-                    className={cn('grid h-9 w-9 place-items-center rounded-[12px]', look.tile)}
+              <section key={cat.id} className="space-y-3">
+                <div className="flex items-center justify-between border-b border-malva-100 pb-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className={cn('grid h-8 w-8 place-items-center rounded-lg', look.tile)}>
+                      <Icon className="h-4 w-4" strokeWidth={1.8} />
+                    </span>
+                    <div>
+                      <h2 className="font-display text-[18px] font-semibold text-ink-900">
+                        {cleanCategoryName(cat.nombre)}
+                      </h2>
+                      <p className="text-[12px] text-ink-400">{items.length} servicios</p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => abrirNuevo(cat.id)}
+                    className="text-malva-700 hover:bg-malva-50"
                   >
-                    <Icon className="h-[18px] w-[18px]" strokeWidth={1.6} />
-                  </span>
-                  <h2 className="flex-1 font-display text-[18px] font-semibold text-ink-900">
-                    {cleanCategoryName(cat.nombre)}
-                  </h2>
-                  <span className="tnum text-[12px] text-ink-400">
-                    {items.filter((s) => s.activo).length}/{items.length} activos
-                  </span>
+                    <Plus className="h-3.5 w-3.5" />
+                    Añadir en {cleanCategoryName(cat.nombre)}
+                  </Button>
                 </div>
 
-                <RevealGroup className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <RevealGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {items.map((svc) => (
                     <RevealItem key={svc.id} variant="pop">
                       <Surface
-                        pad="sm"
+                        pad="md"
                         radius="lg"
-                        className={cn('flex h-full flex-col', !svc.activo && 'opacity-60')}
+                        className={cn(
+                          'flex h-full flex-col justify-between transition-all group hover:shadow-[var(--shadow-malva)]',
+                          !svc.activo && 'opacity-60'
+                        )}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-[14px] font-semibold leading-snug text-ink-900">
-                            {svc.nombre}
-                          </h3>
-                          <Badge tone={svc.activo ? 'success' : 'neutral'} size="sm">
-                            {svc.activo ? 'Activo' : 'Pausado'}
-                          </Badge>
+                        <div>
+                          <div className="flex items-start justify-between gap-3">
+                            <h3 className="text-[15px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors">
+                              {svc.nombre}
+                            </h3>
+                            <span className="tnum font-display text-[16px] font-semibold text-malva-700 shrink-0">
+                              {formatCurrencyFromCents(svc.precioCentavos)}
+                            </span>
+                          </div>
+
+                          <div className="mt-2.5 flex flex-wrap gap-1.5">
+                            <Badge tone="glass" size="sm">
+                              <Clock className="h-3 w-3" strokeWidth={2} />
+                              {humanDuration(svc.duracionMin)}
+                            </Badge>
+                            <Badge tone="neutral" size="sm">
+                              <Timer className="h-3 w-3" strokeWidth={2} />
+                              +{svc.bufferMin}m buffer
+                            </Badge>
+                            {svc.requiereConfirmacion && (
+                              <Badge tone="warning" size="sm">
+                                <Info className="h-3 w-3" strokeWidth={2} />
+                                Requiere WhatsApp
+                              </Badge>
+                            )}
+                            {!svc.activo && (
+                              <Badge tone="neutral" size="sm">
+                                Desactivado
+                              </Badge>
+                            )}
+                          </div>
                         </div>
 
-                        <p className="tnum mt-1.5 font-display text-[21px] font-semibold text-malva-700">
-                          {formatCurrencyFromCents(svc.precioCentavos)}
-                        </p>
-
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          <Badge tone="glass" size="sm">
-                            <Clock className="h-3 w-3" strokeWidth={2} />
-                            {humanDuration(svc.duracionMin)}
-                          </Badge>
-                          <Badge tone="glass" size="sm">
-                            <Timer className="h-3 w-3" strokeWidth={2} />
-                            +{svc.bufferMin} min
-                          </Badge>
-                        </div>
-
-                        <div className="mt-auto pt-3">
-                          <Button variant="glass" size="sm" full onClick={() => abrir(svc)}>
-                            <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} />
-                            Editar
+                        <div className="mt-4 pt-2">
+                          <Button
+                            variant="soft"
+                            size="sm"
+                            full
+                            onClick={() => abrirEditar(svc)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Editar servicio
                           </Button>
                         </div>
                       </Surface>
@@ -185,109 +227,124 @@ export default function AdminCatalogoPage() {
         </div>
       )}
 
-      {/* ---------- Editor ---------- */}
-      <Sheet
-        open={!!editando}
-        onOpenChange={(abierto) => !abierto && setEditando(null)}
-        title="Editar servicio"
-        description="El precio de las citas ya agendadas no cambia: se congeló al reservar."
+      {/* ===================================================================
+          RIGHT DRAWER: CREAR / EDITAR SERVICIO (CERO SCROLL)
+          =================================================================== */}
+      <RightDrawer
+        open={drawerAbierto}
+        onOpenChange={setDrawerAbierto}
+        size="md"
+        title={editando ? 'Editar servicio' : 'Nuevo servicio'}
+        description="Fija el precio en pesos colombianos, la duración en silla y el tiempo de preparación."
         footer={
-          <div className="flex gap-2">
-            <Button variant="glass" full onClick={() => setEditando(null)} disabled={guardando}>
+          <div className="flex items-center justify-end gap-3">
+            <Button
+              variant="glass"
+              size="md"
+              onClick={() => setDrawerAbierto(false)}
+              disabled={guardando}
+            >
               Cancelar
             </Button>
-            <Button full loading={guardando} loadingText="Guardando…" onClick={guardar}>
-              Guardar cambios
+            <Button
+              variant="primary"
+              size="md"
+              loading={guardando}
+              onClick={guardar}
+            >
+              {editando ? 'Guardar cambios' : 'Crear servicio'}
             </Button>
           </div>
         }
       >
-        <div className="space-y-[var(--spacing-fib-2)]">
-          <Field
-            label="Nombre del servicio"
-            required
-            value={form.nombre}
-            onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-          />
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-[13px] font-semibold text-ink-700">
+              Categoría
+            </label>
+            <select
+              value={form.categoryId}
+              onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
+              className="w-full bg-white/70 backdrop-blur-sm text-ink-900 border border-ink-200/80 rounded-[var(--radius-sm)] p-2.5 text-sm focus:outline-none focus:border-malva-500 focus:bg-white"
+            >
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {cleanCategoryName(c.nombre)}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <Field
-            label="Precio"
-            required
-            type="number"
-            min={0}
-            step={1000}
-            inputMode="numeric"
-            suffix="COP"
-            value={form.precioCop}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, precioCop: parseInt(e.target.value, 10) || 0 }))
-            }
-            hint={`Se mostrará como ${formatCurrencyFromCents(precioCentavos)}`}
+            label="Nombre del servicio"
+            type="text"
+            value={form.nombre}
+            onChange={(e) => setForm((prev) => ({ ...prev, nombre: e.target.value }))}
+            placeholder="Ej. Balayage Golden Touch"
           />
+
+          <div>
+            <Field
+              label="Precio en COP"
+              type="number"
+              step={1000}
+              min={0}
+              value={form.precioCop}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, precioCop: Number(e.target.value) || 0 }))
+              }
+              className="tnum"
+            />
+            <p className="mt-1 text-[11.5px] text-ink-400">
+              Equivale a {formatCurrencyFromCents(toCents(form.precioCop))} en el sitio web.
+            </p>
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <Field
-              label="Duración"
-              required
+              label="Duración en silla (min)"
               type="number"
-              min={10}
               step={5}
-              inputMode="numeric"
-              suffix="min"
+              min={10}
+              max={480}
               value={form.duracionMin}
               onChange={(e) =>
-                setForm((f) => ({ ...f, duracionMin: parseInt(e.target.value, 10) || 0 }))
+                setForm((prev) => ({ ...prev, duracionMin: Number(e.target.value) || 0 }))
               }
+              className="tnum"
             />
+
             <Field
-              label="Preparación"
-              required
+              label="Buffer / Preparación (min)"
               type="number"
-              min={0}
               step={5}
-              inputMode="numeric"
-              suffix="min"
+              min={0}
+              max={60}
               value={form.bufferMin}
               onChange={(e) =>
-                setForm((f) => ({ ...f, bufferMin: parseInt(e.target.value, 10) || 0 }))
+                setForm((prev) => ({ ...prev, bufferMin: Number(e.target.value) || 0 }))
               }
+              className="tnum"
             />
           </div>
 
-          <Surface material="solid" radius="md" pad="sm" className="space-y-2">
-            <p className="text-[12.5px] leading-relaxed text-ink-500">
-              La agenda bloquea{' '}
-              <strong className="font-semibold text-ink-900">
-                {humanDuration(form.duracionMin + form.bufferMin)}
-              </strong>{' '}
-              por cada cita: {form.duracionMin} min de servicio y {form.bufferMin} de
-              limpieza y preparación. Sin ese margen, el estudio se atrasa a media
-              mañana.
-            </p>
-          </Surface>
+          <Toggle
+            label="Servicio activo"
+            description="Aparecerá en el catálogo público para agendamiento."
+            checked={form.activo}
+            onChange={(checked) => setForm((prev) => ({ ...prev, activo: checked }))}
+          />
 
-          {requiereConfirmacion && (
-            <div className="flex items-start gap-2.5 rounded-[var(--radius-sm)] border border-warning/25 bg-warning-soft px-3.5 py-3 text-[12.5px] leading-relaxed text-warning">
-              <Info className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
-              <p>
-                Por encima de{' '}
-                {formatCurrencyFromCents(REGLAS_NEGOCIO.umbralConfirmacionCentavos)} las
-                reservas quedan <strong>por confirmar</strong> hasta que alguien del
-                estudio las apruebe. El agente nunca bloquea sola una cita de este valor.
-              </p>
-            </div>
-          )}
-
-          <div className="border-t border-malva-100 pt-3">
-            <Toggle
-              label="Visible en el catálogo"
-              description="Al apagarlo desaparece del sitio público y nadie puede reservarlo."
-              checked={form.activo}
-              onChange={(activo) => setForm((f) => ({ ...f, activo }))}
-            />
-          </div>
+          <Toggle
+            label="Requiere confirmación previa"
+            description="Si se activa, el cliente verá que la cita queda sujeta a confirmación por WhatsApp."
+            checked={form.requiereConfirmacion}
+            onChange={(checked) =>
+              setForm((prev) => ({ ...prev, requiereConfirmacion: checked }))
+            }
+          />
         </div>
-      </Sheet>
+      </RightDrawer>
     </>
   )
 }
