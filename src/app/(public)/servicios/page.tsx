@@ -34,7 +34,7 @@ export default async function ServiciosPage() {
   const hayServicios = categories.some((c) => servicesOf(services, c).length > 0)
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-[var(--spacing-fib-4)] sm:px-6 sm:py-[var(--spacing-fib-5)]">
+    <div className="mx-auto max-w-5xl px-3.5 py-[var(--spacing-fib-4)] sm:px-6 sm:py-[var(--spacing-fib-5)]">
       <Reveal>
         <SectionHeading
           align="center"
@@ -52,7 +52,7 @@ export default async function ServiciosPage() {
           description="Todavía no hay servicios publicados. El estudio los configura desde su panel."
         />
       ) : (
-        <div className="mt-[var(--spacing-fib-5)] space-y-[var(--spacing-fib-5)]">
+        <div className="mt-[var(--spacing-fib-4)] sm:mt-[var(--spacing-fib-5)] space-y-[var(--spacing-fib-4)] sm:space-y-[var(--spacing-fib-5)]">
           {categories.map((cat) => {
             const catServices = servicesOf(services, cat)
             if (catServices.length === 0) return null
@@ -61,10 +61,10 @@ export default async function ServiciosPage() {
             const Icon = look.icon
 
             return (
-              <section key={cat.id} id={cat.id} className="scroll-mt-24">
-                <Reveal className="space-y-3 border-b border-malva-100 pb-4">
-                  {/* Banner visual sutil */}
-                  <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-2xl bg-malva-100 shadow-sm">
+              <section key={cat.id} id={cat.id} className="scroll-mt-20 sm:scroll-mt-24">
+                <Reveal className="space-y-3 border-b border-malva-100 pb-3 sm:pb-4">
+                  {/* Banner visual 100% responsivo */}
+                  <div className="relative min-h-[96px] sm:min-h-[120px] w-full overflow-hidden rounded-2xl bg-malva-100 shadow-sm flex items-center">
                     <Image
                       src={look.image}
                       alt={cleanCategoryName(cat.nombre)}
@@ -72,24 +72,24 @@ export default async function ServiciosPage() {
                       sizes="(max-width: 768px) 100vw, 800px"
                       className="object-cover object-center"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-ink-950/70 via-ink-950/40 to-transparent" />
-                    <div className="absolute inset-0 flex items-center p-5 sm:p-6">
-                      <div className="flex items-center gap-3.5">
-                        <span className={cn('grid h-12 w-12 shrink-0 place-items-center rounded-2xl backdrop-blur-md border border-white/30', look.tile)}>
-                          <Icon className="h-6 w-6" strokeWidth={1.75} />
+                    <div className="absolute inset-0 bg-gradient-to-r from-ink-950/80 via-ink-950/50 to-transparent" />
+                    <div className="relative z-10 flex items-center p-3.5 sm:p-6 w-full">
+                      <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                        <span className={cn('grid h-10 w-10 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-xl sm:rounded-2xl backdrop-blur-md border border-white/30', look.tile)}>
+                          <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
                         </span>
-                        <div>
-                          <h2 className="font-display text-[24px] sm:text-[28px] font-semibold text-white">
+                        <div className="min-w-0">
+                          <h2 className="font-display text-[19px] sm:text-[28px] font-semibold text-white leading-tight truncate">
                             {cleanCategoryName(cat.nombre)}
                           </h2>
-                          <p className="text-[13px] text-white/85">{look.claim}</p>
+                          <p className="text-[11.5px] sm:text-[13px] text-white/85 line-clamp-1">{look.claim}</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </Reveal>
 
-                <RevealGroup className="mt-4 grid gap-3 md:grid-cols-2">
+                <RevealGroup className="mt-3.5 sm:mt-4 grid gap-3 grid-cols-1 md:grid-cols-2">
                   {catServices.map((service) => {
                     const requiereConfirmacion =
                       service.requiereConfirmacion ||
@@ -101,45 +101,47 @@ export default async function ServiciosPage() {
                           pad="md"
                           radius="lg"
                           className={cn(
-                            'flex h-full flex-col',
+                            'flex h-full flex-col justify-between p-4 sm:p-5',
                             !service.activo && 'opacity-55'
                           )}
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <h3
-                              className={cn(
-                                'text-[15px] font-semibold leading-snug text-ink-900',
-                                !service.activo && 'line-through decoration-ink-300'
+                          <div>
+                            <div className="flex items-start justify-between gap-2.5">
+                              <h3
+                                className={cn(
+                                  'text-[14.5px] sm:text-[15px] font-semibold leading-snug text-ink-900',
+                                  !service.activo && 'line-through decoration-ink-300'
+                                )}
+                              >
+                                {service.nombre}
+                              </h3>
+                              <span className="tnum shrink-0 font-display text-[15.5px] sm:text-[17px] font-semibold text-malva-700 whitespace-nowrap">
+                                {formatCurrencyFromCents(service.precioCentavos)}
+                              </span>
+                            </div>
+
+                            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                              <Badge tone="glass" size="sm">
+                                <Clock className="h-3 w-3" strokeWidth={2} />
+                                {humanDuration(service.duracionMin)}
+                              </Badge>
+
+                              {requiereConfirmacion && service.activo && (
+                                <Badge tone="warning" size="sm">
+                                  <Info className="h-3 w-3" strokeWidth={2} />
+                                  Confirmamos por WhatsApp
+                                </Badge>
                               )}
-                            >
-                              {service.nombre}
-                            </h3>
-                            <span className="tnum shrink-0 font-display text-[17px] font-semibold text-malva-700">
-                              {formatCurrencyFromCents(service.precioCentavos)}
-                            </span>
+
+                              {!service.activo && (
+                                <Badge tone="neutral" size="sm">
+                                  No disponible
+                                </Badge>
+                              )}
+                            </div>
                           </div>
 
-                          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                            <Badge tone="glass" size="sm">
-                              <Clock className="h-3 w-3" strokeWidth={2} />
-                              {humanDuration(service.duracionMin)}
-                            </Badge>
-
-                            {requiereConfirmacion && service.activo && (
-                              <Badge tone="warning" size="sm">
-                                <Info className="h-3 w-3" strokeWidth={2} />
-                                Confirmamos por WhatsApp
-                              </Badge>
-                            )}
-
-                            {!service.activo && (
-                              <Badge tone="neutral" size="sm">
-                                No disponible
-                              </Badge>
-                            )}
-                          </div>
-
-                          <div className="mt-auto pt-4">
+                          <div className="mt-4 pt-2">
                             {service.activo ? (
                               <Link
                                 href={`/reservar?serviceId=${service.id}`}
@@ -174,7 +176,7 @@ export default async function ServiciosPage() {
           <h3 className="text-[14px] font-semibold text-ink-900">
             Antes de reservar, dos cosas
           </h3>
-          <ul className="mt-2 space-y-1.5 text-[13px] leading-relaxed text-ink-500">
+          <ul className="mt-2 space-y-1.5 text-[12.5px] sm:text-[13px] leading-relaxed text-ink-500">
             <li>
               · Reservamos con un mínimo de{' '}
               <strong className="font-semibold text-ink-700">

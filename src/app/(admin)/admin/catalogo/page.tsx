@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Image from 'next/image'
-import { Clock, Info, Pencil, Plus, Timer, Users, AlertTriangle, Check, Sparkles } from 'lucide-react'
+import { Clock, Info, Pencil, Plus, Timer, Users, AlertTriangle, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { getCategoriesAction, getServicesAction, upsertServiceAction } from '@/actions/catalogo'
 import { getProfessionalsAction } from '@/actions/profesionales'
@@ -85,7 +85,6 @@ export default function AdminCatalogoPage() {
   function abrirEditar(svc: Service) {
     setEditando(svc)
     
-    // Obtener los IDs de profesionales que tienen este servicio asignado actualmente
     const profsConEsteServicio = equipo
       .filter((p) => (p.serviceIds ?? []).includes(svc.id))
       .map((p) => p.id)
@@ -178,25 +177,25 @@ export default function AdminCatalogoPage() {
   }
 
   return (
-    <>
+    <div className="pb-8">
       <AdminHeader
         title="Catálogo de Servicios"
         subtitle="Precios, duraciones en silla y asignación directa de profesionales que realizan cada servicio."
       >
-        <Button variant="primary" size="md" onClick={() => abrirNuevo()}>
+        <Button variant="primary" size="md" onClick={() => abrirNuevo()} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           Nuevo servicio
         </Button>
       </AdminHeader>
 
       {cargando ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-36 rounded-[var(--radius-lg)]" />
           ))}
         </div>
       ) : (
-        <div className="space-y-[var(--spacing-fib-5)]">
+        <div className="space-y-[var(--spacing-fib-4)] sm:space-y-[var(--spacing-fib-5)]">
           {categorias.map((cat) => {
             const items = servicesOf(servicios, cat)
             const look = categoryLook(cat.id)
@@ -204,16 +203,17 @@ export default function AdminCatalogoPage() {
 
             return (
               <section key={cat.id} className="space-y-3">
-                <div className="flex items-center justify-between border-b border-malva-100 pb-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <span className={cn('grid h-8 w-8 place-items-center rounded-lg', look.tile)}>
+                {/* Header de Categoría Responsivo */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-malva-100 pb-2.5 gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-lg', look.tile)}>
                       <Icon className="h-4 w-4" strokeWidth={1.8} />
                     </span>
-                    <div>
-                      <h2 className="font-display text-[18px] font-semibold text-ink-900">
+                    <div className="min-w-0">
+                      <h2 className="font-display text-[17px] sm:text-[18px] font-semibold text-ink-900 truncate">
                         {cleanCategoryName(cat.nombre)}
                       </h2>
-                      <p className="text-[12px] text-ink-400">{items.length} servicios</p>
+                      <p className="text-[11.5px] text-ink-400">{items.length} servicios</p>
                     </div>
                   </div>
 
@@ -221,14 +221,14 @@ export default function AdminCatalogoPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => abrirNuevo(cat.id)}
-                    className="text-malva-700 hover:bg-malva-50"
+                    className="text-malva-700 hover:bg-malva-50 self-start sm:self-auto text-xs sm:text-sm px-2.5 sm:px-3 py-1"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    Añadir en {cleanCategoryName(cat.nombre)}
+                    <span>Añadir servicio</span>
                   </Button>
                 </div>
 
-                <RevealGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <RevealGroup className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {items.map((svc) => {
                     const profsQueLoPrestan = equipo.filter((p) =>
                       (p.serviceIds ?? []).includes(svc.id)
@@ -241,17 +241,17 @@ export default function AdminCatalogoPage() {
                           pad="md"
                           radius="lg"
                           className={cn(
-                            'flex h-full flex-col justify-between transition-all group hover:shadow-[var(--shadow-malva)]',
+                            'flex h-full flex-col justify-between transition-all group hover:shadow-[var(--shadow-malva)] p-4 sm:p-5',
                             !svc.activo && 'opacity-60',
                             !tieneProfesionales && 'border-amber-200/80 bg-amber-50/20'
                           )}
                         >
                           <div>
-                            <div className="flex items-start justify-between gap-3">
-                              <h3 className="text-[15px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className="text-[14.5px] sm:text-[15px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug break-words">
                                 {svc.nombre}
                               </h3>
-                              <span className="tnum font-display text-[16px] font-semibold text-malva-700 shrink-0">
+                              <span className="tnum font-display text-[15px] sm:text-[16px] font-semibold text-malva-700 shrink-0 whitespace-nowrap">
                                 {formatCurrencyFromCents(svc.precioCentavos)}
                               </span>
                             </div>
@@ -266,7 +266,6 @@ export default function AdminCatalogoPage() {
                                 +{svc.bufferMin}m buffer
                               </Badge>
                               
-                              {/* Badge de profesionales asignados */}
                               {tieneProfesionales ? (
                                 <Badge tone="glass" size="sm" className="bg-malva-50/60 text-malva-700 border-malva-200/50">
                                   <Users className="h-3 w-3" />
@@ -292,7 +291,6 @@ export default function AdminCatalogoPage() {
                               )}
                             </div>
 
-                            {/* Mostrar avatares de quienes lo prestan */}
                             {tieneProfesionales && (
                               <div className="mt-3 flex items-center gap-1.5 pt-2 border-t border-malva-100/60 text-[11.5px] text-ink-500">
                                 <div className="flex -space-x-1.5 overflow-hidden">
@@ -344,9 +342,7 @@ export default function AdminCatalogoPage() {
         </div>
       )}
 
-      {/* ===================================================================
-          RIGHT DRAWER: CREAR / EDITAR SERVICIO (CERO SCROLL)
-          =================================================================== */}
+      {/* RIGHT DRAWER: CREAR / EDITAR SERVICIO (100% RESPONSIVO) */}
       <RightDrawer
         open={drawerAbierto}
         onOpenChange={setDrawerAbierto}
@@ -354,12 +350,13 @@ export default function AdminCatalogoPage() {
         title={editando ? 'Editar servicio y asignación' : 'Nuevo servicio'}
         description="Fija el precio, la duración en silla y selecciona qué profesionales pueden realizarlo."
         footer={
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex items-center justify-end gap-2.5 sm:gap-3">
             <Button
               variant="glass"
               size="md"
               onClick={() => setDrawerAbierto(false)}
               disabled={guardando}
+              className="flex-1 sm:flex-initial"
             >
               Cancelar
             </Button>
@@ -368,15 +365,16 @@ export default function AdminCatalogoPage() {
               size="md"
               loading={guardando}
               onClick={guardar}
+              className="flex-1 sm:flex-initial"
             >
               {editando ? 'Guardar cambios' : 'Crear servicio'}
             </Button>
           </div>
         }
       >
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
           {/* Bloque 1: Datos del Servicio */}
-          <div className="space-y-4">
+          <div className="space-y-3.5 sm:space-y-4">
             <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
               1. Detalles del servicio
             </h3>
@@ -423,7 +421,7 @@ export default function AdminCatalogoPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field
                 label="Duración en silla (min)"
                 type="number"
@@ -470,7 +468,7 @@ export default function AdminCatalogoPage() {
 
           {/* Bloque 2: Asignación de Profesionales */}
           <div className="space-y-4 border-t border-malva-100 pt-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
                   2. ¿Quiénes realizan este servicio?
@@ -480,7 +478,7 @@ export default function AdminCatalogoPage() {
                 </p>
               </div>
 
-              {/* Atajos de asignación */}
+              {/* Atajos de asignación responsive */}
               <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"
@@ -515,7 +513,7 @@ export default function AdminCatalogoPage() {
               </div>
             )}
 
-            <div className="grid gap-2.5 sm:grid-cols-2">
+            <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-2">
               {equipo.map((prof) => {
                 const asignada = form.assignedProfessionalIds.includes(prof.id)
                 const avatar = getProfessionalAvatar(prof)
@@ -570,6 +568,6 @@ export default function AdminCatalogoPage() {
           </div>
         </div>
       </RightDrawer>
-    </>
+    </div>
   )
 }
