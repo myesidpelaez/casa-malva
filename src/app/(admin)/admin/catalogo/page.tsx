@@ -387,7 +387,7 @@ export default function AdminCatalogoPage() {
               <select
                 value={form.categoryId}
                 onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
-                className="w-full bg-white/70 backdrop-blur-sm text-ink-900 border border-ink-200/80 rounded-[var(--radius-sm)] p-2.5 text-sm focus:outline-none focus:border-malva-500 focus:bg-white"
+                className="w-full bg-[var(--glass-tint)] backdrop-blur-sm text-ink-900 border border-ink-200/80 rounded-[var(--radius-sm)] p-2.5 text-sm focus:outline-none focus:border-malva-500 focus:bg-[var(--card)]"
               >
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -527,8 +527,8 @@ export default function AdminCatalogoPage() {
                     className={cn(
                       'flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition-all touch-target',
                       asignada
-                        ? 'border-malva-500 bg-white text-ink-900 shadow-sm ring-1 ring-malva-500'
-                        : 'border-malva-200/60 bg-white/70 text-ink-600 hover:bg-white hover:border-malva-300 opacity-75'
+                        ? 'border-malva-500 bg-[var(--card)] text-ink-900 shadow-sm ring-1 ring-malva-500'
+                        : 'border-ink-200 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)] hover:border-malva-300 opacity-75'
                     )}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -557,7 +557,7 @@ export default function AdminCatalogoPage() {
                         'grid h-5 w-5 shrink-0 place-items-center rounded border transition-colors',
                         asignada
                           ? 'border-malva-600 bg-malva-600 text-white'
-                          : 'border-ink-300 bg-white'
+                          : 'border-ink-300 bg-[var(--card)]'
                       )}
                     >
                       {asignada && <Check className="h-3.5 w-3.5" strokeWidth={3} />}

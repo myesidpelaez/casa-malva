@@ -199,7 +199,7 @@ export function CatalogoLookbook({ categories, services, professionals }: Props)
                   return (
                     <div
                       key={service.id}
-                      className="group flex flex-col justify-between rounded-[22px] border border-malva-100 bg-white shadow-sm transition-all duration-300 hover:border-malva-300 hover:shadow-lg hover:shadow-malva-900/5 overflow-hidden"
+                      className="group flex flex-col justify-between rounded-[22px] border border-ink-100 bg-[var(--card)] shadow-sm transition-all duration-300 hover:border-malva-300 hover:shadow-lg hover:shadow-malva-900/5 overflow-hidden"
                     >
                       {/* Cabecera con Fotografía del Servicio */}
                       <div className="relative aspect-[16/10] w-full overflow-hidden bg-malva-100">
@@ -229,7 +229,7 @@ export function CatalogoLookbook({ categories, services, professionals }: Props)
 
                         {/* Precio en tag inferior sobre la foto */}
                         <div className="absolute bottom-3 right-3">
-                          <span className="tnum inline-block rounded-xl bg-white/95 backdrop-blur-md px-3 py-1 font-display text-[16px] font-semibold text-malva-700 shadow-sm">
+                          <span className="tnum inline-block rounded-xl bg-[var(--card)]/95 backdrop-blur-md px-3 py-1 font-display text-[16px] font-semibold text-malva-700 shadow-sm">
                             {formatCurrencyFromCents(service.precioCentavos)}
                           </span>
                         </div>

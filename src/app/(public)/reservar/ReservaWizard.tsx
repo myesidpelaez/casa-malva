@@ -629,7 +629,7 @@ function PasoFechaHora({
                   ? 'border-transparent bg-malva-600 text-white shadow-[var(--shadow-malva)]'
                   : deshabilitado
                     ? 'cursor-not-allowed border-ink-100 bg-ink-50 text-ink-300'
-                    : 'border-malva-100 bg-white/70 text-ink-900 backdrop-blur-sm hover:border-malva-300'
+                    : 'border-ink-100 bg-[var(--glass-tint)] text-ink-900 backdrop-blur-sm hover:border-malva-300'
               )}
             >
               <span className="text-[10px] font-semibold uppercase tracking-wide opacity-80">
@@ -750,7 +750,7 @@ function BloqueHoras({
                 'tnum flex h-11 flex-col items-center justify-center rounded-[var(--radius-sm)] border text-[13.5px] font-semibold transition-colors',
                 activa
                   ? 'border-transparent bg-malva-600 text-white shadow-[var(--shadow-malva)]'
-                  : 'border-malva-100 bg-white/70 text-ink-900 backdrop-blur-sm hover:border-malva-300'
+                  : 'border-ink-100 bg-[var(--glass-tint)] text-ink-900 backdrop-blur-sm hover:border-malva-300'
               )}
             >
               {horaCorta(f.inicioUtc)}

@@ -78,7 +78,7 @@ export default async function InicioPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950/40 via-transparent to-transparent" />
 
                 {/* Badge flotante inferior */}
-                <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-white/40 bg-white/80 p-3.5 shadow-lg backdrop-blur-md">
+                <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-tint-strong)] p-3.5 shadow-lg backdrop-blur-md">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-display text-[14.5px] font-semibold text-ink-900">
@@ -147,7 +147,7 @@ export default async function InicioPage() {
                       </span>
 
                       {/* Contador de servicios */}
-                      <span className="absolute bottom-2.5 left-3 rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-semibold text-ink-800 backdrop-blur-sm">
+                      <span className="absolute bottom-2.5 left-3 rounded-full bg-[var(--card)]/90 px-2.5 py-0.5 text-[11px] font-semibold text-ink-700 backdrop-blur-sm border border-[var(--glass-hairline)]">
                         {catServices.length} {catServices.length === 1 ? 'servicio' : 'servicios'}
                       </span>
                     </div>
@@ -250,7 +250,7 @@ export default async function InicioPage() {
                 href="/reservar"
                 className={cn(
                   buttonClass({ size: 'lg' }),
-                  'mt-[var(--spacing-fib-3)] !bg-white !text-malva-700 hover:!bg-white/90 shadow-md font-semibold'
+                  'mt-[var(--spacing-fib-3)] !bg-[var(--card)] !text-malva-700 hover:!bg-[var(--card)]/90 shadow-md font-semibold border border-white/10'
                 )}
               >
                 <CalendarPlus className="h-[18px] w-[18px]" strokeWidth={1.75} />

@@ -34,7 +34,7 @@ export function EmptyState({
       transition={spring.gentle}
       className={cn(
         'flex flex-col items-center justify-center rounded-[var(--radius-lg)]',
-        'border border-dashed border-malva-200 bg-white/40 text-center backdrop-blur-sm',
+        'border border-dashed border-malva-200 bg-[var(--glass-tint)] text-center backdrop-blur-sm',
         compact ? 'gap-2 p-[var(--spacing-fib-3)]' : 'gap-3 p-[var(--spacing-fib-4)]',
         className
       )}

@@ -307,7 +307,7 @@ export default function AdminAgendaPage() {
             'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all',
             profesionalMovil === 'todas'
               ? 'bg-malva-600 text-white shadow-[var(--shadow-malva)]'
-              : 'border border-ink-100 bg-white/80 text-ink-600 hover:bg-white'
+              : 'border border-ink-100 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)]'
           )}
         >
           <Users className="h-3.5 w-3.5" />
@@ -335,7 +335,7 @@ export default function AdminAgendaPage() {
                 'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all',
                 active
                   ? 'bg-malva-600 text-white shadow-[var(--shadow-malva)]'
-                  : 'border border-ink-100 bg-white/80 text-ink-600 hover:bg-white'
+                  : 'border border-ink-100 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)]'
               )}
             >
               <span

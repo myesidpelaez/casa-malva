@@ -17,12 +17,12 @@ import { tween } from '@/lib/motion'
  */
 
 const inputBase = [
-  'w-full bg-white/70 backdrop-blur-sm text-ink-900',
+  'w-full bg-[var(--glass-tint)] backdrop-blur-sm text-ink-900',
   'border border-ink-200/80 rounded-[var(--radius-sm)]',
-  'placeholder:text-ink-300',
+  'placeholder:text-ink-400',
   'transition-[border-color,box-shadow,background-color] duration-200',
   'hover:border-ink-300',
-  'focus:outline-none focus:border-malva-500 focus:bg-white',
+  'focus:outline-none focus:border-malva-500 focus:bg-[var(--card)]',
   'focus:shadow-[0_0_0_4px_rgba(123,75,110,0.1)]',
   'disabled:opacity-50 disabled:cursor-not-allowed',
 ].join(' ')

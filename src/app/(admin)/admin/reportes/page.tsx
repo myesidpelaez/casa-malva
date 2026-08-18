@@ -88,7 +88,7 @@ export default async function ReportesPage({
         title="Reportes del estudio"
         subtitle={`Datos de ${label.toLowerCase()} (${desdeIso.split('T')[0]} a ${new Date(new Date(hastaIso).getTime() - 1000).toISOString().split('T')[0]})`}
       >
-        <div className="flex bg-white rounded-md border border-malva-200 shadow-sm p-1">
+        <div className="flex bg-[var(--glass-tint)] rounded-md border border-ink-200 shadow-sm p-1">
           {['hoy', 'semana', 'mes', 'mes_pasado'].map((p) => {
             const isActive = (periodo || 'hoy') === p
             const labels: Record<string, string> = {
@@ -103,8 +103,8 @@ export default async function ReportesPage({
                 href={`/admin/reportes?periodo=${p}`}
                 className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${
                   isActive 
-                    ? 'bg-malva-100 text-malva-800' 
-                    : 'text-ink-600 hover:text-ink-900 hover:bg-malva-50'
+                    ? 'bg-malva-500 text-white font-semibold shadow-sm' 
+                    : 'text-ink-600 hover:text-ink-900 hover:bg-ink-100/50'
                 }`}
               >
                 {labels[p]}
@@ -124,7 +124,7 @@ export default async function ReportesPage({
           {rep.caja.servicios === 0 ? (
             <EmptyState title="Cero servicios" description="No hay cobros en este periodo." icon={Banknote} compact />
           ) : (
-            <div className="bg-white rounded-[var(--radius-lg)] border border-malva-100 p-4 shadow-sm space-y-5">
+            <div className="bg-[var(--card)] rounded-[var(--radius-lg)] border border-ink-100 p-4 shadow-sm space-y-5">
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <div className="text-xs text-ink-500 mb-1">Ingreso total</div>
@@ -139,7 +139,7 @@ export default async function ReportesPage({
                   <div className="text-2xl font-bold text-ink-900">{formatCurrencyFromCents(rep.caja.ticketPromedioCentavos)}</div>
                 </div>
               </div>
-              <div className="border-t border-malva-100 pt-4">
+              <div className="border-t border-ink-100 pt-4">
                 <div className="text-xs font-semibold text-ink-700 mb-3">Por método de pago</div>
                 <div className="space-y-2">
                   {Object.entries(rep.caja.porMetodo).sort((a, b) => b[1].centavos - a[1].centavos).map(([metodo, stats]) => (
@@ -153,7 +153,7 @@ export default async function ReportesPage({
                 </div>
               </div>
               {rep.caja.propinaCentavos > 0 && (
-                <div className="border-t border-malva-100 pt-4 flex justify-between items-center bg-malva-50/50 -mx-4 -mb-4 p-4 rounded-b-[var(--radius-lg)]">
+                <div className="border-t border-ink-100 pt-4 flex justify-between items-center bg-ink-100/30 -mx-4 -mb-4 p-4 rounded-b-[var(--radius-lg)]">
                   <div className="text-sm font-semibold text-ink-700">Propinas (del equipo, no del negocio)</div>
                   <div className="font-bold text-malva-700">{formatCurrencyFromCents(rep.caja.propinaCentavos)}</div>
                 </div>
@@ -171,9 +171,9 @@ export default async function ReportesPage({
           {rep.profesionales.filter(p => p.servicios > 0 || p.minutosDisponibles > 0).length === 0 ? (
             <EmptyState title="Sin datos del equipo" description="No hubo actividad ni horarios en este periodo." icon={Users} compact />
           ) : (
-            <div className="bg-white rounded-[var(--radius-lg)] border border-malva-100 shadow-sm overflow-hidden">
+            <div className="bg-[var(--card)] rounded-[var(--radius-lg)] border border-ink-100 shadow-sm overflow-hidden">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-malva-50/50 text-ink-500 border-b border-malva-100 text-xs">
+                <thead className="bg-ink-100/40 text-ink-500 border-b border-ink-100 text-xs">
                   <tr>
                     <th className="px-4 py-2 font-medium">Profesional</th>
                     <th className="px-4 py-2 font-medium text-right">Ingreso</th>
@@ -181,9 +181,9 @@ export default async function ReportesPage({
                     <th className="px-4 py-2 font-medium text-right">Ocupación</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-malva-50">
+                <tbody className="divide-y divide-ink-100/60">
                   {rep.profesionales.filter(p => p.servicios > 0 || p.minutosDisponibles > 0).map((p) => (
-                    <tr key={p.professionalId} className="hover:bg-malva-50/30 transition-colors">
+                    <tr key={p.professionalId} className="hover:bg-ink-100/30 transition-colors">
                       <td className="px-4 py-3 font-medium text-ink-900">{mapProf.get(p.professionalId) || p.professionalId}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="font-semibold text-ink-900">{formatCurrencyFromCents(p.ingresoCentavos)}</div>
@@ -193,7 +193,7 @@ export default async function ReportesPage({
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <span className="font-medium text-ink-700">{p.ocupacionPorcentaje.toFixed(0)}%</span>
-                          <div className="w-12 h-1.5 bg-malva-100 rounded-full overflow-hidden">
+                          <div className="w-12 h-1.5 bg-ink-100 rounded-full overflow-hidden">
                             <div className="h-full bg-malva-500 rounded-full" style={{ width: `${Math.min(100, p.ocupacionPorcentaje)}%` }} />
                           </div>
                         </div>
@@ -215,18 +215,18 @@ export default async function ReportesPage({
           {rep.servicios.length === 0 ? (
             <EmptyState title="Sin servicios" description="No hay servicios para evaluar." icon={TrendingUp} compact />
           ) : (
-            <div className="bg-white rounded-[var(--radius-lg)] border border-malva-100 shadow-sm overflow-hidden">
+            <div className="bg-[var(--card)] rounded-[var(--radius-lg)] border border-ink-100 shadow-sm overflow-hidden">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-malva-50/50 text-ink-500 border-b border-malva-100 text-xs">
+                <thead className="bg-ink-100/40 text-ink-500 border-b border-ink-100 text-xs">
                   <tr>
                     <th className="px-4 py-2 font-medium">Servicio</th>
                     <th className="px-4 py-2 font-medium text-right">Veces</th>
                     <th className="px-4 py-2 font-medium text-right text-malva-700">Rendimiento ($/h)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-malva-50">
+                <tbody className="divide-y divide-ink-100/60">
                   {rep.servicios.map((s) => (
-                    <tr key={s.serviceId} className="hover:bg-malva-50/30 transition-colors">
+                    <tr key={s.serviceId} className="hover:bg-ink-100/30 transition-colors">
                       <td className="px-4 py-2.5 font-medium text-ink-900">{mapSvc.get(s.serviceId) || s.serviceId}</td>
                       <td className="px-4 py-2.5 text-right text-ink-600">{s.veces}</td>
                       <td className="px-4 py-2.5 text-right font-bold text-malva-700">{formatCurrencyFromCents(s.ingresoPorHoraCentavos)}/h</td>
@@ -247,7 +247,7 @@ export default async function ReportesPage({
           {rep.origen.web === 0 && rep.origen.admin === 0 && rep.origen.whatsapp === 0 ? (
             <EmptyState title="Sin orígenes" description="No hay citas en este periodo." icon={Share2} compact />
           ) : (
-            <div className="bg-white rounded-[var(--radius-lg)] border border-malva-100 p-4 shadow-sm">
+            <div className="bg-[var(--card)] rounded-[var(--radius-lg)] border border-ink-100 p-4 shadow-sm">
               <div className="space-y-3">
                 {Object.entries(rep.origen).sort((a, b) => b[1] - a[1]).map(([origen, total]) => {
                   const max = Math.max(rep.origen.web, rep.origen.admin, rep.origen.whatsapp, 1)
@@ -255,7 +255,7 @@ export default async function ReportesPage({
                   return (
                     <div key={origen} className="flex items-center gap-3">
                       <div className="w-20 text-xs font-semibold uppercase tracking-wider text-ink-500">{origen}</div>
-                      <div className="flex-1 h-3 bg-malva-100 rounded-full overflow-hidden">
+                      <div className="flex-1 h-3 bg-ink-100 rounded-full overflow-hidden">
                         <div className="h-full bg-malva-400 rounded-full" style={{ width: `${pct}%` }} />
                       </div>
                       <div className="w-8 text-right text-sm font-bold text-ink-900">{total}</div>
@@ -278,7 +278,7 @@ export default async function ReportesPage({
           {rep.franjas.length === 0 ? (
             <EmptyState title="Sin franjas" description="No hay suficientes citas para graficar concentración." icon={CalendarClock} compact />
           ) : (
-            <div className="bg-white rounded-[var(--radius-lg)] border border-malva-100 p-4 shadow-sm overflow-x-auto">
+            <div className="bg-[var(--card)] rounded-[var(--radius-lg)] border border-ink-100 p-4 shadow-sm overflow-x-auto">
               <div className="min-w-[600px]">
                 <div className="grid grid-cols-[auto_repeat(7,1fr)] gap-1">
                   <div className="col-span-1" />
@@ -289,7 +289,7 @@ export default async function ReportesPage({
                   
                   {Array.from({ length: 13 }, (_, i) => i + 8).map(hora => (
                     <React.Fragment key={hora}>
-                      <div className="text-right text-xs text-ink-400 pr-3 py-1.5 flex items-center justify-end border-r border-malva-100">
+                      <div className="text-right text-xs text-ink-400 pr-3 py-1.5 flex items-center justify-end border-r border-ink-100">
                         {hora}:00
                       </div>
                       {[1, 2, 3, 4, 5, 6, 0].map(dia => {
@@ -299,7 +299,7 @@ export default async function ReportesPage({
                         return (
                           <div 
                             key={`${dia}-${hora}`} 
-                            className="h-8 rounded-sm transition-colors border border-transparent hover:border-malva-400 flex items-center justify-center text-[10px] font-bold text-malva-900"
+                            className="h-8 rounded-sm transition-colors border border-transparent hover:border-malva-400 flex items-center justify-center text-[10px] font-bold text-ink-900"
                             style={{ backgroundColor: `rgba(188, 143, 169, ${opacidad})` }}
                             title={`${franja?.servicios || 0} servicios`}
                           >
@@ -324,9 +324,9 @@ export default async function ReportesPage({
           {cobrosCrudos.length === 0 ? (
             <EmptyState title="Sin historial" description="No hay servicios prestados en este periodo." icon={Calendar} compact />
           ) : (
-            <div className="bg-white rounded-[var(--radius-lg)] border border-malva-100 shadow-sm overflow-hidden overflow-x-auto">
+            <div className="bg-[var(--card)] rounded-[var(--radius-lg)] border border-ink-100 shadow-sm overflow-hidden overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap min-w-[700px]">
-                <thead className="bg-malva-50/50 text-ink-500 border-b border-malva-100 text-xs">
+                <thead className="bg-ink-100/40 text-ink-500 border-b border-ink-100 text-xs">
                   <tr>
                     <th className="px-4 py-2 font-medium">Fecha</th>
                     <th className="px-4 py-2 font-medium">Hora</th>
@@ -337,12 +337,12 @@ export default async function ReportesPage({
                     <th className="px-4 py-2 font-medium text-right">Cobrado</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-malva-50">
+                <tbody className="divide-y divide-ink-100/60">
                   {cobrosCrudos.sort((a, b) => new Date(b.fechaUtc).getTime() - new Date(a.fechaUtc).getTime()).map(c => {
                     const d = new Date(c.fechaUtc)
                     const hm = d.toISOString().split('T')[1].substring(0, 5)
                     return (
-                      <tr key={c.id} className="hover:bg-malva-50/30 transition-colors">
+                      <tr key={c.id} className="hover:bg-ink-100/30 transition-colors">
                         <td className="px-4 py-2 text-ink-600">{d.toISOString().split('T')[0]}</td>
                         <td className="px-4 py-2 text-ink-600">{hm}</td>
                         <td className="px-4 py-2 font-medium text-ink-900">{mapCli.get(c.clientId) || c.clientId}</td>

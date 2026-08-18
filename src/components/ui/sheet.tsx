@@ -114,7 +114,7 @@ export function Sheet({
                 </div>
 
                 {footer && (
-                  <div className="shrink-0 border-t border-ink-100/80 bg-white/40 px-[var(--spacing-fib-3)] py-[var(--spacing-fib-2)] pb-[max(var(--spacing-fib-2),env(safe-area-inset-bottom))]">
+                  <div className="shrink-0 border-t border-ink-100/80 bg-[var(--glass-tint)] px-[var(--spacing-fib-3)] py-[var(--spacing-fib-2)] pb-[max(var(--spacing-fib-2),env(safe-area-inset-bottom))]">
                     {footer}
                   </div>
                 )}

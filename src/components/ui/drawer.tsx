@@ -94,7 +94,7 @@ export function RightDrawer({
                 animate="show"
                 exit="exit"
                 className={cn(
-                  'fixed z-50 flex flex-col bg-white shadow-2xl border-malva-200/70',
+                  'fixed z-50 flex flex-col bg-[var(--card)] text-ink-900 shadow-2xl border-ink-100',
                   // Mobile: Bottom Sheet
                   'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-[28px] border-t',
                   // Desktop: Right Drawer (Full Height, Cero Scroll)
@@ -125,7 +125,7 @@ export function RightDrawer({
                     <button
                       type="button"
                       aria-label="Cerrar panel"
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/80 text-ink-500 hover:bg-malva-100 hover:text-ink-900 transition-colors border border-malva-200/50 shadow-sm"
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--glass-tint-strong)] text-ink-500 hover:bg-malva-100 hover:text-ink-900 transition-colors border border-ink-100 shadow-sm"
                     >
                       <X className="h-4 w-4" strokeWidth={2} />
                     </button>

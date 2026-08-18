@@ -254,7 +254,7 @@ function Metrica({
   tono?: 'alerta' | 'bien'
 }) {
   return (
-    <div className="rounded-[var(--radius-md)] border border-ink-100 bg-white/60 px-2.5 py-3 text-center">
+    <div className="rounded-[var(--radius-md)] border border-ink-100 bg-[var(--glass-tint)] px-2.5 py-3 text-center">
       <p className="text-[10.5px] uppercase tracking-[0.1em] text-ink-400">{etiqueta}</p>
       <p
         className={cn(

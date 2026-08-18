@@ -424,8 +424,8 @@ export default function AdminProfesionalesPage() {
                             className={cn(
                               'flex items-center justify-between gap-2 rounded-lg border p-2.5 text-left text-[13px] transition-all touch-target',
                               marcado
-                                ? 'border-malva-500 bg-white text-ink-900 shadow-sm ring-1 ring-malva-500'
-                                : 'border-malva-200/60 bg-white/70 text-ink-600 hover:bg-white hover:border-malva-300'
+                                ? 'border-malva-500 bg-[var(--card)] text-ink-900 shadow-sm ring-1 ring-malva-500'
+                                : 'border-ink-200 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)] hover:border-malva-300'
                             )}
                           >
                             <span className="truncate font-medium">{s.nombre}</span>
@@ -438,7 +438,7 @@ export default function AdminProfesionalesPage() {
                                   'grid h-4 w-4 place-items-center rounded border transition-colors',
                                   marcado
                                     ? 'border-malva-600 bg-malva-600 text-white'
-                                    : 'border-ink-300 bg-white'
+                                    : 'border-ink-300 bg-[var(--card)]'
                                 )}
                               >
                                 {marcado && <Check className="h-3 w-3" strokeWidth={3} />}
@@ -495,7 +495,7 @@ export default function AdminProfesionalesPage() {
                     className={cn(
                       'flex items-center justify-between gap-3 rounded-xl border p-3 transition-colors',
                       activoDia
-                        ? 'border-malva-200 bg-white'
+                        ? 'border-malva-200 bg-[var(--card)]'
                         : 'border-ink-100 bg-ink-50/60 opacity-60'
                     )}
                   >
@@ -516,7 +516,7 @@ export default function AdminProfesionalesPage() {
                         <select
                           value={inicio}
                           onChange={(e) => cambiarHora(d.n, 0, Number(e.target.value))}
-                          className="rounded-md border border-malva-200 bg-white px-2 py-1 font-medium text-ink-900 shadow-sm"
+                          className="rounded-md border border-malva-200 bg-[var(--card)] px-2 py-1 font-medium text-ink-900 shadow-sm"
                         >
                           {Array.from({ length: 12 }, (_, i) => i + 8).map((h) => (
                             <option key={h} value={h}>
@@ -528,7 +528,7 @@ export default function AdminProfesionalesPage() {
                         <select
                           value={fin}
                           onChange={(e) => cambiarHora(d.n, 1, Number(e.target.value))}
-                          className="rounded-md border border-malva-200 bg-white px-2 py-1 font-medium text-ink-900 shadow-sm"
+                          className="rounded-md border border-malva-200 bg-[var(--card)] px-2 py-1 font-medium text-ink-900 shadow-sm"
                         >
                           {Array.from({ length: 14 }, (_, i) => i + 9).map((h) => (
                             <option key={h} value={h}>

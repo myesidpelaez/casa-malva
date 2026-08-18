@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils'
 import { spring } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { Marca } from '@/components/brand'
+import { ThemeToggle } from '@/components/common/ThemeToggle'
 
 type AdminNavItem = { label: string; href: string; icon: LucideIcon }
 
@@ -62,7 +63,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh">
       {/* ---------- Barra lateral (escritorio) ---------- */}
-      <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-malva-100/70 bg-white/55 p-3 backdrop-blur-xl md:flex">
+      <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-[var(--glass-hairline)] bg-[var(--glass-tint)] p-3 backdrop-blur-xl md:flex">
         <Link href="/admin" className="group flex items-center gap-2.5 px-2 py-3">
           <Marca size={36} className="text-malva-600 transition-transform duration-200 group-hover:scale-105" />
           <span className="leading-tight">
@@ -104,7 +105,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="space-y-1 border-t border-malva-100 pt-3">
+        <div className="space-y-1 border-t border-ink-100 pt-3">
+          <div className="flex items-center justify-between px-3 py-1.5">
+            <span className="text-[12.5px] font-semibold text-ink-400">Tema</span>
+            <ThemeToggle />
+          </div>
           <Link
             href="/inicio"
             className="flex items-center gap-2.5 rounded-[var(--radius-sm)] px-3 py-2 text-[12.5px] font-semibold text-ink-400 transition-colors hover:text-malva-700"
@@ -191,7 +196,7 @@ export function AdminHeader({
   children?: React.ReactNode
 }) {
   return (
-    <header className="mb-[var(--spacing-fib-3)] flex flex-col gap-3 border-b border-malva-100 pb-[var(--spacing-fib-2)] sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-[var(--spacing-fib-3)] flex flex-col gap-3 border-b border-ink-100 pb-[var(--spacing-fib-2)] sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         <h1 className="font-display text-[26px] font-semibold leading-tight text-ink-900">
           {title}

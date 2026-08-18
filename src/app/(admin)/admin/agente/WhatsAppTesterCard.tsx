@@ -129,7 +129,7 @@ export function WhatsAppTesterCard() {
         </div>
 
         {/* Columna derecha: Formulario de prueba */}
-        <form onSubmit={handleTest} className="space-y-3 bg-white p-4 rounded-xl border border-malva-100 shadow-sm">
+        <form onSubmit={handleTest} className="space-y-3 bg-[var(--card)] p-4 rounded-xl border border-ink-100 shadow-sm">
           <div className="text-xs font-bold text-ink-800 uppercase tracking-wider">
             Probar Envío en Tiempo Real
           </div>
