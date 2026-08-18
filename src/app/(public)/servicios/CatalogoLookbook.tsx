@@ -1,5 +1,7 @@
 'use client'
 
+import { Reveal } from '@/components/common/Reveal'
+
 import * as React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -16,9 +18,7 @@ import {
   servicesOf,
 } from '@/lib/catalogo-ui'
 import { buttonClass } from '@/components/ui/button-variants'
-import { Badge } from '@/components/ui/badge'
 import { Surface, SectionHeading } from '@/components/ui/surface'
-import { Reveal, RevealGroup, RevealItem } from '@/components/common/Reveal'
 import { EmptyState } from '@/components/common/EmptyState'
 import { cn } from '@/lib/utils'
 import type { Category, Professional, Service } from '@/types'

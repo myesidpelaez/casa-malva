@@ -9,17 +9,12 @@ import {
   Smartphone,
   MessageCircle,
   Users,
-  TrendingUp,
   Printer,
   Share2,
   ExternalLink,
   Phone,
   Mail,
-  MapPin,
   CheckCircle2,
-  Clock,
-  ShieldCheck,
-  ChevronRight,
 } from 'lucide-react'
 
 const DEMO_URL = 'https://casa-malva--casa-malva-demo.us-central1.hosted.app'
@@ -181,7 +176,7 @@ export function FlyerContent() {
                 <h4 className="text-sm font-bold text-ink-900">WhatsApp & Cero Inasistencias</h4>
               </div>
               <p className="text-xs text-ink-600 leading-relaxed">
-                Confirmación instantánea y recordatorios automáticos previos a la cita. Reduce los "no-shows" y mantén tu agenda llena con clientas puntuales.
+                Confirmación instantánea y recordatorios automáticos previos a la cita. Reduce los &quot;no-shows&quot; y mantén tu agenda llena con clientas puntuales.
               </p>
             </div>
 

@@ -5,34 +5,26 @@ import { AdminHeader } from '@/components/layout/AdminShell'
 import { Surface } from '@/components/ui/surface'
 import { Badge } from '@/components/ui/badge'
 import { RevealGroup, RevealItem } from '@/components/common/Reveal'
+import { WhatsAppTesterCard } from './WhatsAppTesterCard'
 
-/**
- * Módulo del agente de IA — todavía no construido.
- *
- * Esta pantalla NO finge que existe. Muestra lo que va a hacer y en qué fase
- * entra, porque una pantalla vacía sin explicación delante de un cliente se
- * lee como una parte rota del producto, no como una parte pendiente.
- *
- * Spec pendiente: docs/specs/06-agente.md
- */
 const HERRAMIENTAS = [
   {
     icon: MessageCircle,
-    titulo: 'Conversaciones unificadas',
+    titulo: 'Notificaciones WhatsApp Oficiales',
     texto:
-      'WhatsApp y el chat del sitio entran al mismo cerebro y escriben en esta misma agenda. Una sola verdad, no dos calendarios.',
+      'Confirmación instantánea al agendar citas desde la web con datos del especialista, fecha, hora y ubicación.',
   },
   {
     icon: Workflow,
-    titulo: 'Agenda de verdad',
+    titulo: 'Agenda & Disponibilidad en Tiempo Real',
     texto:
-      'El agente consulta disponibilidad, agenda, reagenda y cancela usando las mismas reglas que valida el servidor.',
+      'Las clientas reservan solas contra los turnos reales de los profesionales, evitando dobles reservas.',
   },
   {
     icon: ShieldCheck,
-    titulo: 'Blindaje anti-invento',
+    titulo: 'Costo Marginal & Alta Fidelidad',
     texto:
-      'Nunca inventa precios ni cupos: todo dato sale de una herramienta. Y por encima de $200.000 escala a una persona en vez de bloquear el cupo.',
+      'Conexión directa a Meta Cloud API sin intermediarios. Costo de ~$3 COP por mensaje transaccional.',
   },
 ]
 
@@ -40,26 +32,26 @@ export default function AdminAgentePage() {
   return (
     <>
       <AdminHeader
-        title="Agente de IA"
-        subtitle="Atención por WhatsApp y web, con traspaso a una persona cuando hace falta."
+        title="Canal WhatsApp & Agente"
+        subtitle="Notificaciones automáticas oficiales y atención inteligente para Casa Malva."
       >
-        <Badge tone="warning" size="lg">
-          Fase 4 · en construcción
+        <Badge tone="success" size="lg">
+          Cloud API v24.0 Activa
         </Badge>
       </AdminHeader>
 
-      <Surface material="deep" radius="xl" pad="lg" className="mb-[var(--spacing-fib-3)]">
+      {/* Componente de prueba y estado en vivo */}
+      <WhatsAppTesterCard />
+
+      <Surface material="deep" radius="xl" pad="lg" className="my-[var(--spacing-fib-3)]">
         <span className="grid h-12 w-12 place-items-center rounded-[16px] bg-white/15 text-white">
           <Bot className="h-6 w-6" strokeWidth={1.5} />
         </span>
         <h2 className="mt-3 font-display text-[24px] font-semibold text-white">
-          Todavía no está encendido
+          Notificaciones y Automatización Conversacional
         </h2>
         <p className="mt-1.5 max-w-lg text-[13.5px] leading-relaxed text-white/70">
-          La agenda, el catálogo y las reglas de negocio ya están construidas y
-          probadas — que es exactamente lo que el agente necesita para no
-          equivocarse. Lo que falta es conectarle el canal de WhatsApp y las
-          herramientas.
+          Casa Malva ya dispara mensajes de confirmación automáticos por WhatsApp cada vez que una clienta completa su reserva en la web.
         </p>
       </Surface>
 

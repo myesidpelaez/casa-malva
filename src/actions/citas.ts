@@ -1,5 +1,7 @@
 'use server'
 
+import { enviarConfirmacionCitaWhatsApp } from '@/lib/whatsapp/notifications'
+
 import {
   docGet,
   docSet,
@@ -164,6 +166,22 @@ async function _crearCitaBase(input: CrearCitaInput, omitirAntelacionMinima: boo
       return { ok: false, error: 'cupo_ocupado', alternativas }
     }
 
+    // Disparador de Notificación automática por WhatsApp (No bloqueante)
+    if (input.clienteTelefono) {
+      enviarConfirmacionCitaWhatsApp({
+        citaId: resReserva.data.id,
+        clienteNombre: input.clienteNombre || 'Clienta',
+        clienteTelefono: input.clienteTelefono,
+        servicioNombre: svc.nombre,
+        profesionalNombre: prof.nombre,
+        inicioIso: input.inicioUtc,
+        precioCentavos: svc.precioCentavos,
+        sedeNombre: 'Casa Malva • El Poblado',
+        sedeDireccion: 'Cra. 37 #8A-42, Vía Provenza, Medellín',
+      }).catch((err) => {
+        console.error('[WHATSAPP_ASYNC_ERROR] Error en envío en segundo plano:', err)
+      })
+    }
     return { ok: true, data: resReserva.data }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Error al procesar la cita'

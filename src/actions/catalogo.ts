@@ -2,7 +2,7 @@
 
 import { docGet, docSet, getCategories, getServices, getProfessionals } from '@/lib/db'
 import { withAuth } from '@/lib/withAuth'
-import type { Category, Service, Professional } from '@/types'
+import type { Category, Service } from '@/types'
 import type { SlotInfo } from '@/lib/disponibilidad'
 
 export type ActionResult<T> =
