@@ -52,7 +52,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="es" className={`${fraunces.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="antialiased selection:bg-malva-200 selection:text-malva-900">
         <script
           dangerouslySetInnerHTML={{
