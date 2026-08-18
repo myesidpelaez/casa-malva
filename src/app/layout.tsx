@@ -54,6 +54,20 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="antialiased selection:bg-malva-200 selection:text-malva-900">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const guardado = localStorage.getItem('cm:tema');
+                if (guardado === 'dark' || (!guardado && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                  document.documentElement.setAttribute('data-theme', 'light');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
         {/* Telón de fondo. Sin esto, el vidrio no tiene nada que refractar. */}
         <div className="aurora" aria-hidden />
         {children}

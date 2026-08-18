@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { buttonClass } from '@/components/ui/button-variants'
 import { spring } from '@/lib/motion'
 import { MarcaReveal } from '@/components/brand'
+import { ThemeToggle } from '@/components/common/ThemeToggle'
 
 const LINKS = [
   { href: '/inicio', label: 'Inicio' },
@@ -42,9 +43,9 @@ export function TopBar() {
     <header
       className={cn(
         'sticky top-0 z-40 w-full border-b transition-[background-color,border-color,box-shadow] duration-300',
-        'bg-white/55 backdrop-blur-xl backdrop-saturate-150',
+        'bg-[var(--glass-tint)] backdrop-blur-xl backdrop-saturate-150',
         condensada
-          ? 'border-malva-100 bg-white/75 shadow-[var(--shadow-e1)]'
+          ? 'border-malva-100/60 bg-[var(--glass-tint-strong)] shadow-[var(--shadow-e1)]'
           : 'border-transparent'
       )}
     >
@@ -89,16 +90,19 @@ export function TopBar() {
           })}
         </nav>
 
-        <Link
-          href="/reservar"
-          className={cn(
-            buttonClass({ variant: 'primary', size: 'md' }),
-            'hidden sm:inline-flex'
-          )}
-        >
-          <CalendarPlus className="h-4 w-4" strokeWidth={1.75} />
-          <span>Reservar cita</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Link
+            href="/reservar"
+            className={cn(
+              buttonClass({ variant: 'primary', size: 'md' }),
+              'hidden sm:inline-flex'
+            )}
+          >
+            <CalendarPlus className="h-4 w-4" strokeWidth={1.75} />
+            <span>Reservar cita</span>
+          </Link>
+        </div>
       </div>
     </header>
   )

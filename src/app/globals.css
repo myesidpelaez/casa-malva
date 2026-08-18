@@ -83,6 +83,9 @@
    Materiales de vidrio (glassmorphism)
    El vidrio SOLO funciona si hay algo detrás. Por eso existe .aurora.
    ========================================================================= */
+/* ============================================================================
+   CASA MALVA — Tokens de Modo Oscuro & Temas Semánticos
+   ========================================================================= */
 :root {
   --glass-blur: 20px;
   --glass-saturate: 180%;
@@ -93,9 +96,56 @@
   --glass-hairline: rgba(123, 75, 110, 0.1);
 
   --canvas: #faf8f9;
+  --card: #ffffff;
   --duration-fast: 160ms;
   --duration-base: 260ms;
   --duration-slow: 420ms;
+}
+
+[data-theme='dark'] {
+  --canvas: #171316;
+  --card: #221c21;
+  --glass-tint: rgba(34, 28, 33, 0.65);
+  --glass-tint-strong: rgba(34, 28, 33, 0.85);
+  --glass-tint-deep: rgba(18, 14, 17, 0.85);
+  --glass-border: rgba(201, 163, 186, 0.2);
+  --glass-hairline: rgba(201, 163, 186, 0.12);
+
+  --color-ink-900: #efe8ec;
+  --color-ink-700: #ded5da;
+  --color-ink-500: #a89aa4;
+  --color-ink-400: #8d848a;
+  --color-ink-300: #6b6268;
+  --color-ink-200: #453d43;
+  --color-ink-100: #2a2228;
+  --color-ink-50: #221c21;
+
+  --color-malva-50: #2a1b26;
+  --color-malva-100: #3b2435;
+  --color-malva-200: #523049;
+  --color-malva-300: #703f64;
+  --color-malva-400: #965786;
+  --color-malva-500: #b878a6;
+  --color-malva-600: #c9a3ba;
+  --color-malva-700: #dcbacf;
+  --color-malva-800: #ebdce4;
+  --color-malva-900: #f7f0f4;
+}
+
+[data-theme='dark'] .aurora::before {
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(123, 75, 110, 0.35),
+    transparent 68%
+  );
+}
+
+[data-theme='dark'] .aurora::after {
+  background: radial-gradient(
+    circle at 60% 40%,
+    rgba(102, 61, 91, 0.3),
+    transparent 66%
+  );
 }
 
 * {
