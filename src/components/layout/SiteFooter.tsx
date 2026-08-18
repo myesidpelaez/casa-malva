@@ -12,7 +12,7 @@ import { Marca } from '@/components/brand'
  */
 export function SiteFooter() {
   return (
-    <footer className="mt-[var(--spacing-fib-6)] border-t border-malva-100 bg-white/40 backdrop-blur-sm">
+    <footer className="mt-[var(--spacing-fib-6)] border-t border-malva-100 bg-[var(--glass-tint)] backdrop-blur-sm">
       <div className="mx-auto grid max-w-6xl gap-[var(--spacing-fib-3)] px-4 py-[var(--spacing-fib-4)] sm:px-6 md:grid-cols-3">
         <div className="space-y-2">
           <div className="flex items-center gap-2.5">

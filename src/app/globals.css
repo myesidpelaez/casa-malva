@@ -14,26 +14,26 @@
   --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
 
   /* ---- Escala malva (el acento de marca) -------------------------------- */
-  --color-malva-50: #faf5f8;
-  --color-malva-100: #f3eaf0;
-  --color-malva-200: #e8d5e1;
-  --color-malva-300: #d4b3c8;
-  --color-malva-400: #b98aa8;
-  --color-malva-500: #9c6489;
-  --color-malva-600: #7b4b6e; /* ← acento original de marca */
-  --color-malva-700: #663d5b;
-  --color-malva-800: #52324a;
-  --color-malva-900: #3d2537;
+  --color-malva-50: var(--cm-malva-50);
+  --color-malva-100: var(--cm-malva-100);
+  --color-malva-200: var(--cm-malva-200);
+  --color-malva-300: var(--cm-malva-300);
+  --color-malva-400: var(--cm-malva-400);
+  --color-malva-500: var(--cm-malva-500);
+  --color-malva-600: var(--cm-malva-600);
+  --color-malva-700: var(--cm-malva-700);
+  --color-malva-800: var(--cm-malva-800);
+  --color-malva-900: var(--cm-malva-900);
 
   /* ---- Neutros cálidos (nunca gris puro: siempre con un punto de rosa) --- */
-  --color-ink-900: #1a1618;
-  --color-ink-700: #453d43;
-  --color-ink-500: #6b6268;
-  --color-ink-400: #8d848a;
-  --color-ink-300: #b5abb1;
-  --color-ink-200: #ded5da;
-  --color-ink-100: #efe8ec;
-  --color-ink-50: #faf8f9;
+  --color-ink-900: var(--cm-ink-900);
+  --color-ink-700: var(--cm-ink-700);
+  --color-ink-500: var(--cm-ink-500);
+  --color-ink-400: var(--cm-ink-400);
+  --color-ink-300: var(--cm-ink-300);
+  --color-ink-200: var(--cm-ink-200);
+  --color-ink-100: var(--cm-ink-100);
+  --color-ink-50: var(--cm-ink-50);
 
   /* ---- Acentos de apoyo ------------------------------------------------- */
   --color-blush: #e8c4cf;
@@ -80,11 +80,7 @@
 }
 
 /* ============================================================================
-   Materiales de vidrio (glassmorphism)
-   El vidrio SOLO funciona si hay algo detrás. Por eso existe .aurora.
-   ========================================================================= */
-/* ============================================================================
-   CASA MALVA — Tokens de Modo Oscuro & Temas Semánticos
+   Tokens de Superficie & Temas Semánticos (Claro / Oscuro)
    ========================================================================= */
 :root {
   --glass-blur: 20px;
@@ -100,6 +96,26 @@
   --duration-fast: 160ms;
   --duration-base: 260ms;
   --duration-slow: 420ms;
+
+  --cm-ink-900: #1a1618;
+  --cm-ink-700: #453d43;
+  --cm-ink-500: #6b6268;
+  --cm-ink-400: #8d848a;
+  --cm-ink-300: #b5abb1;
+  --cm-ink-200: #ded5da;
+  --cm-ink-100: #efe8ec;
+  --cm-ink-50: #faf8f9;
+
+  --cm-malva-50: #faf5f8;
+  --cm-malva-100: #f3eaf0;
+  --cm-malva-200: #e8d5e1;
+  --cm-malva-300: #d4b3c8;
+  --cm-malva-400: #b98aa8;
+  --cm-malva-500: #9c6489;
+  --cm-malva-600: #7b4b6e;
+  --cm-malva-700: #663d5b;
+  --cm-malva-800: #52324a;
+  --cm-malva-900: #3d2537;
 }
 
 [data-theme='dark'] {
@@ -111,60 +127,38 @@
   --glass-border: rgba(201, 163, 186, 0.2);
   --glass-hairline: rgba(201, 163, 186, 0.12);
 
-  --color-ink-900: #efe8ec;
-  --color-ink-700: #ded5da;
-  --color-ink-500: #a89aa4;
-  --color-ink-400: #8d848a;
-  --color-ink-300: #6b6268;
-  --color-ink-200: #453d43;
-  --color-ink-100: #2a2228;
-  --color-ink-50: #221c21;
+  --cm-ink-900: #efe8ec;
+  --cm-ink-700: #ded5da;
+  --cm-ink-500: #a89aa4;
+  --cm-ink-400: #8d848a;
+  --cm-ink-300: #6b6268;
+  --cm-ink-200: #453d43;
+  --cm-ink-100: #2a2228;
+  --cm-ink-50: #221c21;
 
-  --color-malva-50: #2a1b26;
-  --color-malva-100: #3b2435;
-  --color-malva-200: #523049;
-  --color-malva-300: #703f64;
-  --color-malva-400: #965786;
-  --color-malva-500: #b878a6;
-  --color-malva-600: #c9a3ba;
-  --color-malva-700: #dcbacf;
-  --color-malva-800: #ebdce4;
-  --color-malva-900: #f7f0f4;
-}
-
-[data-theme='dark'] .aurora::before {
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(123, 75, 110, 0.35),
-    transparent 68%
-  );
-}
-
-[data-theme='dark'] .aurora::after {
-  background: radial-gradient(
-    circle at 60% 40%,
-    rgba(102, 61, 91, 0.3),
-    transparent 66%
-  );
+  --cm-malva-50: #2a1b26;
+  --cm-malva-100: #3b2435;
+  --cm-malva-200: #523049;
+  --cm-malva-300: #703f64;
+  --cm-malva-400: #965786;
+  --cm-malva-500: #b878a6;
+  --cm-malva-600: #c9a3ba;
+  --cm-malva-700: #dcbacf;
+  --cm-malva-800: #ebdce4;
+  --cm-malva-900: #f7f0f4;
 }
 
 * {
   border-color: var(--color-ink-100);
-  /* Firefox y navegadores con soporte estándar */
   scrollbar-width: thin;
   scrollbar-color: var(--color-malva-300) transparent;
 }
 
-/* Selección de texto en armonía con la paleta de Casa Malva */
 ::selection {
   background-color: var(--color-malva-200);
   color: var(--color-malva-900);
 }
 
-/* ============================================================================
-   Scrollbars WebKit (Chrome, Edge, Safari, Brave, Opera) — Estilo Casa Malva
-   Píldora flotante elegante, ultrafina, tonos malva cálidos
-   ========================================================================= */
 ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
@@ -197,6 +191,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  background-color: var(--canvas);
 }
 
 body {
@@ -212,7 +207,6 @@ body {
   font-feature-settings: "cv11", "ss01";
 }
 
-/* Los titulares llevan la serif. El texto de interfaz nunca. */
 .font-display {
   font-family: var(--font-display);
   font-variation-settings: "SOFT" 40, "WONK" 1;
@@ -221,7 +215,6 @@ body {
 
 /* ---------------------------------------------------------------------------
    .aurora — el telón de fondo sobre el que el vidrio tiene sentido.
-   Tres manchas de color muy diluidas, fijas, que se mueven muy despacio.
    ------------------------------------------------------------------------ */
 .aurora {
   position: fixed;
@@ -267,6 +260,22 @@ body {
   animation: aurora-drift-b 32s var(--ease-in-out-soft) infinite alternate;
 }
 
+[data-theme='dark'] .aurora::before {
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(123, 75, 110, 0.35),
+    transparent 68%
+  );
+}
+
+[data-theme='dark'] .aurora::after {
+  background: radial-gradient(
+    circle at 60% 40%,
+    rgba(102, 61, 91, 0.3),
+    transparent 66%
+  );
+}
+
 @keyframes aurora-drift-a {
   to {
     transform: translate3d(-6%, 8%, 0) scale(1.12);
@@ -280,14 +289,8 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   .glass — el material base. Tinte + desenfoque + saturación + filo superior.
-   El ::after de 1px es lo que da la sensación de canto biselado de Apple.
+   .glass — el material base.
    ------------------------------------------------------------------------ */
-/* Nota: NO se escribe `-webkit-backdrop-filter` a mano. Al declarar la versión
-   con prefijo después de la estándar, Lightning CSS (el compilador de Tailwind 4)
-   considera que la segunda pisa a la primera y termina eliminando las dos: el
-   panel queda con el tinte pero sin desenfoque. Se declara solo la estándar y
-   el compilador añade el prefijo según los navegadores objetivo. */
 .glass {
   position: relative;
   background: var(--glass-tint);
@@ -310,7 +313,6 @@ body {
   color: white;
 }
 
-/* Filo superior: la línea de luz que separa el vidrio del fondo */
 .glass-edge::after {
   content: "";
   position: absolute;
@@ -330,34 +332,27 @@ body {
   pointer-events: none;
 }
 
-/* Navegador sin backdrop-filter: se cae a un sólido opaco legible, no a un
-   panel transparente ilegible. */
 @supports not (backdrop-filter: blur(1px)) {
   .glass,
   .glass-strong {
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--card);
   }
   .glass-deep {
     background: var(--color-malva-800);
   }
 }
 
-/* ---------------------------------------------------------------------------
-   Foco visible. Accesibilidad no negociable: un anillo con contraste real.
-   ------------------------------------------------------------------------ */
 :focus-visible {
   outline: 2px solid var(--color-malva-600);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
 
-/* Área táctil mínima de 44px (guía de Apple HIG) */
 .touch-target {
   min-height: 44px;
   min-width: 44px;
 }
 
-/* Scrollbars discretas y personalizadas para contenedores y drawers */
 .scrollbar-none,
 .no-scrollbar {
   scrollbar-width: none !important;
@@ -392,9 +387,6 @@ body {
   background: transparent;
 }
 
-/* ---------------------------------------------------------------------------
-   Brillo que recorre un botón primario al pasar el cursor.
-   ------------------------------------------------------------------------ */
 .sheen {
   position: relative;
   overflow: hidden;
@@ -421,24 +413,11 @@ body {
   transform: translateX(120%);
 }
 
-/* Cifras tabulares: los precios y las horas nunca deben bailar */
 .tnum {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
-/* ---------------------------------------------------------------------------
-   Entrada de contenido al hacer scroll.
-
-   Regla que gobierna esto: **el contenido nunca depende de JavaScript para ser
-   visible.** Sin la clase `.js` en <html> (script bloqueado, JS desactivado)
-   no hay ninguna regla que lo esconda, así que se ve entero.
-   Con `.js`, arranca oculto y `.is-in` lo revela — y hay un temporizador de
-   seguridad en Reveal.tsx que revela todo pase lo que pase.
-
-   Antes esto lo hacía framer-motion desde `opacity: 0`. Si el navegador no
-   ejecutaba los fotogramas, la portada se quedaba en blanco.
-   ------------------------------------------------------------------------ */
 @keyframes reveal-up {
   from {
     opacity: 0;
@@ -476,16 +455,6 @@ body {
   }
 }
 
-/* ---------------------------------------------------------------------------
-   Pasos del asistente de reserva.
-
-   El sentido cuenta la historia: hacia adelante entra por la derecha, hacia
-   atrás por la izquierda. Es CSS y no `AnimatePresence mode="wait"` a
-   propósito: aquel modo no monta el paso siguiente hasta que TERMINA la
-   animación de salida del anterior. Si esa animación no llega a ejecutarse, el
-   asistente se queda clavado en el paso 1 — y ese es el camino crítico del
-   producto. Aquí el contenido aparece siempre y el deslizamiento es adorno.
-   ------------------------------------------------------------------------ */
 @keyframes paso-desde-derecha {
   from {
     opacity: 0;
@@ -517,13 +486,11 @@ body {
   }
 }
 
-/* Red de seguridad: si algo va mal, se muestra todo y se acabó. */
 html.reveal-todo .reveal {
   opacity: 1 !important;
   animation: none !important;
 }
 
-/* Esqueleto de carga */
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
@@ -550,9 +517,6 @@ html.reveal-todo .reveal {
   animation: shimmer 1.6s infinite;
 }
 
-/* ---------------------------------------------------------------------------
-   Respeto por prefers-reduced-motion. Se apaga el movimiento, NO el contenido.
-   ------------------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -601,7 +565,6 @@ html.reveal-todo .reveal {
   transform-box: fill-box;
 }
 
-/* Revelación (D3 / D4): trazo progresivo en línea o aparición suave */
 .marca-reveal .marca-petal-reveal {
   stroke-dasharray: 100;
   stroke-dashoffset: 0;
@@ -626,7 +589,6 @@ html.reveal-todo .reveal {
   to { opacity: 1; transform: scale(1); }
 }
 
-/* Espera / Spinner botánico (D5): secuencia fluida de 5 pétalos */
 .marca-espera .marca-petal-seq {
   animation: marcaSeq 1500ms ease-in-out infinite;
 }
@@ -648,4 +610,3 @@ html.reveal-todo .reveal {
     animation: none !important;
   }
 }
-

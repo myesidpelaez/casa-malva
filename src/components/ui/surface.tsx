@@ -22,7 +22,7 @@ const surfaceVariants = cva('relative', {
     material: {
       glass: 'glass glass-edge',
       frost: 'glass-strong glass-edge',
-      solid: 'bg-white border border-ink-100 shadow-[var(--shadow-e1)]',
+      solid: 'bg-[var(--card)] border border-ink-100 shadow-[var(--shadow-e1)]',
       deep: 'glass-deep glass-edge',
       plain: 'bg-transparent',
     },
