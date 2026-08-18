@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-label="Casa Malva">
+  <g fill="#7b4b6e">
+    <path d="M32,33 C23,29 20,19 28.5,9.5 L32,13.5 L35.5,9.5 C44,19 41,29 32,33 Z" />
+    <path d="M32,33 C23,29 20,19 28.5,9.5 L32,13.5 L35.5,9.5 C44,19 41,29 32,33 Z" transform="rotate(72 32 32)" />
+    <path d="M32,33 C23,29 20,19 28.5,9.5 L32,13.5 L35.5,9.5 C44,19 41,29 32,33 Z" transform="rotate(144 32 32)" />
+    <path d="M32,33 C23,29 20,19 28.5,9.5 L32,13.5 L35.5,9.5 C44,19 41,29 32,33 Z" transform="rotate(216 32 32)" />
+    <path d="M32,33 C23,29 20,19 28.5,9.5 L32,13.5 L35.5,9.5 C44,19 41,29 32,33 Z" transform="rotate(288 32 32)" />
+  </g>
+</svg>

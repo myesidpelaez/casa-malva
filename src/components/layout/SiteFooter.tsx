@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Clock, MapPin } from 'lucide-react'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
+import { Marca } from '@/components/brand'
 
 /**
  * Pie del sitio público.
@@ -15,9 +16,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-[var(--spacing-fib-3)] px-4 py-[var(--spacing-fib-4)] sm:px-6 md:grid-cols-3">
         <div className="space-y-2">
           <div className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-[12px] bg-malva-600 font-display text-base font-semibold text-white">
-              M
-            </span>
+            <Marca size={36} className="text-malva-600" />
             <span className="font-display text-lg font-semibold text-ink-900">
               Casa Malva
             </span>

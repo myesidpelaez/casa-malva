@@ -8,6 +8,7 @@ import { CalendarPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonClass } from '@/components/ui/button-variants'
 import { spring } from '@/lib/motion'
+import { MarcaReveal } from '@/components/brand'
 
 const LINKS = [
   { href: '/inicio', label: 'Inicio' },
@@ -49,13 +50,9 @@ export function TopBar() {
     >
       <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/inicio" className="group flex items-center gap-3">
-          <motion.span
-            whileHover={{ rotate: -6, scale: 1.06 }}
-            transition={spring.snappy}
-            className="grid h-10 w-10 place-items-center rounded-[14px] bg-malva-600 font-display text-lg font-semibold text-white shadow-[var(--shadow-malva)]"
-          >
-            M
-          </motion.span>
+          <div className="shrink-0 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-6">
+            <MarcaReveal size={40} className="text-malva-600 drop-shadow-xs" />
+          </div>
           <span className="leading-tight">
             <span className="block font-display text-[19px] font-semibold tracking-tight text-ink-900">
               Casa Malva

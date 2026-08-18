@@ -543,3 +543,59 @@ html.reveal-todo .reveal {
     margin: 0 !important;
   }
 }
+
+/* ============================================================================
+   CASA MALVA — Animaciones de la marca «La Vena» (Spec 26)
+   ========================================================================= */
+.marca-petal {
+  transform-box: fill-box;
+}
+
+/* Revelación (D3 / D4): trazo progresivo en línea o aparición suave */
+.marca-reveal .marca-petal-reveal {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation: marcaDraw 1150ms var(--ease-out-expo) both;
+}
+.marca-reveal .marca-petal-reveal-solid {
+  animation: marcaRise 700ms var(--ease-out-expo) both;
+}
+.marca-reveal .delay-1 { animation-delay: 60ms; }
+.marca-reveal .delay-2 { animation-delay: 180ms; }
+.marca-reveal .delay-3 { animation-delay: 300ms; }
+.marca-reveal .delay-4 { animation-delay: 420ms; }
+.marca-reveal .delay-5 { animation-delay: 540ms; }
+
+@keyframes marcaDraw {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes marcaRise {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Espera / Spinner botánico (D5): secuencia fluida de 5 pétalos */
+.marca-espera .marca-petal-seq {
+  animation: marcaSeq 1500ms ease-in-out infinite;
+}
+.marca-espera .delay-1 { animation-delay: 0ms; }
+.marca-espera .delay-2 { animation-delay: 150ms; }
+.marca-espera .delay-3 { animation-delay: 300ms; }
+.marca-espera .delay-4 { animation-delay: 450ms; }
+.marca-espera .delay-5 { animation-delay: 600ms; }
+
+@keyframes marcaSeq {
+  0%, 70%, 100% { opacity: 0.22; }
+  30% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marca-reveal .marca-petal-reveal,
+  .marca-reveal .marca-petal-reveal-solid,
+  .marca-espera .marca-petal-seq {
+    animation: none !important;
+  }
+}
+
