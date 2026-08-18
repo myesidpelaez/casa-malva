@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, CalendarPlus, Clock, MapPin, ShieldCheck, Sparkles, Star } from 'lucide-react'
+import { ArrowRight, CalendarPlus, Sparkles } from 'lucide-react'
 import { getCategoriesAction, getServicesAction } from '@/actions/catalogo'
 import { getProfessionalsAction } from '@/actions/profesionales'
 import { formatCurrencyFromCents } from '@/lib/currency'
@@ -30,11 +30,6 @@ export default async function InicioPage() {
         <div className="grid items-center gap-8 lg:grid-cols-12">
           {/* Columna de texto */}
           <Reveal className="text-center lg:col-span-7 lg:text-left">
-            <span className="inline-flex items-center gap-2 rounded-full border border-malva-200/70 bg-white/70 px-4 py-1.5 text-[12px] font-semibold text-malva-700 shadow-sm backdrop-blur-md">
-              <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
-              Laureles · Medellín
-            </span>
-
             <h1 className="mt-[var(--spacing-fib-3)] font-display text-[42px] font-semibold leading-[1.05] tracking-[-0.02em] text-ink-900 sm:text-[62px]">
               Tu momento
               <br />
@@ -64,19 +59,6 @@ export default async function InicioPage() {
                 Ver servicios y precios
                 <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
               </Link>
-            </div>
-
-            {/* Badges de confianza */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-[12.5px] text-ink-400 lg:justify-start">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Agenda en vivo
-              </span>
-              <span>·</span>
-              <span className="inline-flex items-center gap-1">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                Atención 1 a 1 sin esperas
-              </span>
             </div>
           </Reveal>
 
@@ -113,43 +95,6 @@ export default async function InicioPage() {
             </div>
           </Reveal>
         </div>
-
-        {/* Tres promesas. Cada una responde a una objeción real del sector. */}
-        <RevealGroup className="mx-auto mt-[var(--spacing-fib-5)] grid max-w-5xl gap-3 sm:grid-cols-3">
-          {[
-            {
-              icon: Clock,
-              title: 'Horarios reales',
-              body: 'Solo ves lo que está libre de verdad, con el tiempo de preparación ya descontado.',
-            },
-            {
-              icon: ShieldCheck,
-              title: 'Sin dobles reservas',
-              body: 'Si dos clientas piden el mismo cupo, el sistema solo deja pasar a una.',
-            },
-            {
-              icon: MapPin,
-              title: 'Laureles',
-              body: 'Circular 4ª con Carrera 76. Lunes a sábado, de 9:00 a 19:00.',
-            },
-          ].map((item) => (
-            <RevealItem key={item.title} variant="pop">
-              <Surface pad="md" radius="lg" className="h-full">
-                <item.icon
-                  className="h-5 w-5 text-malva-500"
-                  strokeWidth={1.75}
-                  aria-hidden
-                />
-                <h3 className="mt-2.5 text-[14px] font-semibold text-ink-900">
-                  {item.title}
-                </h3>
-                <p className="mt-1 text-[13px] leading-relaxed text-ink-500">
-                  {item.body}
-                </p>
-              </Surface>
-            </RevealItem>
-          ))}
-        </RevealGroup>
       </section>
 
       {/* ================= ESPECIALIDADES CON FOTOGRAFÍA ================= */}
