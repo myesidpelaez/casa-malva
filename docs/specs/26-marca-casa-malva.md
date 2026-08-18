@@ -1,6 +1,6 @@
 # Spec 26 — La marca: «La Vena»
 
-**Estado:** plano abierto, **pendiente de aprobación de Mario** · **Depende de:** Spec 10 (sistema de diseño)
+**Estado:** **plano cerrado — aprobado por Mario el 2026-08-18** · **Depende de:** Spec 10 (sistema de diseño)
 **Arquitecto:** ClaudeCode/claude-opus-5 · **Fecha:** 2026-08-18
 **Implementa:** Antigravity CLI (`agy` 1.1.13) · modelo `gemini-3.7-flash-high`
 **Propuesta visual:** https://claude.ai/code/artifact/9d1b9477-a2d1-4b88-b247-680edaf41861 (dirección **B**, elegida por Mario el 2026-08-18)
