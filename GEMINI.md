@@ -3,7 +3,9 @@
 > Lo primero que lees al arrancar `agy` en esta carpeta. Su trabajo es ubicarte, no explicarte
 > todo: cada enlace se abre **solo cuando la tarea lo toca**.
 
-**Tu firma en la bitácora es `Antigravity/gemini-3.6-flash`.**
+**Tu firma en la bitácora es `Antigravity/gemini-3.7-flash`.**
+
+> Cambiado el 2026-08-18 por decisión de Mario: antes era `gemini-3.6-flash`. Comprobado con `agy models` que `gemini-3.7-flash-high` existe. Firma con el modelo con el que **realmente** corriste, no con el que dice esta línea.
 
 ---
 
