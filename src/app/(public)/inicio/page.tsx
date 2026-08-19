@@ -8,6 +8,7 @@ import { categoryLook, cleanCategoryName, getProfessionalAvatar, priceFrom, serv
 import { buttonClass } from '@/components/ui/button-variants'
 import { Surface, SectionHeading } from '@/components/ui/surface'
 import { Reveal, RevealGroup, RevealItem } from '@/components/common/Reveal'
+import { Marca } from '@/components/brand'
 import { cn } from '@/lib/utils'
 
 export const revalidate = 0
@@ -79,14 +80,17 @@ export default async function InicioPage() {
 
                 {/* Badge flotante inferior */}
                 <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-tint-strong)] p-3.5 shadow-lg backdrop-blur-md">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-display text-[14.5px] font-semibold text-ink-900">
-                        Casa Malva Estudio
-                      </p>
-                      <p className="text-[12px] text-ink-500">Circular 4ª con Cra 76</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Marca size={32} animate="breathe" className="text-malva-600 shrink-0" />
+                      <div>
+                        <p className="font-display text-[14.5px] font-semibold text-ink-900">
+                          Casa Malva Estudio
+                        </p>
+                        <p className="text-[12px] text-ink-500">Circular 4ª con Cra 76</p>
+                      </div>
                     </div>
-                    <span className="rounded-full bg-malva-100 px-2.5 py-1 text-[11px] font-semibold text-malva-700">
+                    <span className="rounded-full bg-malva-100 px-2.5 py-1 text-[11px] font-semibold text-malva-700 shrink-0">
                       Lun - Sáb
                     </span>
                   </div>

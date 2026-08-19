@@ -65,7 +65,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       {/* ---------- Barra lateral (escritorio) ---------- */}
       <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-[var(--glass-hairline)] bg-[var(--glass-tint)] p-3 backdrop-blur-xl md:flex">
         <Link href="/admin" className="group flex items-center gap-2.5 px-2 py-3">
-          <Marca size={36} className="text-malva-600 transition-transform duration-200 group-hover:scale-105" />
+          <Marca size={36} interactive className="text-malva-600 transition-transform duration-200 group-hover:scale-105" />
           <span className="leading-tight">
             <span className="block font-display text-[16px] font-semibold text-ink-900">
               Casa Malva

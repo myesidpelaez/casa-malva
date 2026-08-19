@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Marca } from './Marca'
+import { Marca, type MarcaProps } from './Marca'
 import { MarcaReveal } from './MarcaReveal'
 import { cn } from '@/lib/utils'
 
@@ -18,6 +18,15 @@ export interface MarcaLockupProps {
    * @default false
    */
   reveal?: boolean
+  /**
+   * Modo de animación directa si no se usa reveal por sesión.
+   */
+  animate?: MarcaProps['animate']
+  /**
+   * Micro-interacción al pasar el cursor.
+   * @default false
+   */
+  interactive?: boolean
   className?: string
   symbolClassName?: string
   titleClassName?: string
@@ -34,6 +43,8 @@ export function MarcaLockup({
   size = 36,
   subtitle = 'Estudio de belleza',
   reveal = false,
+  animate,
+  interactive = false,
   className,
   symbolClassName,
   titleClassName,
@@ -45,6 +56,8 @@ export function MarcaLockup({
     <div className={cn('flex items-center gap-3', className)}>
       <CompMarca
         size={size}
+        animate={animate}
+        interactive={interactive}
         className={cn('text-malva-600', symbolClassName)}
       />
       <span className="leading-tight">

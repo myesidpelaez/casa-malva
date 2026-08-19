@@ -41,14 +41,14 @@
   --color-sage: #c3d0c4;
 
   /* ---- Semántica de estado --------------------------------------------- */
-  --color-success: #2f7d5b;
-  --color-success-soft: #e6f2ec;
-  --color-warning: #9a6a1f;
-  --color-warning-soft: #fbf1de;
-  --color-danger: #b4462f;
-  --color-danger-soft: #fbeae6;
-  --color-info: #3d5a80;
-  --color-info-soft: #e8eef5;
+  --color-success: var(--cm-success);
+  --color-success-soft: var(--cm-success-soft);
+  --color-warning: var(--cm-warning);
+  --color-warning-soft: var(--cm-warning-soft);
+  --color-danger: var(--cm-danger);
+  --color-danger-soft: var(--cm-danger-soft);
+  --color-info: var(--cm-info);
+  --color-info-soft: var(--cm-info-soft);
 
   /* ---- Radios (esquina continua estilo Apple: generosa y escalada) ------- */
   --radius-xs: 8px;
@@ -93,6 +93,15 @@
 
   --canvas: #faf8f9;
   --card: #ffffff;
+
+  --cm-success: #2f7d5b;
+  --cm-success-soft: #e6f2ec;
+  --cm-warning: #9a6a1f;
+  --cm-warning-soft: #fbf1de;
+  --cm-danger: #b4462f;
+  --cm-danger-soft: #fbeae6;
+  --cm-info: #3d5a80;
+  --cm-info-soft: #e8eef5;
   --duration-fast: 160ms;
   --duration-base: 260ms;
   --duration-slow: 420ms;
@@ -121,6 +130,15 @@
 [data-theme='dark'] {
   --canvas: #171316;
   --card: #221c21;
+
+  --cm-success: #48bb78;
+  --cm-success-soft: rgba(72, 187, 120, 0.16);
+  --cm-warning: #ecc94b;
+  --cm-warning-soft: rgba(236, 201, 75, 0.16);
+  --cm-danger: #f56565;
+  --cm-danger-soft: rgba(245, 101, 101, 0.16);
+  --cm-info: #63b3ed;
+  --cm-info-soft: rgba(99, 179, 237, 0.16);
   --glass-tint: rgba(34, 28, 33, 0.65);
   --glass-tint-strong: rgba(34, 28, 33, 0.85);
   --glass-tint-deep: rgba(18, 14, 17, 0.85);
@@ -561,52 +579,126 @@ html.reveal-todo .reveal {
 /* ============================================================================
    CASA MALVA — Animaciones de la marca «La Vena» (Spec 26)
    ========================================================================= */
-.marca-petal {
-  transform-box: fill-box;
+.marca-breathe .petal-grp {
+  transform-origin: 32px 32px;
+  transform-box: view-box;
+  animation: marcaBreathe 3600ms ease-in-out infinite;
 }
 
-.marca-reveal .marca-petal-reveal {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 0;
-  animation: marcaDraw 1150ms var(--ease-out-expo) both;
-}
-.marca-reveal .marca-petal-reveal-solid {
-  animation: marcaRise 700ms var(--ease-out-expo) both;
-}
-.marca-reveal .delay-1 { animation-delay: 60ms; }
-.marca-reveal .delay-2 { animation-delay: 180ms; }
-.marca-reveal .delay-3 { animation-delay: 300ms; }
-.marca-reveal .delay-4 { animation-delay: 420ms; }
-.marca-reveal .delay-5 { animation-delay: 540ms; }
-
-@keyframes marcaDraw {
-  from { stroke-dashoffset: 100; }
-  to { stroke-dashoffset: 0; }
+@keyframes marcaBreathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(193, 139, 172, 0.4));
+  }
 }
 
-@keyframes marcaRise {
-  from { opacity: 0; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1); }
+.marca-bloom .petal-grp {
+  transform-origin: 32px 32px;
+  transform-box: view-box;
+  animation: marcaBloom 1000ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.marca-espera .marca-petal-seq {
-  animation: marcaSeq 1500ms ease-in-out infinite;
+@keyframes marcaBloom {
+  0% {
+    transform: scale(0.3) rotate(-35deg);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.08) rotate(4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
-.marca-espera .delay-1 { animation-delay: 0ms; }
-.marca-espera .delay-2 { animation-delay: 150ms; }
-.marca-espera .delay-3 { animation-delay: 300ms; }
-.marca-espera .delay-4 { animation-delay: 450ms; }
-.marca-espera .delay-5 { animation-delay: 600ms; }
 
-@keyframes marcaSeq {
-  0%, 70%, 100% { opacity: 0.22; }
-  30% { opacity: 1; }
+.marca-reveal .petal-grp {
+  transform-origin: 32px 32px;
+  transform-box: view-box;
+  animation: marcaReveal 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes marcaReveal {
+  0% {
+    transform: scale(0.65) rotate(-15deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.marca-espera .petal-grp {
+  transform-origin: 32px 32px;
+  transform-box: view-box;
+  animation: marcaEspera 1800ms ease-in-out infinite;
+}
+
+@keyframes marcaEspera {
+  0%, 100% {
+    transform: scale(0.92) rotate(0deg);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.08) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+.marca-interactive {
+  cursor: pointer;
+}
+.marca-interactive .petal-grp {
+  transform-origin: 32px 32px;
+  transform-box: view-box;
+  transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1), filter 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.marca-interactive:hover .petal-grp {
+  transform: scale(1.08) rotate(6deg);
+  filter: drop-shadow(0 2px 10px rgba(123, 75, 110, 0.3));
+}
+
+.marca-halo-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.marca-halo-backdrop {
+  position: absolute;
+  inset: -25%;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(193, 139, 172, 0.32) 0%, rgba(201, 163, 186, 0.12) 55%, transparent 70%);
+  pointer-events: none;
+  animation: marcaHaloPulse 3600ms ease-in-out infinite;
+}
+[data-theme='dark'] .marca-halo-backdrop {
+  background: radial-gradient(circle, rgba(201, 163, 186, 0.28) 0%, rgba(123, 75, 110, 0.18) 55%, transparent 70%);
+}
+
+@keyframes marcaHaloPulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.08); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marca-reveal .marca-petal-reveal,
-  .marca-reveal .marca-petal-reveal-solid,
-  .marca-espera .marca-petal-seq {
+  .marca-reveal .petal-grp,
+  .marca-espera .petal-grp,
+  .marca-breathe .petal-grp,
+  .marca-bloom .petal-grp,
+  .marca-halo-backdrop {
     animation: none !important;
+    transform: none !important;
+  }
+  .marca-interactive:hover .petal-grp {
+    transform: none !important;
+    filter: none !important;
   }
 }

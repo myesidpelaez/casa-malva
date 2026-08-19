@@ -19,10 +19,10 @@ const badgeVariants = cva(
       tone: {
         neutral: 'bg-ink-100 text-ink-700',
         malva: 'bg-malva-100 text-malva-700',
-        success: 'bg-success-soft text-success',
-        warning: 'bg-warning-soft text-warning',
-        danger: 'bg-danger-soft text-danger',
-        info: 'bg-info-soft text-info',
+        success: 'bg-success-soft text-success border border-success/20',
+        warning: 'bg-warning-soft text-warning border border-warning/20',
+        danger: 'bg-danger-soft text-danger border border-danger/20',
+        info: 'bg-info-soft text-info border border-info/20',
         glass: 'glass text-ink-700',
       },
       size: {
@@ -63,37 +63,37 @@ export const APPOINTMENT_STATE: Record<AppointmentState, StateMeta> = {
     label: 'Por confirmar',
     tone: 'warning',
     accent: 'bg-warning',
-    surface: 'bg-warning-soft/45',
+    surface: 'bg-warning-soft/30',
   },
   agendada: {
     label: 'Agendada',
     tone: 'info',
     accent: 'bg-info',
-    surface: 'bg-info-soft/40',
+    surface: 'bg-info-soft/25',
   },
   confirmada: {
     label: 'Confirmada',
     tone: 'success',
     accent: 'bg-success',
-    surface: 'bg-success-soft/45',
+    surface: 'bg-success-soft/30',
   },
   completada: {
     label: 'Completada',
     tone: 'neutral',
     accent: 'bg-ink-300',
-    surface: 'bg-ink-50',
+    surface: 'bg-ink-100/30',
   },
   cancelada: {
     label: 'Cancelada',
     tone: 'danger',
     accent: 'bg-danger',
-    surface: 'bg-danger-soft/40',
+    surface: 'bg-danger-soft/25',
   },
   no_asistio: {
     label: 'No asistió',
     tone: 'danger',
     accent: 'bg-danger',
-    surface: 'bg-danger-soft/30',
+    surface: 'bg-danger-soft/20',
   },
 }
 

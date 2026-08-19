@@ -35,6 +35,7 @@ import { Field } from '@/components/ui/field'
 import { Stepper } from '@/components/ui/segmented'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/common/EmptyState'
+import { Marca } from '@/components/brand'
 import type { Appointment, Category, Professional, Service } from '@/types'
 
 type Franja = { inicioUtc: string; professionalId: string; professionalNombre: string }
@@ -963,20 +964,24 @@ function Confirmacion({
 }) {
   return (
     <div className="mx-auto max-w-lg px-4 py-[var(--spacing-fib-5)] sm:px-6">
-      <motion.div
-        initial={{ scale: 0.6, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ ...spring.gentle, delay: 0.05 }}
-        className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-success-soft text-success"
-      >
-        <motion.span
-          initial={{ scale: 0, rotate: -25 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.2 }}
+      <div className="relative mx-auto flex flex-col items-center justify-center">
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ ...spring.gentle, delay: 0.05 }}
+          className="relative grid place-items-center"
         >
-          <CheckCircle2 className="h-11 w-11" strokeWidth={1.6} />
-        </motion.span>
-      </motion.div>
+          <Marca size={84} animate="bloom" halo className="text-malva-600 drop-shadow-md" />
+          <motion.span
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 18, delay: 0.45 }}
+            className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--card)] bg-success text-white shadow-sm"
+          >
+            <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
+          </motion.span>
+        </motion.div>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 14 }}

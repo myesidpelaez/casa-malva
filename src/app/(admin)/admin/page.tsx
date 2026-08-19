@@ -688,64 +688,68 @@ function TarjetaCita({
         </div>
 
         {!terminada && (
-          <div className="flex flex-wrap items-center gap-1.5 border-t border-black/[0.06] pt-2">
-            {(cita.estado === 'agendada' || cita.estado === 'pendiente') && (
-              <Button
-                variant="success"
-                size="sm"
-                onClick={onConfirmar}
-                className="!h-8 !px-3 text-[12px]"
-              >
-                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                Confirmar
-              </Button>
-            )}
-
-            {cita.estado === 'confirmada' && (
-              <>
+          <div className="flex items-center justify-between gap-1.5 border-t border-ink-100/60 pt-2">
+            <div className="flex items-center gap-1.5">
+              {(cita.estado === 'agendada' || cita.estado === 'pendiente') && (
                 <Button
-                  variant="soft"
+                  variant="success"
                   size="sm"
-                  onClick={onCobrar}
+                  onClick={onConfirmar}
                   className="!h-8 !px-3 text-[12px]"
                 >
-                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
-                  Realizada
+                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  Confirmar
                 </Button>
+              )}
+
+              {cita.estado === 'confirmada' && (
+                <>
+                  <Button
+                    variant="soft"
+                    size="sm"
+                    onClick={onCobrar}
+                    className="!h-8 !px-3 text-[12px]"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+                    Realizada
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onNoAsistio}
+                    className="!h-8 !px-2.5 !text-warning text-[12px] hover:!bg-warning-soft"
+                  >
+                    <UserX className="h-3.5 w-3.5" strokeWidth={2} />
+                    No vino
+                  </Button>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1">
+              {(cita.estado === 'agendada' || cita.estado === 'pendiente' || cita.estado === 'confirmada') && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={onNoAsistio}
-                  className="!h-8 !px-2.5 !text-warning text-[12px]"
+                  onClick={onReagendar}
+                  className="!h-8 !px-2.5 !text-ink-600 hover:!text-ink-900"
+                  aria-label="Reagendar"
                 >
-                  <UserX className="h-3.5 w-3.5" strokeWidth={2} />
-                  No vino
+                  <Calendar className="h-3.5 w-3.5" strokeWidth={2} />
+                  <span className="hidden sm:inline">Reagendar</span>
                 </Button>
-              </>
-            )}
+              )}
 
-            {(cita.estado === 'agendada' || cita.estado === 'pendiente' || cita.estado === 'confirmada') && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onReagendar}
-                className="!h-8 !px-2.5 !text-ink-400 hover:!text-ink-900 ml-auto"
-                aria-label="Reagendar"
+                onClick={onCancelar}
+                className="!h-8 !px-2.5 !text-ink-400 hover:!text-danger"
+                aria-label="Cancelar la cita"
               >
-                <Calendar className="h-3.5 w-3.5" strokeWidth={2} />
-                Reagendar
+                <X className="h-3.5 w-3.5" strokeWidth={2} />
               </Button>
-            )}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCancelar}
-              className="!h-8 !px-2.5 !text-ink-400 hover:!text-danger ml-auto"
-              aria-label="Cancelar la cita"
-            >
-              <X className="h-3.5 w-3.5" strokeWidth={2} />
-            </Button>
+            </div>
           </div>
         )}
       </div>

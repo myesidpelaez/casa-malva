@@ -52,7 +52,7 @@ export function TopBar() {
       <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/inicio" className="group flex items-center gap-3">
           <div className="shrink-0 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-6">
-            <MarcaReveal size={40} className="text-malva-600 drop-shadow-xs" />
+            <MarcaReveal size={40} interactive className="text-malva-600 drop-shadow-xs" />
           </div>
           <span className="leading-tight">
             <span className="block font-display text-[19px] font-semibold tracking-tight text-ink-900">

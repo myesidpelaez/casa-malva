@@ -26,17 +26,17 @@ export const buttonVariants = cva(
         ],
         glass: [
           'glass glass-edge text-ink-900',
-          'hover:bg-white/80 hover:shadow-[var(--shadow-e3)]',
+          'hover:bg-[var(--card)]/80 hover:shadow-[var(--shadow-e3)]',
         ],
         soft: [
           'bg-malva-100 text-malva-700 border border-malva-200/60',
           'hover:bg-malva-200/70',
         ],
         outline: [
-          'border border-malva-300 bg-white/50 text-malva-700 backdrop-blur-sm',
+          'border border-malva-300 bg-[var(--glass-tint)] text-malva-700 backdrop-blur-sm',
           'hover:bg-malva-50 hover:border-malva-400',
         ],
-        ghost: ['text-ink-500 hover:bg-malva-50 hover:text-malva-700'],
+        ghost: ['text-ink-500 hover:bg-ink-100/50 hover:text-ink-900'],
         danger: [
           'bg-danger text-white shadow-[var(--shadow-e2)]',
           'hover:brightness-110 active:brightness-95',
