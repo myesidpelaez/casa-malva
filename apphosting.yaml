@@ -2,7 +2,12 @@
 # Fuente: skill firebase-despliegue §2
 
 runConfig:
-  minInstances: 0          # Escala a cero: sin tráfico, sin costo de cómputo
+  # ⚠️ Spec 28 · D8 — decisión de Mario, 2026-08-20.
+  # Antes era 0 ("escala a cero, sin costo de cómputo"). Con el webhook de WhatsApp eso ya no
+  # sirve: con la instancia dormida, el mensaje de la madrugada paga arranque en frío, Meta
+  # reintenta, y el trabajo diferido del webhook muere cuando Cloud Run congela la instancia.
+  # Esto es lo que cuesta poder decirle "24/7" al dueño del spa sin mentir.
+  minInstances: 1
   maxInstances: 2          # Techo de gasto ante picos imprevistos
   concurrency: 80
   cpu: 1
@@ -17,4 +22,34 @@ env:
   # Secretos referenciados desde Cloud Secret Manager (nunca valores en el repo)
   - variable: SESSION_SECRET
     secret: session-secret
+    availability: [RUNTIME]
+
+  # ── Agente recepcionista por WhatsApp (Spec 28) ──────────────────────────────
+  # Antes de desplegar hay que crear cada secreto:
+  #   firebase apphosting:secrets:set whatsapp-access-token
+  #   firebase apphosting:secrets:set whatsapp-app-secret
+  #   firebase apphosting:secrets:set whatsapp-verify-token
+  #   firebase apphosting:secrets:set deepseek-api-key
+  - variable: WHATSAPP_PHONE_NUMBER_ID
+    secret: whatsapp-phone-number-id
+    availability: [RUNTIME]
+
+  - variable: WHATSAPP_ACCESS_TOKEN
+    secret: whatsapp-access-token
+    availability: [RUNTIME]
+
+  # Firma HMAC del webhook (Spec 28 · D5). Sin esto el webhook rechaza TODO por diseño.
+  - variable: WHATSAPP_APP_SECRET
+    secret: whatsapp-app-secret
+    availability: [RUNTIME]
+
+  # Token del apretón de manos de alta con Meta. Lo inventas tú; solo tiene que coincidir
+  # con el que escribas en el panel de la app de Meta.
+  - variable: WHATSAPP_VERIFY_TOKEN
+    secret: whatsapp-verify-token
+    availability: [RUNTIME]
+
+  # Cerebro del agente (Spec 28 · D7). Sin llave, el agente escala a humano en vez de inventar.
+  - variable: DEEPSEEK_API_KEY
+    secret: deepseek-api-key
     availability: [RUNTIME]

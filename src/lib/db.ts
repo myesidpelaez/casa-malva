@@ -52,7 +52,29 @@ export function getDb(): Firestore {
       app = getApps()[0]
     }
     firestoreInstance = getFirestore(app)
-    firestoreInstance.settings({ ignoreUndefinedProperties: true })
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Hallazgo del 2026-08-20, al montar el webhook de la Spec 28.
+    //
+    // `firestoreInstance` es una variable de MÓDULO, y `getFirestore(app)` devuelve un
+    // SINGLETON del proceso. En cuanto hay dos grafos de módulos vivos —una página y una
+    // ruta de API, que es justo lo que pasa desde que existe `/api/whatsapp/webhook`— el
+    // segundo grafo entra aquí con `firestoreInstance` en null pero recibe la MISMA instancia
+    // de Firestore, ya configurada. Y `settings()` solo se puede llamar una vez:
+    //
+    //   Error: Firestore has already been initialized. You can only call settings() once…
+    //
+    // El fallo estaba latente desde siempre y nadie lo vio porque el proyecto no tenía
+    // ninguna ruta de API. La primera que existió lo destapó: el webhook devolvía 200 a Meta
+    // y moría por dentro sin escribir nada.
+    //
+    // La bandera va en `globalThis` a propósito: es lo único que sí es único por proceso.
+    // ─────────────────────────────────────────────────────────────────────────
+    const g = globalThis as typeof globalThis & { __casaMalvaFirestoreConfigurado?: boolean }
+    if (!g.__casaMalvaFirestoreConfigurado) {
+      firestoreInstance.settings({ ignoreUndefinedProperties: true })
+      g.__casaMalvaFirestoreConfigurado = true
+    }
   }
   return firestoreInstance
 }

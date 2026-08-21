@@ -17,11 +17,14 @@
     "prueba:lecturas-nube": "tsx scripts/prueba-lecturas-nube.ts",
     "prueba:reportes": "tsx scripts/prueba-reportes.ts",
     "prueba:marca": "tsx scripts/prueba-marca.ts",
-    "verificar": "npm run tsc && npm run lint && npm run prueba:zona && npm run prueba:rutas && npm run prueba:permisos && npm run prueba:ocupacion && npm run prueba:lecturas && npm run prueba:reportes && npm run prueba:marca && npm run build",
+    "verificar": "npm run tsc && npm run lint && npm run prueba:zona && npm run prueba:rutas && npm run prueba:permisos && npm run prueba:ocupacion && npm run prueba:lecturas && npm run prueba:reportes && npm run prueba:marca && npm run prueba:webhook-firma && npm run prueba:plan && npm run prueba:idempotencia && npm run build",
     "verificar:nube": "npm run prueba:doble-reserva && npm run prueba:lecturas-nube && npm run prueba:cobro-nube",
     "prueba:rutas": "tsx scripts/prueba-rutas.ts",
     "prueba:cobros": "tsx scripts/prueba-cobros.ts",
-    "prueba:cobro-nube": "tsx scripts/prueba-cobro-nube.ts"
+    "prueba:cobro-nube": "tsx scripts/prueba-cobro-nube.ts",
+    "prueba:plan": "tsx scripts/prueba-plan.ts",
+    "prueba:webhook-firma": "tsx scripts/prueba-webhook-firma.ts",
+    "prueba:idempotencia": "tsx scripts/prueba-idempotencia.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
