@@ -29,6 +29,8 @@ export type PlanDelAgente =
       /** Instante exacto en UTC ISO. Tiene que ser una franja que el sistema ofrezca de verdad. */
       inicioUtc: string
       nombre: string
+      /** Teléfono de la clienta (requerido en web si no viene en el contexto). */
+      telefono?: string
     }
   | { intencion: 'escalar'; motivo: string }
 
@@ -42,21 +44,25 @@ export type MotivoRechazo =
   | 'profesional_no_presta_servicio'
   | 'fecha_invalida'
   | 'franja_no_ofrecida'
+  | 'telefono_invalido'
 
 export type ResultadoValidacion =
   | { valido: true; plan: PlanDelAgente }
   | { valido: false; motivo: MotivoRechazo; detalle: string }
 
 /**
- * Lo que el ejecutor sabe de quien escribe.
+ * Lo que el ejecutor sabe de quien escribe (Spec 28 · D7, Spec 29 · D2).
  *
- * ⚠️ El `telefonoE164` **no viaja al LLM** (Spec 28 · D7): se resuelve aquí, fuera del prompt.
+ * ⚠️ El `telefonoE164` **no viaja al LLM**: se resuelve aquí, fuera del prompt.
  */
 export type ContextoAgente = {
-  telefonoE164: string
-  /** Nombre de pila. Es el único dato personal que sí entra al prompt. */
+  canal: 'whatsapp' | 'web'
+  /** En WhatsApp llega de Meta. En web es null hasta que la clienta lo dé. */
+  telefonoE164: string | null
   nombre: string
   clientId?: string
+  /** Llave de la conversación: `wa_<digitos>` o `web_<uuid>`. */
+  conversacionId: string
 }
 
 export type ResultadoAgente = {

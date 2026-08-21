@@ -259,4 +259,38 @@ function planAgendar(over: Partial<Extract<PlanDelAgente, { intencion: 'agendar'
   assert.strictEqual(r.valido, true, 'una cita cancelada libera su franja')
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. Spec 29 · D2 / G1 — Teléfono en agendar (validación pura)
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('3. Probando validación de teléfono en plan de agendar (Spec 29 · G1)...')
+
+// 3.1 · Teléfono válido en el plan
+{
+  const r1 = validarPlanAgendar(planAgendar({ telefono: '3006707219' }), services, professionals, [])
+  assert.strictEqual(r1.valido, true, 'teléfono válido de 10 dígitos debe pasar')
+
+  const r2 = validarPlanAgendar(planAgendar({ telefono: '+573006707219' }), services, professionals, [])
+  assert.strictEqual(r2.valido, true, 'teléfono E.164 internacional debe pasar')
+}
+
+// 3.2 · Teléfono inválido: 3 dígitos, letras, vacío o espacios
+{
+  const r1 = validarPlanAgendar(planAgendar({ telefono: '123' }), services, professionals, [])
+  assert.strictEqual(r1.valido, false, 'teléfono de 3 dígitos debe ser rechazado')
+  assert.strictEqual((r1 as { motivo?: string }).motivo, 'telefono_invalido')
+
+  const r2 = validarPlanAgendar(planAgendar({ telefono: '3001234abc' }), services, professionals, [])
+  assert.strictEqual(r2.valido, false, 'teléfono con letras debe ser rechazado')
+  assert.strictEqual((r2 as { motivo?: string }).motivo, 'telefono_invalido')
+
+  const r3 = validarPlanAgendar(planAgendar({ telefono: '' }), services, professionals, [])
+  assert.strictEqual(r3.valido, false, 'teléfono vacío debe ser rechazado')
+  assert.strictEqual((r3 as { motivo?: string }).motivo, 'telefono_invalido')
+
+  const r4 = validarPlanAgendar(planAgendar({ telefono: '   ' }), services, professionals, [])
+  assert.strictEqual(r4.valido, false, 'teléfono con solo espacios debe ser rechazado')
+  assert.strictEqual((r4 as { motivo?: string }).motivo, 'telefono_invalido')
+}
+
 console.log('✅ Todas las pruebas de plan del agente pasaron exitosamente.')
+

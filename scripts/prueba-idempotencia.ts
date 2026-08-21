@@ -16,9 +16,16 @@ import { atender } from '../src/lib/agente/atender'
 import { modeloDeGuion } from '../src/lib/agente/llm'
 import type { Professional, Service } from '../src/types'
 
+import type { ContextoAgente } from '../src/lib/agente/tipos'
+
 console.log('🧪 Iniciando prueba-idempotencia.ts...')
 
-const ctxFalso = { telefonoE164: '+573006707219', nombre: 'Ana' }
+const ctxFalso: ContextoAgente = {
+  canal: 'whatsapp',
+  telefonoE164: '+573006707219',
+  nombre: 'Ana',
+  conversacionId: 'wa_573006707219',
+}
 
 /** Catálogo de mentira: el agente no debe necesitar Firestore para fallar cerrado. */
 const catalogoFalso = async (): Promise<{ services: Service[]; professionals: Professional[] }> => ({

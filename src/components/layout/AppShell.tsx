@@ -4,6 +4,7 @@ import * as React from 'react'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
 import { SiteFooter } from './SiteFooter'
+import { ChatWidget } from '@/components/chat/ChatWidget'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
       <SiteFooter />
       <BottomNav />
+      <ChatWidget />
     </div>
   )
 }
+

@@ -18,6 +18,7 @@ import { normalizePhoneE164 } from '@/lib/utils'
 import { almacenFirestore } from '@/lib/agente/idempotencia'
 import { atender } from '@/lib/agente/atender'
 import {
+  idConversacion,
   leerHistorial,
   marcarConversacion,
   registrarMensaje,
@@ -93,28 +94,30 @@ async function procesarMensaje(m: MensajeEntrante): Promise<void> {
   }
 
   const telefonoE164 = normalizePhoneE164(m.de)
+  const convId = idConversacion(telefonoE164)
 
   // Si una persona está atendiendo, el bot se calla. Se guarda lo que dijo la clienta
   // para que el humano lo vea, y nada más.
-  if (await estaEnManosDeUnHumano(telefonoE164)) {
-    await registrarMensaje(telefonoE164, 'cliente', m.texto || `(${m.tipo})`, { id: m.wamid })
+  if (await estaEnManosDeUnHumano(convId)) {
+    await registrarMensaje(convId, 'cliente', m.texto || `(${m.tipo})`, { id: m.wamid })
     return
   }
 
   const { ctx, conocida } = await resolverContacto(telefonoE164, m.nombrePerfil)
-  const historial = await leerHistorial(telefonoE164, TURNOS_DE_MEMORIA)
+  const historial = await leerHistorial(convId, TURNOS_DE_MEMORIA)
 
-  await registrarMensaje(telefonoE164, 'cliente', m.texto || `(${m.tipo})`, { id: m.wamid })
+  await registrarMensaje(convId, 'cliente', m.texto || `(${m.tipo})`, { id: m.wamid })
 
   const resultado = await atender({ ctx, conocida, historial, mensaje: m.texto, tipo: m.tipo })
 
-  await registrarMensaje(telefonoE164, 'agente', resultado.texto, {
+  await registrarMensaje(convId, 'agente', resultado.texto, {
     herramientaUsada: resultado.herramientaUsada,
   })
 
   await marcarConversacion(
-    telefonoE164,
+    convId,
     resultado.escalado ? 'escalada' : 'abierta',
+    'whatsapp',
     ctx.clientId
   )
 

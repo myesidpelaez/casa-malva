@@ -91,15 +91,19 @@ export function parsearPlan(crudo: string): ResultadoValidacion {
           detalle: 'agendar requiere serviceId, professionalId, inicioUtc y nombre',
         }
       }
+      const plan: PlanDelAgente = {
+        intencion: 'agendar',
+        serviceId: o.serviceId.trim(),
+        professionalId: o.professionalId.trim(),
+        inicioUtc: o.inicioUtc.trim(),
+        nombre: o.nombre.trim(),
+      }
+      if (typeof o.telefono === 'string') {
+        plan.telefono = o.telefono.trim()
+      }
       return {
         valido: true,
-        plan: {
-          intencion: 'agendar',
-          serviceId: o.serviceId.trim(),
-          professionalId: o.professionalId.trim(),
-          inicioUtc: o.inicioUtc.trim(),
-          nombre: o.nombre.trim(),
-        },
+        plan,
       }
     }
 
@@ -119,7 +123,8 @@ export function parsearPlan(crudo: string): ResultadoValidacion {
 
 /**
  * Segunda barrera, solo para `agendar`: comprueba contra el catálogo real que la franja
- * que pide el modelo **es una franja que el sistema ofrece de verdad**.
+ * que pide el modelo **es una franja que el sistema ofrece de verdad** y valida el teléfono
+ * si fue provisto en el plan (Spec 28 · D1, Spec 29 · D2).
  *
  * No reimplementa ninguna regla de negocio: delega en `getStartMinutes`, la misma función que
  * usa el wizard web. Si el agente pudiera agendar algo que el wizard rechaza, habría dos
@@ -131,6 +136,29 @@ export function validarPlanAgendar(
   professionals: Professional[],
   citasDelDia: Appointment[]
 ): ResultadoValidacion {
+  // Validación de teléfono si viene en el plan (Spec 29 · D2)
+  if (plan.telefono !== undefined) {
+    const raw = plan.telefono.trim()
+    if (raw.length === 0) {
+      return { valido: false, motivo: 'telefono_invalido', detalle: 'teléfono vacío' }
+    }
+    if (/[^\d\s\-()+]/.test(raw)) {
+      return {
+        valido: false,
+        motivo: 'telefono_invalido',
+        detalle: 'teléfono contiene letras o caracteres inválidos',
+      }
+    }
+    const digits = raw.replace(/\D/g, '')
+    if (digits.length < 10 || digits.length > 15) {
+      return {
+        valido: false,
+        motivo: 'telefono_invalido',
+        detalle: `teléfono debe tener entre 10 y 15 dígitos (recibidos ${digits.length})`,
+      }
+    }
+  }
+
   const svc = services.find((s) => s.id === plan.serviceId)
   if (!svc || !svc.activo) {
     return { valido: false, motivo: 'servicio_inexistente', detalle: plan.serviceId }

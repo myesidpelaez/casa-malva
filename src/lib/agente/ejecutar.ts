@@ -15,6 +15,7 @@
 import { crearCitaAction } from '@/actions/citas'
 import { getServices, getProfessionals, getAppointmentsEnRango } from '@/lib/db'
 import { startOfDay } from '@/lib/disponibilidad'
+import { normalizePhoneE164 } from '@/lib/utils'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
 import { ejecutarHerramienta } from './herramientas'
 import { validarPlanAgendar } from './validar'
@@ -63,6 +64,17 @@ export async function ejecutarPlan(
     }
 
     case 'agendar': {
+      // Teléfono: en WhatsApp llega en el contexto; en web viene en el plan (Spec 29 · D2).
+      const telCrudo = plan.telefono?.trim() || ctx.telefonoE164?.trim()
+      if (!telCrudo) {
+        return {
+          tipo: 'datos',
+          herramienta: 'agendar',
+          datos: 'No agendé: todavía no tienes el teléfono de la clienta. Pídeselo antes de confirmar.',
+        }
+      }
+      const telefonoFinal = normalizePhoneE164(telCrudo)
+
       const [services, professionals] = await Promise.all([getServices(), getProfessionals()])
 
       const inicio = new Date(plan.inicioUtc)
@@ -97,12 +109,12 @@ export async function ejecutarPlan(
       const res = await crearCitaAction({
         clientId: ctx.clientId,
         clienteNombre: plan.nombre || ctx.nombre,
-        clienteTelefono: ctx.telefonoE164,
+        clienteTelefono: telefonoFinal,
         professionalId: plan.professionalId,
         serviceId: plan.serviceId,
         inicioUtc: plan.inicioUtc,
-        origen: 'whatsapp',
-        creadaPor: 'agente-whatsapp',
+        origen: ctx.canal,
+        creadaPor: ctx.canal === 'web' ? 'agente-web' : 'agente-whatsapp',
       })
 
       if (!res.ok) {
@@ -126,18 +138,21 @@ export async function ejecutarPlan(
       const prof = professionals.find((p) => p.id === cita.professionalId)
       const cuandoTexto = FMT_HORA.format(new Date(cita.inicioUtc))
 
-      // `crearCitaAction` ya dispara la plantilla de confirmación por su cuenta, así que aquí
-      // solo se cierra la conversación. Si se repitiera el detalle, la clienta recibiría dos
-      // mensajes casi iguales.
+      // `crearCitaAction` ya dispara la plantilla de confirmación por su cuenta si tiene WhatsApp
       const aviso =
         cita.estado === 'pendiente'
           ? ' Queda pendiente de confirmación por el valor; una compañera te escribe para cerrarla.'
           : ''
 
+      const canalAviso =
+        ctx.canal === 'web'
+          ? ' Te llegará la confirmación a tu WhatsApp.'
+          : ' Te llega la confirmación por aquí mismo.'
+
       return {
         tipo: 'respuesta',
         resultado: {
-          texto: `¡Listo, ${plan.nombre || ctx.nombre}! Te agendé ${svc?.nombre ?? 'tu cita'} con ${prof?.nombre ?? 'nosotras'} el ${cuandoTexto}.${aviso} Te llega la confirmación por aquí mismo.`,
+          texto: `¡Listo, ${plan.nombre || ctx.nombre}! Te agendé ${svc?.nombre ?? 'tu cita'} con ${prof?.nombre ?? 'nosotras'} el ${cuandoTexto}.${aviso}${canalAviso}`,
           escalado: cita.estado === 'pendiente',
           citaCreadaId: cita.id,
         },
