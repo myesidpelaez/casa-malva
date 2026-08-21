@@ -24,7 +24,8 @@
     "prueba:cobro-nube": "tsx scripts/prueba-cobro-nube.ts",
     "prueba:plan": "tsx scripts/prueba-plan.ts",
     "prueba:webhook-firma": "tsx scripts/prueba-webhook-firma.ts",
-    "prueba:idempotencia": "tsx scripts/prueba-idempotencia.ts"
+    "prueba:idempotencia": "tsx scripts/prueba-idempotencia.ts",
+    "prueba:meta": "tsx scripts/probar-credenciales-meta.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
