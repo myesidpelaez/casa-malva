@@ -90,13 +90,22 @@ export async function atender(
     const respuesta = await modelo.completar(mensajes)
     if (!respuesta.ok) {
       console.error('[AGENTE] el modelo falló:', respuesta.error)
+      if (intento < MAX_CONSULTAS) {
+        continue
+      }
       return { texto: ME_PERDI, escalado: true }
     }
 
     const parseado = parsearPlan(respuesta.texto)
     if (!parseado.valido) {
-      // Falla cerrado (regla 3): un plan ininteligible NO se interpreta a la buena de Dios.
-      console.error('[AGENTE] plan inválido:', parseado.motivo, '·', parseado.detalle)
+      // Falla cerrado si agota consultas, pero si aún tiene intentos se le retroalimenta
+      console.warn('[AGENTE] plan inválido:', parseado.motivo, '·', parseado.detalle)
+      if (intento < MAX_CONSULTAS) {
+        datosRecogidos.push(
+          `[error_plan]\nTu respuesta anterior no fue válida (${parseado.motivo}: ${parseado.detalle}). Si intentaste agendar pero aún no tienes el nombre o teléfono de la clienta, debes responder con "responder" pidiéndoselos primero.`
+        )
+        continue
+      }
       return { texto: ME_PERDI, escalado: true }
     }
 

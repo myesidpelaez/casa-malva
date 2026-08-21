@@ -1,73 +1,35 @@
 /**
- * Gate G4 de la Spec 29 — Ruta de chat web (/api/chat).
+ * Gate G4 de la Spec 29 (y Spec 29b · Hallazgo 1) — Ruta de chat web (/api/chat).
  *
- * Prueba que:
+ * Prueba sobre el código UNIFICADO que:
  * - Petición sin cookie crea sesión y la devuelve en Set-Cookie.
  * - Petición con cookie reusa la misma conversación.
  * - Cuerpo sin mensaje o de más de 1000 caracteres → 400.
  * - Superado el tope → 429 sin llamar al modelo.
+ * - En manos de un humano (en_atencion) → mensaje amable sin llamar al modelo.
+ * - Lee y pasa historial de turnos al agente.
+ * - Registra la herramientaUsada del agente.
  */
 
 import * as assert from 'node:assert'
-import { manejarChat } from '../src/app/api/chat/route'
+import { manejarChat, almacenConversacionEnMemoria } from '../src/app/api/chat/route'
+import type { EntradaAtencion } from '../src/lib/agente/atender'
 import type { ResultadoAgente } from '../src/lib/agente/tipos'
 
-console.log('🧪 Iniciando prueba-chat-web.ts (Spec 29 · G4)...')
-
-// Almacén en memoria para simular conversaciones sin tocar Firestore
-type ConvEnMemoria = {
-  mensajesEnVentana: number
-  ventanaAbiertaEn: string | null
-  mensajesTotales: number
-  estado: string
-  mensajes: Array<{ rol: string; texto: string }>
-}
-
-function crearAlmacenTest() {
-  const convs = new Map<string, ConvEnMemoria>()
-
-  return {
-    async obtenerOIniciar(convId: string) {
-      if (!convs.has(convId)) {
-        convs.set(convId, {
-          mensajesEnVentana: 0,
-          ventanaAbiertaEn: null,
-          mensajesTotales: 0,
-          estado: 'abierta',
-          mensajes: [],
-        })
-      }
-      return convs.get(convId)!
-    },
-    async actualizar(convId: string, data: Partial<ConvEnMemoria>) {
-      const actual = convs.get(convId) || {
-        mensajesEnVentana: 0,
-        ventanaAbiertaEn: null,
-        mensajesTotales: 0,
-        estado: 'abierta',
-        mensajes: [],
-      }
-      convs.set(convId, { ...actual, ...data })
-    },
-    async agregarMensaje(convId: string, rol: string, texto: string) {
-      const c = convs.get(convId)
-      if (c) c.mensajes.push({ rol, texto })
-    },
-    obtener(convId: string) {
-      return convs.get(convId)
-    },
-  }
-}
+console.log('🧪 Iniciando prueba-chat-web.ts (Spec 29 · G4 / Spec 29b · H1)...')
 
 async function main() {
-  const almacen = crearAlmacenTest()
+  const almacen = almacenConversacionEnMemoria()
   let llamadasAlModelo = 0
+  let ultimaEntradaAtender: EntradaAtencion | null = null
 
-  const mockAtender = async (): Promise<ResultadoAgente> => {
+  const mockAtender = async (entrada: EntradaAtencion): Promise<ResultadoAgente> => {
     llamadasAlModelo++
+    ultimaEntradaAtender = entrada
     return {
       texto: 'Hola, soy la recepcionista. ¿En qué te ayudo?',
       escalado: false,
+      herramientaUsada: 'catalogo',
     }
   }
 
@@ -148,7 +110,7 @@ async function main() {
     sesionIdGenerado = match[1]
   }
 
-  // 2.2 · Segunda petición con cookie: reusa la sesión
+  // 2.2 · Segunda petición con cookie: reusa la sesión y pasa historial
   {
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
@@ -165,6 +127,13 @@ async function main() {
     const datos = almacen.obtener(convId)
     assert.ok(datos, 'debe existir la conversación en el almacén')
     assert.strictEqual(datos.mensajesTotales, 2, 'debe haber acumulado 2 mensajes en la misma conversación')
+    assert.ok(ultimaEntradaAtender !== null, 'atender debió ser llamado')
+    const entradaRecibida = ultimaEntradaAtender as EntradaAtencion
+    assert.ok(entradaRecibida.historial.length >= 2, 'debe recibir historial de turnos previos')
+
+    // Verificar que herramientaUsada se guardó en el almacén
+    const ultimoMensajeAgente = datos.mensajes.filter((m) => m.rol === 'agente').pop()
+    assert.strictEqual(ultimoMensajeAgente?.extra?.herramientaUsada, 'catalogo', 'debe guardar la herramientaUsada')
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -175,7 +144,7 @@ async function main() {
   const sesionSpam = 'sesion_spam_test'
   const convSpamId = `web_${sesionSpam}`
   // Simulamos que ya consumió los 20 mensajes de la hora
-  await almacen.actualizar(convSpamId, {
+  await almacen.actualizarLimite(convSpamId, {
     mensajesEnVentana: 20,
     ventanaAbiertaEn: new Date().toISOString(),
     mensajesTotales: 20,
@@ -200,6 +169,32 @@ async function main() {
   assert.strictEqual(cuerpo429.error, 'demasiados_mensajes')
   assert.strictEqual(cuerpo429.escalado, true)
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // 4. Conversación en manos de un humano (en_atencion)
+  // ───────────────────────────────────────────────────────────────────────────
+  console.log('4. Probando conversación en_atencion...')
+
+  const sesionHumano = 'sesion_humano_test'
+  const convHumanoId = `web_${sesionHumano}`
+  await almacen.marcarEstado(convHumanoId, 'en_atencion')
+
+  const llamadasAntesHumano = llamadasAlModelo
+  const reqHumano = new Request('http://localhost/api/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: `sesionId=${sesionHumano}`,
+    },
+    body: JSON.stringify({ mensaje: '¿Hola, sigue alguien ahí?' }),
+  })
+
+  const resHumano = await manejarChat(reqHumano, { atender: mockAtender, almacen })
+  assert.strictEqual(resHumano.status, 200)
+  assert.strictEqual(llamadasAlModelo, llamadasAntesHumano, 'NO debe llamar al bot si está en manos humanas')
+  const cuerpoHumano = (await resHumano.json()) as { texto?: string; escalado?: boolean }
+  assert.ok(cuerpoHumano.texto?.includes('atendiendo'), 'debe responder aviso de humano')
+  assert.strictEqual(cuerpoHumano.escalado, true)
+
   console.log('✅ Todas las pruebas de la ruta /api/chat pasaron exitosamente.')
 }
 
@@ -207,3 +202,4 @@ main().catch((err) => {
   console.error(err)
   process.exit(1)
 })
+
