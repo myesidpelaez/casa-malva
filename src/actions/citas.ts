@@ -176,8 +176,8 @@ async function _crearCitaBase(input: CrearCitaInput, omitirAntelacionMinima: boo
         profesionalNombre: prof.nombre,
         inicioIso: input.inicioUtc,
         precioCentavos: svc.precioCentavos,
-        sedeNombre: 'Casa Malva • El Poblado',
-        sedeDireccion: 'Cra. 37 #8A-42, Vía Provenza, Medellín',
+        sedeNombre: REGLAS_NEGOCIO.sede.nombre,
+        sedeDireccion: REGLAS_NEGOCIO.sede.direccion,
       }).catch((err) => {
         console.error('[WHATSAPP_ASYNC_ERROR] Error en envío en segundo plano:', err)
       })

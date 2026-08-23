@@ -10,6 +10,7 @@ import { Surface, SectionHeading } from '@/components/ui/surface'
 import { Reveal, RevealGroup, RevealItem } from '@/components/common/Reveal'
 import { Marca } from '@/components/brand'
 import { cn } from '@/lib/utils'
+import { REGLAS_NEGOCIO } from '@/lib/reglas'
 
 export const revalidate = 0
 
@@ -70,7 +71,7 @@ export default async function InicioPage() {
               <div className="relative aspect-[4/3] sm:aspect-[4/3.5] overflow-hidden rounded-[2rem] border border-malva-200/60 bg-malva-50/50 shadow-[var(--shadow-malva)]">
                 <Image
                   src="/images/hero.jpg"
-                  alt="Interior del salón Casa Malva en Laureles, Medellín"
+                  alt="Interior del salón Casa Malva, estudio de demostración en Medellín"
                   fill
                   priority
                   sizes="(max-width: 768px) 100vw, 500px"
@@ -87,7 +88,7 @@ export default async function InicioPage() {
                         <p className="font-display text-[14.5px] font-semibold text-ink-900">
                           Casa Malva Estudio
                         </p>
-                        <p className="text-[12px] text-ink-500">Circular 4ª con Cra 76</p>
+                        <p className="text-[12px] text-ink-500">{REGLAS_NEGOCIO.sede.direccion}</p>
                       </div>
                     </div>
                     <span className="rounded-full bg-malva-100 px-2.5 py-1 text-[11px] font-semibold text-malva-700 shrink-0">

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Lock, Mail, TriangleAlert } from 'lucide-react'
 import { loginAction } from '@/actions/auth'
+import { REGLAS_NEGOCIO } from '@/lib/reglas'
 import { spring, tween } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/ui/surface'
@@ -63,7 +64,7 @@ export default function AdminLoginPage() {
             <h1 className="mt-3 font-display text-[24px] font-semibold text-ink-900">
               Panel del estudio
             </h1>
-            <p className="text-[13px] text-ink-500">Casa Malva · Laureles, Medellín</p>
+            <p className="text-[13px] text-ink-500">{REGLAS_NEGOCIO.sede.nombre}</p>
           </div>
 
           <form onSubmit={entrar} className="space-y-[var(--spacing-fib-2)]">

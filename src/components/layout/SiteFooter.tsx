@@ -22,15 +22,15 @@ export function SiteFooter() {
             </span>
           </div>
           <p className="max-w-xs text-[13px] leading-relaxed text-ink-500">
-            Estudio de belleza en Laureles. Cuidamos el detalle, empezando por tu
-            tiempo.
+            Estudio de belleza de demostración. Cuidamos el detalle, empezando por
+            tu tiempo.
           </p>
         </div>
 
         <div className="space-y-2 text-[13px] text-ink-500">
           <p className="flex items-start gap-2">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-malva-500" strokeWidth={1.75} />
-            <span>Circular 4ª con Carrera 76 · Laureles, Medellín</span>
+            <span>{REGLAS_NEGOCIO.sede.direccion}</span>
           </p>
           <p className="flex items-start gap-2">
             <Clock className="mt-0.5 h-4 w-4 shrink-0 text-malva-500" strokeWidth={1.75} />

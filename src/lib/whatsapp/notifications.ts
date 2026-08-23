@@ -1,6 +1,7 @@
 import { sendWhatsAppMessage, sanitizePhoneForMeta } from './client'
 import type { CitaWhatsAppPayload, EnvioWhatsAppResult, WhatsAppPayload } from './types'
 import { formatCurrencyFromCents } from '@/lib/currency'
+import { REGLAS_NEGOCIO } from '@/lib/reglas'
 
 /**
  * Formatea una fecha ISO a texto natural en español para Medellín (UTC-5)
@@ -58,8 +59,11 @@ export async function enviarConfirmacionCitaWhatsApp(
   const telefonoDestino = sanitizePhoneForMeta(cita.clienteTelefono)
   const { fechaTexto, horaTexto } = formatearFechaCitaEspañol(cita.inicioIso)
   const precioCOP = formatCurrencyFromCents(cita.precioCentavos)
-  const sedeNombre = cita.sedeNombre || 'Casa Malva • El Poblado'
-  const direccion = cita.sedeDireccion || 'Cra. 37 #8A-42, Vía Provenza, Medellín'
+  // 🔴 Aquí NO se inventa una dirección por defecto (era `|| 'Cra. 37 #8A-42…'`).
+  // Ese `||` mandaba a la clienta de un cliente real a un salón que no existe, en silencio,
+  // el día que el campo llegara vacío. Si no hay dirección, el mensaje simplemente no la lleva.
+  const sedeNombre = cita.sedeNombre || REGLAS_NEGOCIO.sede.nombre
+  const direccion = cita.sedeDireccion?.trim()
 
   const templateName = process.env.WHATSAPP_TEMPLATE_CONFIRMACION?.trim()
 
@@ -99,7 +103,7 @@ Hola *${cita.clienteNombre}*, tu cita ha sido reservada con éxito:
 👩‍🎨 *Especialista:* ${cita.profesionalNombre}
 📅 *Fecha:* ${fechaTexto}
 ⏰ *Hora:* ${horaTexto}
-📍 *Sede:* ${sedeNombre} (${direccion})
+📍 *Sede:* ${sedeNombre}${direccion ? ` (${direccion})` : ''}
 💳 *Valor:* ${precioCOP}
 
 🌿 *Recomendación:* Te esperamos 5 minutos antes para brindarte una experiencia relajante con una infusión de cortesía.

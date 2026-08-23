@@ -43,7 +43,24 @@ import { EmptyState } from '@/components/common/EmptyState'
 import type { Appointment, Client, Professional, Service } from '@/types'
 import { DrawerCobro, DrawerReagendar, DrawerNuevaCita } from './DrawersCita'
 
-const REFRESCO_MS = 3000
+/**
+ * Cada cuánto le pregunta la agenda al servidor si hay citas nuevas.
+ *
+ * ⚠️ **Esta constante es dinero.** Con 3.000 ms —lo que hubo hasta el 2026-08-21— una sola
+ * pantalla abierta durante una jornada de 10 h hace ~12.000 consultas, agota a media mañana
+ * las 50.000 lecturas diarias que Firestore regala, y **mantiene la instancia de Cloud Run
+ * despierta todo el horario laboral**: el "escala a cero" deja de existir. Estimado en
+ * ~27 USD/mes por cliente. Con 15.000 ms baja a ~6 USD, y nadie nota la diferencia.
+ *
+ * Cálculo y supuestos: [[04-BIBLIOTECA/patrones/implantacion-primer-cliente]] §2.0.bis.
+ * Si alguna vez hay que bajarlo, que sea con la factura delante.
+ */
+const REFRESCO_MS = 15000
+
+/** Los mismos segundos, para el rótulo de la pantalla. Derivado a propósito: un texto que
+ *  promete "cada 3 segundos" mientras el código refresca cada 15 es una mentira que nadie
+ *  detecta hasta que la dueña la cronometra. */
+const REFRESCO_SEG = Math.round(REFRESCO_MS / 1000)
 
 type Filtro = 'todas' | 'pendientes' | 'activas'
 
@@ -90,7 +107,7 @@ export default function AdminAgendaPage() {
   /* --- Citas: sondeo continuo, acotado al día que se está mirando ---
    *
    * Antes pedía `getCitasAction()` sin argumento, que devuelve la ventana de 67 días
-   * (−7/+60) entera. Cada 3 segundos. En la demo eran 15 citas y no se notaba; en un
+   * (−7/+60) entera, en cada vuelta del sondeo. En la demo eran 15 citas y no se notaba; en un
    * spa real son ~2.100 documentos por vuelta, ~25 millones de lecturas por jornada y
    * una factura de Firestore mayor que la mensualidad del cliente.
    *
@@ -232,7 +249,7 @@ export default function AdminAgendaPage() {
     <>
       <AdminHeader
         title="Agenda del día"
-        subtitle={<LivePulse label="En vivo · se actualiza sola cada 3 segundos" />}
+        subtitle={<LivePulse label={`En vivo · se actualiza sola cada ${REFRESCO_SEG} segundos`} />}
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
           <Button variant="primary" size="sm" onClick={() => setNuevaCitaOpen(true)}>Nueva cita</Button>

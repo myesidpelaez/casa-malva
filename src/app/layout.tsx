@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     template: '%s · Casa Malva',
   },
   description:
-    'Estudio de belleza en Laureles, Medellín. Uñas, cabello, maquillaje y cejas. Reserva tu cita en línea.',
+    'Estudio de belleza de demostración en Medellín. Uñas, cabello, maquillaje y cejas. Reserva tu cita en línea.',
   applicationName: 'Casa Malva',
   formatDetection: { telephone: false },
 }

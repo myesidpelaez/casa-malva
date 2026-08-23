@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Casa Malva · Estudio de belleza',
     short_name: 'Casa Malva',
-    description: 'Estudio de belleza en Laureles, Medellín',
+    description: 'Estudio de belleza de demostración en Medellín',
     start_url: '/',
     display: 'standalone',
     background_color: '#FAF8F9',

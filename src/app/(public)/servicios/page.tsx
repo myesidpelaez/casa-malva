@@ -8,7 +8,7 @@ export const revalidate = 0
 export const metadata: Metadata = {
   title: 'Lookbook de Servicios y Precios · Casa Malva',
   description:
-    'Catálogo visual de Casa Malva en Laureles, Medellín: uñas, cabello, maquillaje, cejas y pestañas con fotografía de acabados reales y reserva en línea.',
+    'Catálogo visual de Casa Malva, estudio de demostración en Medellín: uñas, cabello, maquillaje, cejas y pestañas con fotografía de acabados reales y reserva en línea.',
 }
 
 export default async function ServiciosPage() {
