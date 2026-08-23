@@ -53,3 +53,8 @@ env:
   - variable: DEEPSEEK_API_KEY
     secret: deepseek-api-key
     availability: [RUNTIME]
+
+  # Alternativa de IA: Google Gemini 1.5 Flash
+  - variable: GEMINI_API_KEY
+    secret: gemini-api-key
+    availability: [RUNTIME]

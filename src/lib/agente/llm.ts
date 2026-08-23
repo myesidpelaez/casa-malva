@@ -106,3 +106,107 @@ export function modeloDeGuion(respuestas: string[]): ModeloLLM {
     },
   }
 }
+
+const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+
+/**
+ * Google Gemini 1.5 Flash en modo JSON estructurado.
+ * Menos de 600ms de latencia, tier gratuito de 1M tokens/min y costo ínfimo ($0.075 / 1M).
+ */
+export function modeloGemini(): ModeloLLM {
+  return {
+    async completar(mensajes: MensajeLLM[]): Promise<RespuestaLLM> {
+      const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim()
+
+      if (!apiKey || apiKey === 'pendiente-configuracion') {
+        return { ok: false, error: 'GEMINI_API_KEY ausente o no configurada' }
+      }
+
+      const control = new AbortController()
+      const reloj = setTimeout(() => control.abort(), TIEMPO_LIMITE_MS)
+
+      try {
+        const url = `${GEMINI_ENDPOINT}?key=${apiKey}`
+        const systemInstruction = mensajes.find((m) => m.rol === 'sistema')?.contenido
+        const contents = mensajes
+          .filter((m) => m.rol !== 'sistema')
+          .map((m) => ({
+            role: m.rol === 'usuario' ? 'user' : 'model',
+            parts: [{ text: m.contenido }],
+          }))
+
+        const payload: Record<string, unknown> = {
+          contents,
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.3,
+            maxOutputTokens: 700,
+          },
+        }
+
+        if (systemInstruction) {
+          payload.systemInstruction = {
+            parts: [{ text: systemInstruction }],
+          }
+        }
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: control.signal,
+        })
+
+        if (!res.ok) {
+          const detalle = await res.text().catch(() => '')
+          return { ok: false, error: `[Gemini ${res.status}] ${detalle.slice(0, 300)}` }
+        }
+
+        const data = (await res.json()) as {
+          candidates?: Array<{
+            content?: { parts?: Array<{ text?: string }> }
+          }>
+        }
+
+        const texto = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+        if (typeof texto !== 'string' || texto.trim().length === 0) {
+          return { ok: false, error: 'Gemini devolvió una respuesta vacía' }
+        }
+
+        return { ok: true, texto }
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return { ok: false, error: `Gemini tardó más de ${TIEMPO_LIMITE_MS / 1000}s` }
+        }
+        return { ok: false, error: err instanceof Error ? err.message : 'error de red con Gemini' }
+      } finally {
+        clearTimeout(reloj)
+      }
+    },
+  }
+}
+
+/**
+ * Modelo por defecto: Detecta automáticamente si hay GEMINI_API_KEY o DEEPSEEK_API_KEY.
+ * Si hay Gemini configurado, usa Gemini; si hay DeepSeek válido, usa DeepSeek.
+ */
+export function modeloPorDefecto(): ModeloLLM {
+  const geminiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim()
+  const deepseekKey = (process.env.DEEPSEEK_API_KEY || '').trim()
+
+  if (geminiKey && geminiKey !== 'pendiente-configuracion') {
+    return modeloGemini()
+  }
+  if (deepseekKey && deepseekKey !== 'pendiente-configuracion') {
+    return modeloDeepSeek()
+  }
+
+  return {
+    async completar(mensajes: MensajeLLM[]): Promise<RespuestaLLM> {
+      const g = await modeloGemini().completar(mensajes)
+      if (g.ok) return g
+      return await modeloDeepSeek().completar(mensajes)
+    },
+  }
+}

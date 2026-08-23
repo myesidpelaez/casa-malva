@@ -8,7 +8,7 @@
 
 import { armarPrompt, TURNOS_DE_MEMORIA } from './prompt'
 import { ejecutarPlan } from './ejecutar'
-import { modeloDeepSeek, type ModeloLLM } from './llm'
+import { modeloPorDefecto, type ModeloLLM } from './llm'
 import { parsearPlan } from './validar'
 import { getServices, getProfessionals } from '@/lib/db'
 import type { Professional, Service } from '@/types'
@@ -58,7 +58,7 @@ export async function atender(
   entrada: EntradaAtencion,
   deps: DependenciasAgente = {}
 ): Promise<ResultadoAgente> {
-  const modelo = deps.modelo ?? modeloDeepSeek()
+  const modelo = deps.modelo ?? modeloPorDefecto()
   const cargarCatalogo = deps.cargarCatalogo ?? catalogoDeFirestore
 
   // Audio, imagen, ubicación, sticker: fuera del alcance de la v1 (Spec 28 · §4).

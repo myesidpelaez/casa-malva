@@ -43,39 +43,37 @@ const FMT_ZONA = new Intl.DateTimeFormat('en-CA', {
 type PartesZona = { anio: number; mes: number; dia: number; hora: number; minuto: number }
 
 /** Descompone un instante en las partes de calendario que marca el reloj de ZONA. */
-function partesEnZona(d: Date): PartesZona {
-  const partes = FMT_ZONA.formatToParts(d)
+/** Descompone un instante o string YYYY-MM-DD en las partes de calendario que marca el reloj de ZONA. */
+function partesEnZona(d: Date | string): PartesZona {
+  if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.trim())) {
+    const [anio, mes, dia] = d.trim().split('-').map(Number)
+    return { anio, mes, dia, hora: 12, minuto: 0 }
+  }
+  const dateObj = typeof d === 'string' ? new Date(d) : d
+  const partes = FMT_ZONA.formatToParts(dateObj)
   const v = (tipo: string): number => Number(partes.find((p) => p.type === tipo)?.value)
   return { anio: v('year'), mes: v('month'), dia: v('day'), hora: v('hour'), minuto: v('minute') }
-}
-
-/** Minutos que hay que sumar a UTC para obtener la hora de ZONA en ese instante. Bogotá: −300. */
-function desplazamientoMin(d: Date): number {
-  const p = partesEnZona(d)
-  const comoSiFueraUtc = Date.UTC(p.anio, p.mes - 1, p.dia, p.hora, p.minuto)
-  const instanteAlMinuto = Math.floor(d.getTime() / 60000) * 60000
-  return Math.round((comoSiFueraUtc - instanteAlMinuto) / 60000)
 }
 
 /**
  * Instante exacto en que ZONA marca `minutos` desde su medianoche, el día en que
  * cae `diaRef`. Sustituye a `setHours(h, m, 0, 0)`, que escribía en hora del servidor.
  */
-export function instanteEnZona(diaRef: Date, minutos: number): Date {
+export function instanteEnZona(diaRef: Date | string, minutos: number): Date {
   const p = partesEnZona(diaRef)
-  const tentativo = Date.UTC(p.anio, p.mes - 1, p.dia, 0, 0) + minutos * 60000
-  return new Date(tentativo - desplazamientoMin(new Date(tentativo)) * 60000)
+  const tentativaUtc = Date.UTC(p.anio, p.mes - 1, p.dia, 0, 0) + minutos * 60000
+  return new Date(tentativaUtc + 300 * 60000)
 }
 
 /** Día de la semana **en ZONA**: 0=Domingo … 6=Sábado. */
-export function diaSemanaEnZona(d: Date): number {
+export function diaSemanaEnZona(d: Date | string): number {
   const p = partesEnZona(d)
   return new Date(Date.UTC(p.anio, p.mes - 1, p.dia)).getUTCDay()
 }
 
 /** Medianoche de ZONA del día en que cae `d`. */
 export function startOfDay(d: Date | string): Date {
-  return instanteEnZona(new Date(d), 0)
+  return instanteEnZona(d, 0)
 }
 
 export function isSunday(d: Date): boolean {

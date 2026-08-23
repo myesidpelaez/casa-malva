@@ -269,14 +269,16 @@ export function DrawerNuevaCita({
     }
   }, [step, serviceId, professionalId, fechaStr])
 
-  const clienteExistente = clientas.find(c => c.telefonoE164.includes(telefono))
+  const clienteExistente = telefono.trim()
+    ? clientas.find(c => c.telefonoE164.includes(telefono.trim()) || c.nombre.toLowerCase().includes(telefono.toLowerCase().trim()))
+    : undefined
 
   async function handleConfirmar() {
     setCargando(true)
     const res = await crearCitaAdminAction({
       clientId: clienteExistente?.id,
       clienteTelefono: telefono,
-      clienteNombre: nombre,
+      clienteNombre: clienteExistente ? clienteExistente.nombre : nombre.trim(),
       serviceId,
       professionalId,
       inicioUtc,
@@ -313,7 +315,7 @@ export function DrawerNuevaCita({
               className="flex-1"
               onClick={() => setStep(s => s + 1)}
               disabled={
-                (step === 1 && !telefono) ||
+                (step === 1 && (!telefono.trim() || (!clienteExistente && !nombre.trim()))) ||
                 (step === 2 && !serviceId) ||
                 (step === 3 && !professionalId) ||
                 (step === 4 && !inicioUtc)

@@ -504,7 +504,7 @@ export const getCitasAction = withAuth<Appointment[], [fechaIso?: string, dias?:
     if (fechaIso) {
       // `startOfDay` da la medianoche del reloj del estudio (Bogotá), no la del servidor:
       // es lo que hace que la franja de las 19:00 no se cuente en el día siguiente (F2).
-      const dayStart = startOfDay(new Date(fechaIso))
+      const dayStart = startOfDay(fechaIso)
       const dayEnd = new Date(dayStart.getTime() + Math.max(1, dias) * 24 * 3600 * 1000)
       startIso = dayStart.toISOString()
       endIso = dayEnd.toISOString()
@@ -551,7 +551,7 @@ export async function franjasDelDiaAction(
     const svc = services.find((s) => s.id === serviceId)
     if (!svc) return { ok: false, error: 'Servicio no encontrado' }
 
-    const fecha = new Date(fechaIso)
+    const fecha = dayStart
     const candidatos = professionalId
       ? professionals.filter((p) => p.id === professionalId && p.activo)
       : profesionalesPara(serviceId, professionals)
