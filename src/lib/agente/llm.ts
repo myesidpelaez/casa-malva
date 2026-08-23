@@ -4,8 +4,9 @@
  * Una interfaz, una implementación. El resto del agente no sabe qué modelo hay detrás, y
  * cambiar de proveedor es escribir otra función de este archivo — no tocar el cerebro.
  *
- * Proveedor decidido por Mario el 2026-08-20: **DeepSeek**, por su API compatible con OpenAI.
- * Se llama con `fetch` plano a propósito: cero dependencias nuevas en `package.json`.
+ * Proveedores soportados:
+ * - **Google Gemini 3.5 Flash** (por defecto: ultra rápido < 600ms, costo ínfimo $0.075 / 1M).
+ * - **DeepSeek-Chat** (modo JSON, compatible OpenAI).
  */
 
 export type MensajeLLM = {
@@ -22,46 +23,39 @@ export interface ModeloLLM {
   completar(mensajes: MensajeLLM[]): Promise<RespuestaLLM>
 }
 
-const ENDPOINT = 'https://api.deepseek.com/chat/completions'
-const MODELO = 'deepseek-chat'
 const TIEMPO_LIMITE_MS = 20_000
 
-const ROLES: Record<MensajeLLM['rol'], string> = {
+// --- DEEPSEEK ---
+const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/chat/completions'
+const DEEPSEEK_MODEL = 'deepseek-chat'
+const ROLES_DEEPSEEK: Record<MensajeLLM['rol'], string> = {
   sistema: 'system',
   usuario: 'user',
   asistente: 'assistant',
 }
 
-/**
- * DeepSeek en **modo JSON**, no en *function calling* (Spec 28 · D7).
- *
- * El modelo devuelve un `PlanDelAgente` serializado y nada más. Si el JSON no valida, el plan
- * se descarta en `parsearPlan` y el agente escala. Es lo que hace que el diseño no dependa de
- * lo bien que un modelo concreto llame herramientas.
- */
 export function modeloDeepSeek(): ModeloLLM {
   return {
     async completar(mensajes: MensajeLLM[]): Promise<RespuestaLLM> {
       const apiKey = process.env.DEEPSEEK_API_KEY?.trim()
 
-      // Falla cerrado (regla 3): sin llave NO se inventa una respuesta plausible.
-      if (!apiKey) {
-        return { ok: false, error: 'DEEPSEEK_API_KEY ausente' }
+      if (!apiKey || apiKey === 'pendiente-configuracion') {
+        return { ok: false, error: 'DEEPSEEK_API_KEY ausente o no configurada' }
       }
 
       const control = new AbortController()
       const reloj = setTimeout(() => control.abort(), TIEMPO_LIMITE_MS)
 
       try {
-        const res = await fetch(ENDPOINT, {
+        const res = await fetch(DEEPSEEK_ENDPOINT, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            model: MODELO,
-            messages: mensajes.map((m) => ({ role: ROLES[m.rol], content: m.contenido })),
+            model: DEEPSEEK_MODEL,
+            messages: mensajes.map((m) => ({ role: ROLES_DEEPSEEK[m.rol], content: m.contenido })),
             response_format: { type: 'json_object' },
             temperature: 0.3,
             max_tokens: 700,
@@ -71,7 +65,7 @@ export function modeloDeepSeek(): ModeloLLM {
 
         if (!res.ok) {
           const detalle = await res.text().catch(() => '')
-          return { ok: false, error: `[${res.status}] ${detalle.slice(0, 300)}` }
+          return { ok: false, error: `[DeepSeek ${res.status}] ${detalle.slice(0, 300)}` }
         }
 
         const data = (await res.json()) as {
@@ -96,23 +90,9 @@ export function modeloDeepSeek(): ModeloLLM {
   }
 }
 
-/** Modelo de mentira para pruebas: devuelve lo que se le diga, en orden. */
-export function modeloDeGuion(respuestas: string[]): ModeloLLM {
-  let i = 0
-  return {
-    async completar(): Promise<RespuestaLLM> {
-      if (i >= respuestas.length) return { ok: false, error: 'guion agotado' }
-      return { ok: true, texto: respuestas[i++] }
-    },
-  }
-}
-
+// --- GOOGLE GEMINI ---
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent'
 
-/**
- * Google Gemini 1.5 Flash en modo JSON estructurado.
- * Menos de 600ms de latencia, tier gratuito de 1M tokens/min y costo ínfimo ($0.075 / 1M).
- */
 export function modeloGemini(): ModeloLLM {
   return {
     async completar(mensajes: MensajeLLM[]): Promise<RespuestaLLM> {
@@ -127,13 +107,20 @@ export function modeloGemini(): ModeloLLM {
 
       try {
         const url = `${GEMINI_ENDPOINT}?key=${apiKey}`
-        const systemInstruction = mensajes.find((m) => m.rol === 'sistema')?.contenido
+        
+        // Las primeras instrucciones de sistema forman el systemInstruction
+        const systemParts = mensajes.filter((m, i) => m.rol === 'sistema' && i < 2).map((m) => m.contenido)
+        
+        // El resto (incluyendo datosDeHerramienta que entra como 'sistema' al final) entra en contents
         const contents = mensajes
-          .filter((m) => m.rol !== 'sistema')
-          .map((m) => ({
-            role: m.rol === 'usuario' ? 'user' : 'model',
-            parts: [{ text: m.contenido }],
-          }))
+          .map((m, i) => {
+            if (m.rol === 'sistema' && i < 2) return null
+            return {
+              role: m.rol === 'asistente' ? 'model' : 'user',
+              parts: [{ text: m.contenido }],
+            }
+          })
+          .filter(Boolean)
 
         const payload: Record<string, unknown> = {
           contents,
@@ -144,9 +131,9 @@ export function modeloGemini(): ModeloLLM {
           },
         }
 
-        if (systemInstruction) {
+        if (systemParts.length > 0) {
           payload.systemInstruction = {
-            parts: [{ text: systemInstruction }],
+            parts: [{ text: systemParts.join('\n\n') }],
           }
         }
 
@@ -183,6 +170,17 @@ export function modeloGemini(): ModeloLLM {
       } finally {
         clearTimeout(reloj)
       }
+    },
+  }
+}
+
+/** Modelo de mentira para pruebas: devuelve lo que se le diga, en orden. */
+export function modeloDeGuion(respuestas: string[]): ModeloLLM {
+  let i = 0
+  return {
+    async completar(): Promise<RespuestaLLM> {
+      if (i >= respuestas.length) return { ok: false, error: 'guion agotado' }
+      return { ok: true, texto: respuestas[i++] }
     },
   }
 }
