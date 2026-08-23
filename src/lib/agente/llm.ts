@@ -107,7 +107,7 @@ export function modeloDeGuion(respuestas: string[]): ModeloLLM {
   }
 }
 
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent'
 
 /**
  * Google Gemini 1.5 Flash en modo JSON estructurado.
