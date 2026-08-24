@@ -40,6 +40,14 @@
   --color-champagne: #e6d5bd;
   --color-sage: #c3d0c4;
 
+  /**
+   * Oro editorial: el cierre del degradado de los titulares de alta costura.
+   * Lo estrenó la portada del 2026-08-23 escrito a mano; vive aquí para que las
+   * tres rutas públicas usen el mismo oro y no tres oros parecidos.
+   * Más saturado que `--color-champagne`, que sigue siendo el de las superficies.
+   */
+  --color-oro-editorial: #c5a059;
+
   /* ---- Semántica de estado --------------------------------------------- */
   --color-success: var(--cm-success);
   --color-success-soft: var(--cm-success-soft);

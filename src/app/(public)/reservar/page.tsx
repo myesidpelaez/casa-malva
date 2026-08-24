@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getCategoriesAction, getServicesAction } from '@/actions/catalogo'
 import { getProfessionalsAction } from '@/actions/profesionales'
 import { ReservaWizard } from './ReservaWizard'
+import { BadgeApertura } from '@/components/brand/Apertura'
 
 export const revalidate = 0
 
@@ -36,6 +37,7 @@ export default async function ReservarPage({
   return (
     <ReservaWizard
       serviceIdInicial={serviceId ?? null}
+      estado={<BadgeApertura />}
       categories={(catRes.ok ? catRes.data : []).filter((c) => c.activa)}
       services={(srvRes.ok ? srvRes.data : []).filter((s) => s.activo)}
       professionals={(profRes.ok ? profRes.data : []).filter((p) => p.activo)}
