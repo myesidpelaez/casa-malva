@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getCategoriesAction, getServicesAction } from '@/actions/catalogo'
 import { getProfessionalsAction } from '@/actions/profesionales'
 import { CatalogoLookbook } from './CatalogoLookbook'
+import { BadgeApertura } from '@/components/brand/Apertura'
 
 export const revalidate = 0
 
@@ -27,6 +28,7 @@ export default async function ServiciosPage() {
       categories={categories}
       services={services}
       professionals={professionals}
+      estado={<BadgeApertura />}
     />
   )
 }

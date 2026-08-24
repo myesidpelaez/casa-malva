@@ -35,7 +35,7 @@ import { Field } from '@/components/ui/field'
 import { Stepper } from '@/components/ui/segmented'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/common/EmptyState'
-import { Marca } from '@/components/brand'
+import { Marca, TituloEditorial } from '@/components/brand'
 import type { Appointment, Category, Professional, Service } from '@/types'
 
 type Franja = { inicioUtc: string; professionalId: string; professionalNombre: string }
@@ -48,11 +48,18 @@ export function ReservaWizard({
   categories,
   services,
   professionals,
+  estado,
 }: {
   serviceIdInicial: string | null
   categories: Category[]
   services: Service[]
   professionals: Professional[]
+  /**
+   * Píldora de «Abierto ahora», ya renderizada. Llega hecha desde `page.tsx`
+   * porque depende de la hora y este componente es de cliente: calculada aquí
+   * daría una hora distinta de la del HTML del servidor.
+   */
+  estado?: React.ReactNode
 }) {
   // Si llega con ?serviceId, arranca directamente en el paso del profesional.
   const [paso, setPaso] = React.useState(() =>
@@ -287,6 +294,7 @@ export function ReservaWizard({
               <PasoServicio
                 categories={categories}
                 services={services}
+                estado={estado}
                 seleccionado={servicio}
                 onSelect={(s) => {
                   setServicio(s)
@@ -367,19 +375,28 @@ function PasoServicio({
   services,
   seleccionado,
   onSelect,
+  estado,
 }: {
   categories: Category[]
   services: Service[]
   seleccionado: Service | null
   onSelect: (s: Service) => void
+  estado?: React.ReactNode
 }) {
   return (
     <section className="space-y-[var(--spacing-fib-3)]">
+      {/*
+        Solo este paso lleva el titular de alta costura: es donde se llega desde
+        la portada y donde conviene que la marca siga sonando igual. Del paso 2
+        en adelante el wizard es un formulario, y un titular de 46px le robaría
+        a la rejilla de horas el sitio que necesita.
+      */}
       <header>
-        <h1 className="font-display text-[26px] font-semibold text-ink-900">
-          ¿Qué te vas a hacer?
-        </h1>
-        <p className="text-[13.5px] text-ink-500">
+        {estado}
+        <TituloEditorial as="h1" size="seccion" resalte="te vas a hacer?" className="mt-3">
+          ¿Qué
+        </TituloEditorial>
+        <p className="mt-3 text-[15px] leading-relaxed text-ink-500">
           Elige un servicio para ver las horas libres de verdad.
         </p>
       </header>

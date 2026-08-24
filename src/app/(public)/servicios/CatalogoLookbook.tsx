@@ -18,7 +18,8 @@ import {
   servicesOf,
 } from '@/lib/catalogo-ui'
 import { buttonClass } from '@/components/ui/button-variants'
-import { Surface, SectionHeading } from '@/components/ui/surface'
+import { Surface } from '@/components/ui/surface'
+import { TituloEditorial } from '@/components/brand'
 import { EmptyState } from '@/components/common/EmptyState'
 import { cn } from '@/lib/utils'
 import type { Category, Professional, Service } from '@/types'
@@ -27,9 +28,15 @@ type Props = {
   categories: Category[]
   services: Service[]
   professionals: Professional[]
+  /**
+   * Píldora de «Abierto ahora», ya renderizada. Llega hecha desde `page.tsx`
+   * porque depende de la hora y este componente es de cliente: calculada aquí
+   * daría una hora distinta de la del HTML del servidor.
+   */
+  estado?: React.ReactNode
 }
 
-export function CatalogoLookbook({ categories, services, professionals }: Props) {
+export function CatalogoLookbook({ categories, services, professionals, estado }: Props) {
   // 'todas' o el id de una categoría ('cat_unas', 'cat_cabello', etc.)
   const [categoriaSeleccionada, setCategoriaSeleccionada] = React.useState<string>('todas')
 
@@ -48,14 +55,20 @@ export function CatalogoLookbook({ categories, services, professionals }: Props)
 
   return (
     <div className="mx-auto max-w-6xl px-3.5 py-[var(--spacing-fib-4)] sm:px-6 sm:py-[var(--spacing-fib-5)]">
-      <Reveal>
-        <SectionHeading
-          align="center"
-          eyebrow="Lookbook Editorial"
-          title="Servicios y precios"
-          subtitle="Explora nuestras especialidades con fotografía de acabados reales. Precios transparentes y duración en silla garantizada."
-          className="mx-auto"
-        />
+      <Reveal className="flex flex-col items-center text-center">
+        {estado}
+        <TituloEditorial
+          as="h1"
+          size="seccion"
+          resalte="precios sin sorpresas."
+          className="mt-4"
+        >
+          Servicios de autor,
+        </TituloEditorial>
+        <p className="mt-4 max-w-xl text-[16px] leading-relaxed text-ink-500 sm:text-[18px]">
+          Explora nuestras especialidades con fotografía de acabados reales. Precios
+          transparentes y duración en silla garantizada.
+        </p>
       </Reveal>
 
       {!hayServicios ? (

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, CalendarPlus, Sparkles, Clock, Star, Heart, MapPin, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, CalendarPlus, Sparkles, MapPin, CheckCircle2 } from 'lucide-react'
 import { getCategoriesAction, getServicesAction } from '@/actions/catalogo'
 import { getProfessionalsAction } from '@/actions/profesionales'
 import { formatCurrencyFromCents } from '@/lib/currency'
@@ -8,7 +8,8 @@ import { categoryLook, cleanCategoryName, getProfessionalAvatar, priceFrom, serv
 import { buttonClass } from '@/components/ui/button-variants'
 import { Surface, SectionHeading } from '@/components/ui/surface'
 import { Reveal, RevealGroup, RevealItem } from '@/components/common/Reveal'
-import { Marca } from '@/components/brand'
+import { Marca, TituloEditorial } from '@/components/brand'
+import { BadgeApertura } from '@/components/brand/Apertura'
 import { cn } from '@/lib/utils'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
 
@@ -32,23 +33,11 @@ export default async function InicioPage() {
         <div className="grid items-center gap-10 lg:grid-cols-12">
           {/* Columna Editorial (Texto y Acciones) */}
           <Reveal className="text-center lg:col-span-7 lg:text-left">
-            <div className="inline-flex items-center gap-2 rounded-full border border-malva-200/80 bg-[var(--card)]/90 px-3.5 py-1.5 shadow-sm backdrop-blur-md">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
-              <span className="text-xs font-semibold text-ink-700 tracking-wide">
-                Abierto hoy · Hasta 7:00 PM · El Poblado
-              </span>
-            </div>
+            <BadgeApertura />
 
-            <h1 className="mt-4 font-display text-[44px] sm:text-[68px] font-semibold leading-[1.03] tracking-[-0.03em] text-ink-900">
+            <TituloEditorial className="mt-4" resalte="belleza botánica.">
               Santuario de
-              <br />
-              <span className="bg-gradient-to-r from-malva-700 via-malva-600 to-[#C5A059] bg-clip-text text-transparent">
-                belleza botánica.
-              </span>
-            </h1>
+            </TituloEditorial>
 
             <p className="mt-4 max-w-xl text-[16px] sm:text-[18px] leading-relaxed text-ink-500 font-sans">
               Peluquería de autor, spa de uñas y diseño de cejas en Medellín. Elige tu especialista y agenda tu cita en tiempo real sin esperas ni llamadas.
