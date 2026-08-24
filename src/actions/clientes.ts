@@ -1,7 +1,8 @@
 'use server'
 
-import { docGet, getAppointmentsDeCliente, getClientsRecientes } from '@/lib/db'
+import { docGet, getAppointmentsDeCliente, getClientsRecientes, getClientByPhone, getDb, transaccion, docSet } from '@/lib/db'
 import { withAuth } from '@/lib/withAuth'
+import { normalizePhoneE164 } from '@/lib/utils'
 import type { Appointment, Client } from '@/types'
 
 /*
@@ -21,7 +22,103 @@ import type { Appointment, Client } from '@/types'
 export const getClientsAction = withAuth<Client[], []>(
   'clienta:leer',
   async () => {
-    return await getClientsRecientes(200)
+    const clients = await getClientsRecientes(200)
+    return clients.filter(c => !c.fusionadaEn)
+  }
+)
+
+export const crearClientaAction = withAuth<
+  { yaExistia?: boolean; clienta: Client },
+  [{ nombre: string; telefono: string; email?: string; notas?: string }]
+>(
+  'clienta:crear',
+  async (ctx, input) => {
+    const telE164 = normalizePhoneE164(input.telefono)
+    if (!telE164) {
+      return { ok: false, error: 'Telefono invalido' }
+    }
+
+    const existe = await getClientByPhone(telE164)
+    if (existe) {
+      return { ok: true, data: { yaExistia: true, clienta: existe } }
+    }
+
+    const nuevaClienta: Client = {
+      id: crypto.randomUUID(),
+      nombre: input.nombre.trim(),
+      telefonoE164: telE164,
+      email: input.email?.trim() || undefined,
+      notas: input.notas?.trim() || undefined,
+      creadaEn: new Date().toISOString(),
+    }
+    
+    await docSet('clients', nuevaClienta.id, nuevaClienta)
+    return { ok: true, data: { clienta: nuevaClienta } }
+  }
+)
+
+export const fusionarClientasAction = withAuth<
+  { ok: true },
+  [idSuperviviente: string, idAbsorbida: string]
+>(
+  'clienta:fusionar',
+  async (ctx, idSuperviviente, idAbsorbida) => {
+    if (idSuperviviente === idAbsorbida) {
+      return { ok: false, error: 'Misma ficha' }
+    }
+
+    const superviviente = await docGet<Client>('clients', idSuperviviente)
+    const absorbida = await docGet<Client>('clients', idAbsorbida)
+
+    if (!superviviente || !absorbida) {
+      return { ok: false, error: 'Ficha no encontrada' }
+    }
+
+    if (superviviente.fusionadaEn || absorbida.fusionadaEn) {
+      return { ok: false, error: 'Ficha ya fusionada' }
+    }
+
+    const db = getDb()
+    
+    const appointmentsSnap = await db.collection('appointments').where('clientId', '==', idAbsorbida).get()
+    const chargesSnap = await db.collection('charges').where('clientId', '==', idAbsorbida).get()
+
+    const totalDocs = appointmentsSnap.size + chargesSnap.size
+    if (totalDocs > 200) {
+      return { ok: false, error: 'demasiados_documentos' }
+    }
+
+    await transaccion(async (tx) => {
+      // Reapuntar appointments
+      for (const doc of appointmentsSnap.docs) {
+        tx.update(doc.ref, { clientId: idSuperviviente })
+      }
+      
+      // Reapuntar charges
+      for (const doc of chargesSnap.docs) {
+        tx.update(doc.ref, { clientId: idSuperviviente })
+      }
+
+      const telefonos = new Set(superviviente.telefonosAlternativos || [])
+      if (absorbida.telefonoE164 !== superviviente.telefonoE164) {
+        telefonos.add(absorbida.telefonoE164)
+      }
+      if (absorbida.telefonosAlternativos) {
+        for (const t of absorbida.telefonosAlternativos) {
+          if (t !== superviviente.telefonoE164) telefonos.add(t)
+        }
+      }
+
+      tx.update(db.doc(`clients/${idSuperviviente}`), {
+        telefonosAlternativos: Array.from(telefonos)
+      })
+
+      tx.update(db.doc(`clients/${idAbsorbida}`), {
+        fusionadaEn: idSuperviviente
+      })
+    })
+
+    return { ok: true, data: { ok: true } }
   }
 )
 

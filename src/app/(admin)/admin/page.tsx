@@ -28,6 +28,7 @@ import { getProfessionalsAction } from '@/actions/profesionales'
 import { getClientsAction } from '@/actions/clientes'
 import { formatCurrencyFromCents } from '@/lib/currency'
 import { claveDia, startOfDay } from '@/lib/disponibilidad'
+import { nombreCorto } from '@/lib/personas'
 import { fechaHoraCorta, fechaHoraLarga, fechaLarga, hora } from '@/lib/fechas'
 import { cn } from '@/lib/utils'
 import { spring, tween } from '@/lib/motion'
@@ -363,7 +364,7 @@ export default function AdminAgendaPage() {
               >
                 {prof.nombre.charAt(0)}
               </span>
-              <span>{prof.nombre.split(' ')[0]}</span>
+              <span>{nombreCorto(prof.id, equipo)}</span>
               {count > 0 && (
                 <span
                   className={cn(
@@ -412,6 +413,7 @@ export default function AdminAgendaPage() {
                     servicio={svc}
                     clienta={cli}
                     profesional={prof}
+                    equipo={equipo}
                     mostrarProfesional={profesionalMovil === 'todas'}
                     nueva={recienLlegadas.has(cita.id)}
                     onConfirmar={() =>
@@ -496,6 +498,7 @@ export default function AdminAgendaPage() {
                             servicio={svc}
                             clienta={cli}
                             profesional={prof}
+                            equipo={equipo}
                             nueva={recienLlegadas.has(cita.id)}
                             onConfirmar={() =>
                               transicion(cita, () => confirmarCitaAction(cita.id), 'Cita confirmada')
@@ -598,6 +601,7 @@ function TarjetaCita({
   servicio,
   clienta,
   profesional,
+  equipo,
   mostrarProfesional = false,
   nueva = false,
   onConfirmar,
@@ -610,6 +614,7 @@ function TarjetaCita({
   servicio: Service
   clienta: Client
   profesional: Professional
+  equipo: Professional[]
   mostrarProfesional?: boolean
   nueva?: boolean
   onConfirmar: () => void
@@ -674,7 +679,7 @@ function TarjetaCita({
                   {profesional.nombre.charAt(0)}
                 </span>
                 <span className="truncate max-w-[80px] sm:max-w-none">
-                  {profesional.nombre.split(' ')[0]}
+                  {nombreCorto(profesional.id, equipo)}
                 </span>
               </span>
             )}

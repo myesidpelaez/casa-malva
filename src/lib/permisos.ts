@@ -10,6 +10,8 @@ export const PERMISOS = {
   'cobro:registrar':      ['admin', 'recepcion'],
   'cobro:leer':           ['admin'],
   'clienta:leer':         ['admin', 'recepcion'],
+  'clienta:crear':        ['admin', 'recepcion'],
+  'clienta:fusionar':     ['admin'],
   'catalogo:editar':      ['admin'],
   'equipo:editar':        ['admin'],
 } as const satisfies Record<string, readonly Rol[]>

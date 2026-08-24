@@ -1,13 +1,14 @@
 'use client'
 
 import * as React from 'react'
-import { ChevronRight, Phone, Search, UserRound } from 'lucide-react'
+import { ChevronRight, Phone, Search, UserRound, Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import { getClientDetailAction, getClientsAction } from '@/actions/clientes'
+import { getClientDetailAction, getClientsAction, crearClientaAction, fusionarClientasAction } from '@/actions/clientes'
 import { getServicesAction } from '@/actions/catalogo'
 import { getProfessionalsAction } from '@/actions/profesionales'
 import { formatCurrencyFromCents } from '@/lib/currency'
 import { fechaHoraConAnio, selloCorto } from '@/lib/fechas'
+import { posiblesDuplicadas } from '@/lib/personas'
 import { cn } from '@/lib/utils'
 import { AdminHeader } from '@/components/layout/AdminShell'
 import { Surface } from '@/components/ui/surface'
@@ -17,6 +18,7 @@ import { RightDrawer } from '@/components/ui/drawer'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/common/EmptyState'
 import { RevealGroup, RevealItem } from '@/components/common/Reveal'
+import { Button } from '@/components/ui/button'
 import type { Appointment, Client, Professional, Service } from '@/types'
 
 type Detalle = {
@@ -27,16 +29,6 @@ type Detalle = {
   noShowCount: number
 }
 
-/**
- * Fichas de clientas.
- *
- * Las tres cifras de la ficha se CALCULAN sobre citas que existen de verdad,
- * nunca se guardan ni se inventan ([[04-BIBLIOTECA/patrones/fallos-silenciosos]]:
- * cero métricas derivadas en el seed). "Gastado" cuenta solo lo completado —
- * una cita agendada todavía no es dinero.
- *
- * Spec: docs/specs/08-crm-admin.md
- */
 export default function AdminClientasPage() {
   const [clientas, setClientas] = React.useState<Client[]>([])
   const [servicios, setServicios] = React.useState<Service[]>([])
@@ -45,6 +37,12 @@ export default function AdminClientasPage() {
   const [busqueda, setBusqueda] = React.useState('')
   const [detalle, setDetalle] = React.useState<Detalle | null>(null)
   const [abriendo, setAbriendo] = React.useState<string | null>(null)
+  
+  const [crearAbierto, setCrearAbierto] = React.useState(false)
+  const [creando, setCreando] = React.useState(false)
+  
+  const [duplicadasAbierto, setDuplicadasAbierto] = React.useState(false)
+  const [fusionando, setFusionando] = React.useState(false)
 
   React.useEffect(() => {
     Promise.all([getClientsAction(), getServicesAction(), getProfessionalsAction()]).then(
@@ -71,16 +69,75 @@ export default function AdminClientasPage() {
     return clientas.filter(
       (c) =>
         c.nombre.toLowerCase().includes(q) ||
-        c.telefonoE164.replace(/\D/g, '').includes(q.replace(/\D/g, ''))
+        c.telefonoE164.replace(/\D/g, '').includes(q.replace(/\D/g, '')) ||
+        (c.telefonosAlternativos?.some(t => t.replace(/\D/g, '').includes(q.replace(/\D/g, ''))))
     )
   }, [clientas, busqueda])
+  
+  const pares = React.useMemo(() => posiblesDuplicadas(clientas), [clientas])
+
+  async function onSubmitCrear(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setCreando(true)
+    const formData = new FormData(e.currentTarget)
+    const nombre = formData.get('nombre') as string
+    const telefono = formData.get('telefono') as string
+    const email = formData.get('email') as string
+    const notas = formData.get('notas') as string
+    
+    const res = await crearClientaAction({ nombre, telefono, email, notas })
+    setCreando(false)
+    if (!res.ok) {
+      toast.error(res.error)
+      return
+    }
+    
+    if (res.data.yaExistia) {
+      toast.info('El teléfono ya existía. Abriendo ficha.')
+    } else {
+      toast.success('Clienta creada')
+      setClientas(prev => [res.data.clienta, ...prev])
+    }
+    setCrearAbierto(false)
+    abrir(res.data.clienta.id)
+  }
+  
+  async function onFusionar(idSuperviviente: string, idAbsorbida: string) {
+    setFusionando(true)
+    const res = await fusionarClientasAction(idSuperviviente, idAbsorbida)
+    setFusionando(false)
+    if (!res.ok) {
+      toast.error(res.error)
+      return
+    }
+    toast.success('Clientas fusionadas')
+    setDuplicadasAbierto(false)
+    
+    // Refresh clients list
+    const c = await getClientsAction()
+    if (c.ok) setClientas(c.data)
+  }
 
   return (
     <>
       <AdminHeader
         title="Clientas"
         subtitle="Cada ficha reúne el historial completo, venga de la web, de WhatsApp o de recepción."
-      />
+      >
+        <Button variant="primary" onClick={() => setCrearAbierto(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nueva clienta
+        </Button>
+      </AdminHeader>
+
+      {pares.length > 0 && (
+        <div className="mb-4 flex items-center justify-between rounded-lg bg-amber-50 p-3 text-[13px] text-amber-800 border border-amber-200">
+          <span>{pares.length} posibles fichas repetidas</span>
+          <Button variant="outline" size="sm" onClick={() => setDuplicadasAbierto(true)}>
+            Revisar
+          </Button>
+        </div>
+      )}
 
       <div className="mb-[var(--spacing-fib-3)] max-w-sm">
         <Field
@@ -233,6 +290,93 @@ export default function AdminClientasPage() {
                 </ol>
               )}
             </div>
+          </div>
+        )}
+      </RightDrawer>
+      
+      {/* ---------- Crear Clienta ---------- */}
+      <RightDrawer
+        open={crearAbierto}
+        onOpenChange={setCrearAbierto}
+        title="Nueva clienta"
+        description="Si el teléfono ya existe, se abrirá la ficha existente en su lugar."
+      >
+        <form onSubmit={onSubmitCrear} className="space-y-4">
+          <Field
+            label="Nombre completo"
+            name="nombre"
+            required
+            autoFocus
+          />
+          <Field
+            label="Teléfono"
+            name="telefono"
+            type="tel"
+            required
+            placeholder="+57..."
+          />
+          <Field
+            label="Correo electrónico"
+            name="email"
+            type="email"
+          />
+          <div className="space-y-1">
+            <label className="text-[13px] font-medium text-ink-700">Notas</label>
+            <textarea
+              name="notas"
+              className="w-full rounded-[var(--radius-md)] border border-ink-200 bg-white p-2.5 text-[13.5px] text-ink-900 outline-none transition focus:border-malva-400 focus:ring-4 focus:ring-malva-400/20"
+              rows={3}
+            />
+          </div>
+          <div className="pt-2">
+            <Button type="submit" variant="primary" className="w-full" disabled={creando}>
+              {creando ? 'Guardando...' : 'Guardar clienta'}
+            </Button>
+          </div>
+        </form>
+      </RightDrawer>
+      
+      {/* ---------- Resolver Duplicadas ---------- */}
+      <RightDrawer
+        open={duplicadasAbierto}
+        onOpenChange={setDuplicadasAbierto}
+        title="Resolver duplicadas"
+        description="Selecciona cuál ficha sobrevive. La otra será absorbida (sus citas y cobros se moverán). Esta acción no se puede deshacer desde la interfaz."
+        size="lg"
+      >
+        {pares.length > 0 && (
+          <div className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Surface pad="md" className="space-y-3">
+                <h3 className="font-semibold text-ink-900">{pares[0][0].nombre}</h3>
+                <p className="text-sm text-ink-500">{pares[0][0].telefonoE164}</p>
+                <Button 
+                  variant="primary" 
+                  className="w-full"
+                  disabled={fusionando}
+                  onClick={() => onFusionar(pares[0][0].id, pares[0][1].id)}
+                >
+                  Mantener esta
+                </Button>
+              </Surface>
+              <Surface pad="md" className="space-y-3">
+                <h3 className="font-semibold text-ink-900">{pares[0][1].nombre}</h3>
+                <p className="text-sm text-ink-500">{pares[0][1].telefonoE164}</p>
+                <Button 
+                  variant="primary" 
+                  className="w-full"
+                  disabled={fusionando}
+                  onClick={() => onFusionar(pares[0][1].id, pares[0][0].id)}
+                >
+                  Mantener esta
+                </Button>
+              </Surface>
+            </div>
+            {pares.length > 1 && (
+              <p className="text-sm text-ink-500 text-center">
+                Hay {pares.length - 1} par(es) más. Resuelve este primero.
+              </p>
+            )}
           </div>
         )}
       </RightDrawer>

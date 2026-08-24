@@ -9,6 +9,7 @@ import { getProfessionalsAction } from '@/actions/profesionales'
 import { formatCurrencyFromCents, fromCents, toCents } from '@/lib/currency'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
 import { categoryLook, cleanCategoryName, humanDuration, servicesOf, getProfessionalAvatar } from '@/lib/catalogo-ui'
+import { nombreCorto } from '@/lib/personas'
 import { cn } from '@/lib/utils'
 import { AdminHeader } from '@/components/layout/AdminShell'
 import { Button } from '@/components/ui/button'
@@ -315,7 +316,7 @@ export default function AdminCatalogoPage() {
                                   })}
                                 </div>
                                 <span className="truncate">
-                                  {profsQueLoPrestan.map((p) => p.nombre.split(' ')[0]).join(', ')}
+                                  {profsQueLoPrestan.map((p) => nombreCorto(p.id, equipo)).join(', ')}
                                 </span>
                               </div>
                             )}

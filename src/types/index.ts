@@ -63,6 +63,9 @@ export type Client = {
   email?: string
   notas?: string
   creadaEn: string // ISO UTC
+  telefonosAlternativos?: string[]
+  fusionadaEn?: string
+  ultimaVisitaUtc?: string
   _seed?: boolean
 }
 
