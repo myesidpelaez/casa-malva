@@ -29,6 +29,20 @@ type Detalle = {
   noShowCount: number
 }
 
+/**
+ * Fichas de clientas.
+ *
+ * Las tres cifras de la ficha se CALCULAN sobre citas que existen de verdad,
+ * nunca se guardan ni se inventan ([[04-BIBLIOTECA/patrones/fallos-silenciosos]]:
+ * cero métricas derivadas en el seed). "Gastado" cuenta solo lo completado —
+ * una cita agendada todavía no es dinero.
+ *
+ * La identidad de una clienta es su TELÉFONO, no su nombre: dos clientas que se
+ * llaman igual con números distintos son dos personas, y el sistema no las une
+ * jamás por su cuenta (Spec 30, D1).
+ *
+ * Specs: docs/specs/08-crm-admin.md · docs/specs/30-identidad-de-clientas.md
+ */
 export default function AdminClientasPage() {
   const [clientas, setClientas] = React.useState<Client[]>([])
   const [servicios, setServicios] = React.useState<Service[]>([])

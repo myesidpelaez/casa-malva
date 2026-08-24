@@ -1,7 +1,8 @@
 'use server'
 
-import { docGet, getAppointmentsDeCliente, getClientsRecientes, getClientByPhone, getDb, transaccion, docSet } from '@/lib/db'
+import { docGet, getAppointmentsDeCliente, getClientsRecientes, getClientByPhone, docSet } from '@/lib/db'
 import { withAuth } from '@/lib/withAuth'
+import { fusionarClientas } from '@/lib/fusion'
 import { normalizePhoneE164 } from '@/lib/utils'
 import type { Appointment, Client } from '@/types'
 
@@ -63,62 +64,19 @@ export const fusionarClientasAction = withAuth<
 >(
   'clienta:fusionar',
   async (ctx, idSuperviviente, idAbsorbida) => {
-    if (idSuperviviente === idAbsorbida) {
-      return { ok: false, error: 'Misma ficha' }
-    }
+    // La fusión vive en `lib/fusion.ts` para que se pueda probar contra Firestore desde un
+    // script: `withAuth` necesita `cookies()`, que solo existe dentro de una petición.
+    // Aquí solo se traduce el resultado a un mensaje para la pantalla.
+    const res = await fusionarClientas(idSuperviviente, idAbsorbida)
+    if (res.ok) return { ok: true, data: { ok: true } }
 
-    const superviviente = await docGet<Client>('clients', idSuperviviente)
-    const absorbida = await docGet<Client>('clients', idAbsorbida)
-
-    if (!superviviente || !absorbida) {
-      return { ok: false, error: 'Ficha no encontrada' }
-    }
-
-    if (superviviente.fusionadaEn || absorbida.fusionadaEn) {
-      return { ok: false, error: 'Ficha ya fusionada' }
-    }
-
-    const db = getDb()
-    
-    const appointmentsSnap = await db.collection('appointments').where('clientId', '==', idAbsorbida).get()
-    const chargesSnap = await db.collection('charges').where('clientId', '==', idAbsorbida).get()
-
-    const totalDocs = appointmentsSnap.size + chargesSnap.size
-    if (totalDocs > 200) {
-      return { ok: false, error: 'demasiados_documentos' }
-    }
-
-    await transaccion(async (tx) => {
-      // Reapuntar appointments
-      for (const doc of appointmentsSnap.docs) {
-        tx.update(doc.ref, { clientId: idSuperviviente })
-      }
-      
-      // Reapuntar charges
-      for (const doc of chargesSnap.docs) {
-        tx.update(doc.ref, { clientId: idSuperviviente })
-      }
-
-      const telefonos = new Set(superviviente.telefonosAlternativos || [])
-      if (absorbida.telefonoE164 !== superviviente.telefonoE164) {
-        telefonos.add(absorbida.telefonoE164)
-      }
-      if (absorbida.telefonosAlternativos) {
-        for (const t of absorbida.telefonosAlternativos) {
-          if (t !== superviviente.telefonoE164) telefonos.add(t)
-        }
-      }
-
-      tx.update(db.doc(`clients/${idSuperviviente}`), {
-        telefonosAlternativos: Array.from(telefonos)
-      })
-
-      tx.update(db.doc(`clients/${idAbsorbida}`), {
-        fusionadaEn: idSuperviviente
-      })
-    })
-
-    return { ok: true, data: { ok: true } }
+    const mensajes = {
+      misma_ficha: 'Es la misma ficha',
+      ficha_no_encontrada: 'Ficha no encontrada',
+      ya_fusionada: 'Una de las dos fichas ya se fusionó antes',
+      demasiados_documentos: 'La ficha tiene demasiado historial para fusionarla de una vez',
+    } as const
+    return { ok: false, error: mensajes[res.error] }
   }
 )
 

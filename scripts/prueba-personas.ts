@@ -35,6 +35,15 @@ const dosCamilaRestrepo = [
 assertEq('Dos Camila Restrepo - primera (A)', nombreCorto('A', dosCamilaRestrepo), 'Camila Restrepo')
 assertEq('Dos Camila Restrepo - segunda (B)', nombreCorto('B', dosCamilaRestrepo), 'Camila Restrepo (2)')
 
+/* 3.bis. El orden NO puede depender de cómo llegue el array. Si dependiera, la misma
+ * profesional se llamaría "Camila Restrepo" en una pantalla y "Camila Restrepo (2)" en
+ * otra, según el orden en que Firestore devolviera los documentos — y eso es peor que no
+ * desambiguar, porque el nombre deja de identificar a nadie. */
+const alReves = [...dosCamilaRestrepo].reverse()
+assertEq('Orden estable: A se llama igual con el array al revés', nombreCorto('A', alReves), nombreCorto('A', dosCamilaRestrepo))
+assertEq('Orden estable: B se llama igual con el array al revés', nombreCorto('B', alReves), nombreCorto('B', dosCamilaRestrepo))
+assertEq('Orden estable: la segunda sigue siendo B, no A', nombreCorto('B', alReves), 'Camila Restrepo (2)')
+
 // 4. Nombre de una sola palabra -> no revienta
 assertEq('Nombre una palabra', nombreCorto('1', [{ id: '1', nombre: 'Camila' }]), 'Camila')
 assertEq('Dos Nombres de una palabra igual', nombreCorto('1', [
