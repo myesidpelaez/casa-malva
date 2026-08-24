@@ -20,8 +20,7 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary: [
-          'bg-malva-600 text-white shadow-[var(--shadow-malva)]',
-          'hover:bg-malva-700 active:bg-malva-800',
+          'glass-button-primary',
           'sheen',
         ],
         glass: [
