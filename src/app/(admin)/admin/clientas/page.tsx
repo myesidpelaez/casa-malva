@@ -13,7 +13,7 @@ import { AdminHeader } from '@/components/layout/AdminShell'
 import { Surface } from '@/components/ui/surface'
 import { StatusPill } from '@/components/ui/badge'
 import { Field } from '@/components/ui/field'
-import { Sheet } from '@/components/ui/sheet'
+import { RightDrawer } from '@/components/ui/drawer'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/common/EmptyState'
 import { RevealGroup, RevealItem } from '@/components/common/Reveal'
@@ -150,7 +150,7 @@ export default function AdminClientasPage() {
       )}
 
       {/* ---------- Ficha ---------- */}
-      <Sheet
+      <RightDrawer
         open={!!detalle}
         onOpenChange={(abierto) => !abierto && setDetalle(null)}
         title={detalle?.client.nombre ?? ''}
@@ -235,7 +235,7 @@ export default function AdminClientasPage() {
             </div>
           </div>
         )}
-      </Sheet>
+      </RightDrawer>
     </>
   )
 }

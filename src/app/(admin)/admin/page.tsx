@@ -36,7 +36,7 @@ import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/ui/surface'
 import { APPOINTMENT_STATE, Badge, LivePulse, StatusPill } from '@/components/ui/badge'
 import { Segmented } from '@/components/ui/segmented'
-import { Sheet } from '@/components/ui/sheet'
+import { RightDrawer } from '@/components/ui/drawer'
 import { Field } from '@/components/ui/field'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/common/EmptyState'
@@ -526,7 +526,7 @@ export default function AdminAgendaPage() {
       </div>
 
       {/* ---------- Cancelación con motivo ---------- */}
-      <Sheet
+      <RightDrawer
         open={!!cancelando}
         onOpenChange={(abierto) => !abierto && setCancelando(null)}
         title="Cancelar la cita"
@@ -563,7 +563,7 @@ export default function AdminAgendaPage() {
             hint="Se guarda en el historial. Si lo dejas vacío queda como “Cancelada desde el panel”."
           />
         </div>
-      </Sheet>
+      </RightDrawer>
 
       <DrawerCobro
         cita={cobrando}

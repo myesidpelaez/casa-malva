@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { AnimatePresence, motion, type Variants } from 'framer-motion'
+import { AnimatePresence, motion, type PanInfo, type Variants } from 'framer-motion'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { overlay } from '@/lib/motion'
@@ -72,6 +72,15 @@ export function RightDrawer({
     return () => window.removeEventListener('resize', check)
   }, [])
 
+  /**
+   * En móvil se arrastra hacia abajo para cerrar: el gesto que cualquiera que use un
+   * celular ya tiene en los dedos. Venía del `Sheet` al que este componente sustituye,
+   * y se conserva a propósito — Casa Malva se demuestra en el celular del dueño.
+   */
+  const alSoltarElArrastre = (_: unknown, info: PanInfo) => {
+    if (info.offset.y > 120 || info.velocity.y > 600) onOpenChange(false)
+  }
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <AnimatePresence>
@@ -93,6 +102,10 @@ export function RightDrawer({
                 initial="hidden"
                 animate="show"
                 exit="exit"
+                drag={isDesktop ? false : 'y'}
+                dragConstraints={{ top: 0, bottom: 0 }}
+                dragElastic={{ top: 0, bottom: 0.4 }}
+                onDragEnd={alSoltarElArrastre}
                 className={cn(
                   'fixed z-50 flex flex-col bg-[var(--card)] text-ink-900 shadow-2xl border-ink-100',
                   // Mobile: Bottom Sheet

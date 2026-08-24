@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Sheet } from '@/components/ui/sheet'
+import { RightDrawer } from '@/components/ui/drawer'
 import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/ui/surface'
@@ -75,7 +75,7 @@ export function DrawerCobro({
   ]
 
   return (
-    <Sheet
+    <RightDrawer
       open={!!cita}
       onOpenChange={(op) => !op && onClose()}
       title="Cobrar servicio"
@@ -133,7 +133,7 @@ export function DrawerCobro({
           onChange={(e) => setNota(e.target.value)}
         />
       </div>
-    </Sheet>
+    </RightDrawer>
   )
 }
 
@@ -181,7 +181,7 @@ export function DrawerReagendar({
   }
 
   return (
-    <Sheet
+    <RightDrawer
       open={!!cita}
       onOpenChange={(op) => !op && onClose()}
       title="Reagendar cita"
@@ -224,7 +224,7 @@ export function DrawerReagendar({
           )}
         </div>
       </div>
-    </Sheet>
+    </RightDrawer>
   )
 }
 
@@ -297,7 +297,7 @@ export function DrawerNuevaCita({
   }
 
   return (
-    <Sheet
+    <RightDrawer
       open={open}
       onOpenChange={(op) => !op && onClose()}
       title="Nueva cita"
@@ -449,6 +449,6 @@ export function DrawerNuevaCita({
           </div>
         )}
       </div>
-    </Sheet>
+    </RightDrawer>
   )
 }
