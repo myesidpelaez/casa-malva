@@ -48,7 +48,7 @@ export function TituloEditorial({
     >
       {children}
       <br />
-      <span className="bg-gradient-to-r from-malva-700 via-malva-600 to-[var(--color-oro-editorial)] bg-clip-text text-transparent">
+      <span className="bg-gradient-to-r from-malva-700 via-malva-600 to-[var(--color-oro-editorial)] dark:from-malva-300 dark:via-malva-200 dark:to-[#E5C158] bg-clip-text text-transparent">
         {resalte}
       </span>
     </Etiqueta>

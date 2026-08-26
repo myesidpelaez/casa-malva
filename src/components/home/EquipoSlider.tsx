@@ -221,7 +221,7 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
                   </div>
 
                   <Link
-                    href="/reservar"
+                    href={`/reservar?professionalId=${prof.id}`}
                     className="glass-button-primary flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] font-semibold shadow-sm"
                   >
                     <Calendar className="h-4 w-4" strokeWidth={1.8} />

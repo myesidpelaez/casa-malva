@@ -63,7 +63,7 @@ export default async function InicioPage() {
                 href="/servicios"
                 className={cn(
                   buttonClass({ variant: 'glass', size: 'xl' }),
-                  'w-full sm:w-auto border-white/60 dark:border-ink-700 shadow-sm hover:border-malva-300'
+                  'w-full sm:w-auto shadow-sm'
                 )}
               >
                 <span>Explorar Lookbook</span>
@@ -72,22 +72,22 @@ export default async function InicioPage() {
             </div>
 
             {/* Badges de Confianza y Calidad con Glassmorphism */}
-            <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-malva-100/70 dark:border-ink-800/80 pt-6 text-left">
-              <div className="flex items-center gap-2.5 rounded-xl bg-white/40 dark:bg-ink-900/30 p-2 border border-white/60 dark:border-ink-800 backdrop-blur-xs">
-                <CheckCircle2 className="h-4 w-4 text-malva-600 shrink-0" />
-                <span className="text-[12.5px] text-ink-700 dark:text-ink-300 font-medium">Sin Esperas</span>
+            <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-malva-100/70 pt-6 text-left">
+              <div className="flex items-center gap-2.5 rounded-xl bg-[var(--card)]/85 p-2.5 border border-malva-200/80 shadow-xs backdrop-blur-md transition-all hover:border-malva-300">
+                <CheckCircle2 className="h-4.5 w-4.5 text-malva-600 shrink-0" />
+                <span className="text-[13px] text-ink-900 font-semibold">Sin Esperas</span>
               </div>
-              <div className="flex items-center gap-2.5 rounded-xl bg-white/40 dark:bg-ink-900/30 p-2 border border-white/60 dark:border-ink-800 backdrop-blur-xs">
-                <Sparkles className="h-4 w-4 text-[#C5A059] shrink-0" />
-                <span className="text-[12.5px] text-ink-700 dark:text-ink-300 font-medium">Alta Costura</span>
+              <div className="flex items-center gap-2.5 rounded-xl bg-[var(--card)]/85 p-2.5 border border-malva-200/80 shadow-xs backdrop-blur-md transition-all hover:border-malva-300">
+                <Sparkles className="h-4.5 w-4.5 text-[#C5A059] shrink-0" />
+                <span className="text-[13px] text-ink-900 font-semibold">Alta Costura</span>
               </div>
-              <div className="flex items-center gap-2.5 rounded-xl bg-white/40 dark:bg-ink-900/30 p-2 border border-white/60 dark:border-ink-800 backdrop-blur-xs">
-                <MapPin className="h-4 w-4 text-malva-600 shrink-0" />
-                <span className="text-[12.5px] text-ink-700 dark:text-ink-300 font-medium">El Poblado</span>
+              <div className="flex items-center gap-2.5 rounded-xl bg-[var(--card)]/85 p-2.5 border border-malva-200/80 shadow-xs backdrop-blur-md transition-all hover:border-malva-300">
+                <MapPin className="h-4.5 w-4.5 text-malva-600 shrink-0" />
+                <span className="text-[13px] text-ink-900 font-semibold">El Poblado</span>
               </div>
-              <div className="flex items-center gap-2.5 rounded-xl bg-white/40 dark:bg-ink-900/30 p-2 border border-white/60 dark:border-ink-800 backdrop-blur-xs">
-                <ShieldCheck className="h-4 w-4 text-success shrink-0" />
-                <span className="text-[12.5px] text-ink-700 dark:text-ink-300 font-medium">100% Botánico</span>
+              <div className="flex items-center gap-2.5 rounded-xl bg-[var(--card)]/85 p-2.5 border border-malva-200/80 shadow-xs backdrop-blur-md transition-all hover:border-malva-300">
+                <ShieldCheck className="h-4.5 w-4.5 text-success shrink-0" />
+                <span className="text-[13px] text-ink-900 font-semibold">100% Botánico</span>
               </div>
             </div>
           </Reveal>
@@ -180,15 +180,7 @@ export default async function InicioPage() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-ink-950/65 via-transparent to-transparent" />
                       
-                      {/* Badge con Icono flotante con Glassmorphism */}
-                      <span
-                        className={cn(
-                          'absolute right-3.5 top-3.5 grid h-9 w-9 place-items-center rounded-xl backdrop-blur-md shadow-md border border-white/40 text-white',
-                          look.tile
-                        )}
-                      >
-                        <Icon className="h-4.5 w-4.5" strokeWidth={1.8} />
-                      </span>
+                      
 
                       {/* Contador de servicios */}
                       <span className="absolute bottom-3 left-3.5 rounded-full bg-white/90 dark:bg-ink-900/90 px-3 py-0.5 text-[11px] font-semibold text-ink-800 dark:text-ink-200 backdrop-blur-md border border-white/60 dark:border-ink-700 shadow-xs">
@@ -198,18 +190,18 @@ export default async function InicioPage() {
 
                     {/* Cuerpo de la Card */}
                     <div className="flex flex-1 flex-col p-6">
-                      <h3 className="font-display text-[20px] font-semibold text-ink-900 dark:text-ink-50 group-hover:text-malva-700 dark:group-hover:text-malva-300 transition-colors">
+                      <h3 className="font-display text-[20px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors">
                         {cleanCategoryName(cat.nombre)}
                       </h3>
                       
-                      <p className="mt-2 flex-1 text-[13.5px] leading-relaxed text-ink-600 dark:text-ink-400 font-sans line-clamp-2">
+                      <p className="mt-2 flex-1 text-[13.5px] leading-relaxed text-ink-600 font-sans line-clamp-2">
                         {look.claim}
                       </p>
 
                       <div className="mt-5 flex items-center justify-between border-t border-malva-100/70 dark:border-ink-800/80 pt-3.5">
                         <span className="text-[12.5px] font-medium text-ink-400">Desde</span>
                         {desde !== null && (
-                          <span className="tnum text-[16px] font-semibold text-malva-700 dark:text-malva-300">
+                          <span className="tnum text-[16px] font-semibold text-malva-700">
                             {formatCurrencyFromCents(desde)}
                           </span>
                         )}
@@ -268,10 +260,10 @@ export default async function InicioPage() {
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   href="/reservar"
-                  className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-white px-8 py-4 text-[16px] font-bold text-ink-900 dark:text-ink-900 shadow-[0_10px_30px_rgba(0,0,0,0.35),0_0_20px_rgba(255,255,255,0.4)] hover:bg-white/95 hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-white px-8 py-4 text-[16px] font-bold text-[#1a1618] shadow-[0_10px_30px_rgba(0,0,0,0.35),0_0_24px_rgba(255,255,255,0.45)] hover:bg-white/95 hover:scale-105 active:scale-95 transition-all duration-200 font-display"
                 >
-                  <CalendarPlus className="h-5 w-5 text-malva-800" strokeWidth={2} />
-                  <span className="tracking-tight">Agendar Cita Ahora</span>
+                  <CalendarPlus className="h-5 w-5 text-malva-800" strokeWidth={2.2} />
+                  <span className="tracking-tight font-bold text-[#1a1618]">Agendar Cita Ahora</span>
                 </Link>
               </div>
 

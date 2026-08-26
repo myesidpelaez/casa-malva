@@ -1,55 +1,81 @@
-'use client'
+"use client"
 
 import * as React from 'react'
-import { motion } from 'framer-motion'
-import { MessageSquare, Send, RefreshCw, Sparkles, UserCheck, AlertCircle, Bot } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  MessageSquare,
+  Sparkles,
+  Send,
+  UserCheck,
+  AlertCircle,
+  RefreshCw,
+  Bot,
+  CalendarCheck,
+} from 'lucide-react'
 import { RightDrawer } from '@/components/ui/drawer'
 import { cn } from '@/lib/utils'
 
-type MensajeUI = {
+type MensajeChat = {
   id: string
-  rol: 'cliente' | 'agente'
+  rol: 'cliente' | 'agente' | 'sistema'
   texto: string
-  esError?: boolean
-}
-
-const MENSAJE_BIENVENIDA: MensajeUI = {
-  id: 'msg_welcome',
-  rol: 'agente',
-  texto: '¡Hola! Soy la recepcionista 24/7 de Casa Malva. ¿En qué te puedo ayudar hoy?',
 }
 
 export function ChatWidget() {
   const [abierto, setAbierto] = React.useState(false)
-  const [mensajes, setMensajes] = React.useState<MensajeUI[]>([MENSAJE_BIENVENIDA])
+  const [mensajes, setMensajes] = React.useState<MensajeChat[]>([
+    {
+      id: 'bienvenida_1',
+      rol: 'agente',
+      texto:
+        '¡Hola! Soy Malva, tu Concierge de belleza en Casa Malva. ¿En qué puedo consentirte hoy? Puedo ayudarte a consultar disponibilidad de especialistas, resolver dudas sobre rituales o agendar tu cita.',
+    },
+  ])
   const [inputTexto, setInputTexto] = React.useState('')
   const [cargando, setCargando] = React.useState(false)
   const [errorRed, setErrorRed] = React.useState<string | null>(null)
   const [ultimoMensajeFallido, setUltimoMensajeFallido] = React.useState<string | null>(null)
   const [escalado, setEscalado] = React.useState(false)
 
+  // Generamos un ID de sesión estable por pestaña/sesión de navegador
+  const [sessionId] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('casa_malva_chat_session')
+      if (stored) return stored
+      const nuevo = crypto.randomUUID()
+      sessionStorage.setItem('casa_malva_chat_session', nuevo)
+      return nuevo
+    }
+    return 'sesion_temp'
+  })
+
   const finalMensajesRef = React.useRef<HTMLDivElement>(null)
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
-  const scrollToBottom = React.useCallback(() => {
-    finalMensajesRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [])
-
+  // Auto-scroll al final con cada nuevo mensaje
   React.useEffect(() => {
     if (abierto) {
-      scrollToBottom()
-      setTimeout(() => inputRef.current?.focus(), 150)
+      finalMensajesRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [abierto, mensajes, cargando, scrollToBottom])
+  }, [mensajes, abierto, cargando])
 
-  async function enviarMensaje(textoAEnviar: string) {
-    const textoLimpio = textoAEnviar.trim()
+  // Focus en el input cuando se abre el drawer
+  React.useEffect(() => {
+    if (abierto) {
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 150)
+    }
+  }, [abierto])
+
+  async function enviarMensaje(texto: string) {
+    const textoLimpio = texto.trim()
     if (!textoLimpio || cargando) return
 
     setErrorRed(null)
     setUltimoMensajeFallido(null)
 
-    const mensajeUsuario: MensajeUI = {
+    const mensajeUsuario: MensajeChat = {
       id: `usr_${Date.now()}`,
       rol: 'cliente',
       texto: textoLimpio,
@@ -63,22 +89,15 @@ export function ChatWidget() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mensaje: textoLimpio }),
+        body: JSON.stringify({
+          sessionId,
+          mensaje: textoLimpio,
+        }),
       })
 
       if (!res.ok) {
         if (res.status === 429) {
-          const data = (await res.json().catch(() => ({}))) as { texto?: string }
-          setMensajes((prev) => [
-            ...prev,
-            {
-              id: `bot_${Date.now()}`,
-              rol: 'agente',
-              texto: data.texto || 'Has alcanzado el límite de mensajes por ahora. Te contactaremos pronto.',
-            },
-          ])
-          setEscalado(true)
-          return
+          throw new Error('Has enviado muchos mensajes seguidos. Espera un momento.')
         }
         throw new Error(`Error de servidor (${res.status})`)
       }
@@ -119,26 +138,33 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Botón flotante accesible abajo a la derecha */}
+      {/* Botón flotante editorial 'Malva · Concierge' */}
       <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40">
         <motion.button
           type="button"
           onClick={() => setAbierto(true)}
-          aria-label="Abrir chat con la recepcionista"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="group relative flex items-center gap-2.5 rounded-full bg-malva-700 hover:bg-malva-800 text-white px-4.5 py-3.5 shadow-xl transition-all border border-malva-500/30 focus:outline-none focus:ring-2 focus:ring-malva-400 focus:ring-offset-2"
+          aria-label="Abrir chat con Malva, tu Concierge de belleza"
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-malva-800 via-malva-700 to-malva-800 hover:from-malva-700 hover:to-malva-900 text-white px-4.5 py-3 shadow-[0_8px_25px_rgba(102,61,91,0.35)] transition-all border border-malva-300/30 focus:outline-none focus:ring-2 focus:ring-malva-400 focus:ring-offset-2 backdrop-blur-md cursor-pointer"
         >
           <div className="relative">
-            <MessageSquare className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <div className="grid h-7 w-7 place-items-center rounded-full bg-white/15 text-white">
+              <Sparkles className="h-4 w-4 text-malva-200" />
+            </div>
+            <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
           </div>
-          <span className="font-sans font-medium text-sm hidden sm:inline-block">
-            Chat en vivo
-          </span>
+          <div className="flex flex-col text-left hidden sm:flex">
+            <span className="font-display font-semibold text-[13.5px] leading-tight text-white tracking-tight">
+              Malva · Concierge
+            </span>
+            <span className="text-[10px] text-malva-200/90 font-sans leading-tight">
+              Atención 24/7
+            </span>
+          </div>
         </motion.button>
       </div>
 
@@ -148,23 +174,25 @@ export function ChatWidget() {
         onOpenChange={setAbierto}
         title={
           <div className="flex items-center gap-2.5 text-ink-900">
-            <div className="grid h-8 w-8 place-items-center rounded-full bg-malva-100 text-malva-700">
-              <Bot className="h-4.5 w-4.5" />
+            <div className="grid h-9 w-9 place-items-center rounded-full bg-malva-100 dark:bg-malva-950/60 text-malva-700 dark:text-malva-300 border border-malva-200/60">
+              <Sparkles className="h-4.5 w-4.5" />
             </div>
             <div>
-              <div className="text-base sm:text-lg font-display font-semibold">Recepcionista Casa Malva</div>
+              <div className="text-base sm:text-lg font-display font-semibold text-ink-900">
+                Malva · Concierge de Belleza
+              </div>
               <div className="text-xs text-ink-500 font-sans font-normal flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Atención 24/7
+                Asistente inteligente · Casa Malva 24/7
               </div>
             </div>
           </div>
         }
-        description="Pregúntale por disponibilidad, precios o agenda tu cita al instante."
+        description="Consulta disponibilidad de especialistas, cotiza rituales o agenda tu cita al instante."
         size="md"
         className="flex flex-col h-full"
       >
-        {/* Contenedor de mensajes (Cero Scroll compliant: flex-1 overflow-y-auto) */}
+        {/* Contenedor de mensajes */}
         <div className="flex flex-col gap-3 py-2 min-h-full justify-between">
           <div className="flex flex-col gap-3">
             {mensajes.map((m) => (
@@ -185,7 +213,7 @@ export function ChatWidget() {
             {cargando && (
               <div className="self-start flex items-center gap-2 rounded-2xl bg-[var(--card)] border border-ink-100 dark:border-ink-800 px-4 py-2.5 text-xs text-ink-500 shadow-sm rounded-bl-xs">
                 <Sparkles className="h-3.5 w-3.5 text-malva-500 animate-spin" />
-                <span>Escribiendo…</span>
+                <span>Malva está redactando…</span>
                 <span className="flex gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-malva-400 animate-bounce" />
                   <span className="h-1.5 w-1.5 rounded-full bg-malva-400 animate-bounce [animation-delay:0.2s]" />
@@ -204,7 +232,7 @@ export function ChatWidget() {
                 <button
                   type="button"
                   onClick={reintentar}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 text-xs font-medium shrink-0 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 text-xs font-medium shrink-0 transition-colors cursor-pointer"
                 >
                   <RefreshCw className="h-3 w-3" />
                   Reintentar
@@ -217,8 +245,8 @@ export function ChatWidget() {
               <div className="self-center w-full my-2 flex items-center gap-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3 text-xs text-amber-900 dark:text-amber-200">
                 <UserCheck className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                 <div>
-                  <span className="font-semibold">Te paso con una persona: </span>
-                  <span>Un miembro de nuestro equipo te contactará directamente para atenderte.</span>
+                  <span className="font-semibold">Te contacto con recepción: </span>
+                  <span>Una especialista de nuestro equipo te responderá directamente.</span>
                 </div>
               </div>
             )}
@@ -241,15 +269,15 @@ export function ChatWidget() {
                 onChange={(e) => setInputTexto(e.target.value.slice(0, 1000))}
                 onKeyDown={handleKeyDown}
                 rows={1}
-                placeholder="Escribe un mensaje... (Enter para enviar)"
+                placeholder="Pregúntale a Malva... (Enter para enviar)"
                 disabled={cargando}
                 className="w-full resize-none bg-transparent px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none disabled:opacity-50 min-h-[38px] max-h-32"
               />
               <button
                 type="submit"
                 disabled={cargando || !inputTexto.trim()}
-                aria-label="Enviar mensaje"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-malva-700 hover:bg-malva-800 text-white disabled:opacity-40 disabled:hover:bg-malva-700 transition-all"
+                aria-label="Enviar mensaje a Malva"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-malva-700 hover:bg-malva-800 text-white disabled:opacity-40 disabled:hover:bg-malva-700 transition-all cursor-pointer"
               >
                 <Send className="h-4 w-4" />
               </button>

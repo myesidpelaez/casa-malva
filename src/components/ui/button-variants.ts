@@ -12,7 +12,7 @@ export const buttonVariants = cva(
   [
     'relative inline-flex items-center justify-center gap-2 whitespace-nowrap',
     'font-semibold select-none cursor-pointer',
-    'transition-[background-color,border-color,color,box-shadow] duration-200',
+    'transition-[background-color,border-color,color,box-shadow,transform] duration-200',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-malva-600',
     'disabled:pointer-events-none disabled:opacity-45',
   ],
@@ -24,8 +24,8 @@ export const buttonVariants = cva(
           'sheen',
         ],
         glass: [
-          'glass glass-edge text-ink-900',
-          'hover:bg-[var(--card)]/80 hover:shadow-[var(--shadow-e3)]',
+          'glass glass-edge text-ink-900 border border-ink-200/80',
+          'hover:bg-[var(--card)]/80 hover:border-malva-300 hover:shadow-[var(--shadow-e3)]',
         ],
         soft: [
           'bg-malva-100 text-malva-700 border border-malva-200/60',
@@ -33,9 +33,9 @@ export const buttonVariants = cva(
         ],
         outline: [
           'border border-malva-300 bg-[var(--glass-tint)] text-malva-700 backdrop-blur-sm',
-          'hover:bg-malva-50 hover:border-malva-400',
+          'hover:bg-malva-100/60 hover:border-malva-400',
         ],
-        ghost: ['text-ink-500 hover:bg-ink-100/50 hover:text-ink-900'],
+        ghost: ['text-ink-600 hover:bg-ink-100/60 hover:text-ink-900'],
         danger: [
           'bg-danger text-white shadow-[var(--shadow-e2)]',
           'hover:brightness-110 active:brightness-95',

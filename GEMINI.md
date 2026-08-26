@@ -16,7 +16,7 @@ Medellín. Next.js 16 + React 19 + **Cloud Firestore** (Admin SDK). Repositorio 
 `github.com/myesidpelaez/casa-malva`.
 
 La **ficha de conocimiento** del proyecto vive aparte, en la bóveda:
-`D:\MEMORIA\01-PROYECTOS\spa-demo\`. Aquí va el código; allá va el porqué.
+`D:\Harmony` — doctrina, reglas y bitácoras. La historia anterior vive en `D:\memoria-antigua\01-PROYECTOS\spa-demo\`, **solo lectura**. Aquí va el código; allá va el porqué.
 
 ## Reparto de roles en esta tarea
 
@@ -38,12 +38,12 @@ inventados.
 3. Lee **`.agents/skills/`** → tus tres skills de Firebase (despliegue, seguridad, modelado).
    Son tuyas y son correctas: **el código las incumplió igual**. Contrástalas contra lo que
    escribas.
-4. Si la tarea toca la bóveda, arranca por `D:\MEMORIA\index.md` y `D:\MEMORIA\GEMINI.md`.
+4. Si la tarea toca la bóveda, arranca por `D:\Harmony\ARRANQUE.md`, luego `CONSTITUCION.md` y `ESTADO.md`.
 
 ## Lo que ya se sabe de este código (no lo redescubras)
 
 Una revisión del 2026-08-14 encontró 16 hallazgos. Están en
-`D:\MEMORIA\01-PROYECTOS\spa-demo\revision-migracion-firestore.md` con archivo, línea y arreglo.
+`D:\memoria-antigua\01-PROYECTOS\spa-demo\revision-migracion-firestore.md` (solo lectura) con archivo, línea y arreglo.
 **Léela antes de tocar `citas.ts`, `db.ts`, `withAuth.ts` o `disponibilidad.ts`.**
 
 Los cuatro que siguen abiertos y **no debes empeorar**:
@@ -83,7 +83,7 @@ estuvo un día entero sin poder desplegarse y nadie lo notó (hallazgo F17).
 
 ## Cómo reportas
 
-**Protocolo completo y obligatorio:** `D:\MEMORIA\06-AGENTES\antigravity-protocolo-de-cierre.md`.
+**Protocolo completo y obligatorio:** `D:\Harmony\protocolos\CIERRE.md` y `D:\Harmony\biblioteca\antigravity-lecciones.md`.
 Léelo entero antes de cerrar cualquier tarea y **rellena su plantilla de seis secciones**.
 
 Lo esencial:

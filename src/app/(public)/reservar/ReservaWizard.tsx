@@ -2,10 +2,12 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft,
   CalendarCheck2,
+  Check,
   CheckCircle2,
   Clock,
   Info,
@@ -16,14 +18,20 @@ import {
   Sunset,
   TriangleAlert,
   User,
+  Calendar as CalendarIcon,
+  ShieldCheck,
 } from 'lucide-react'
 import { crearCitaAction, franjasDelDiaAction, diasConCuposAction } from '@/actions/citas'
 import { formatCurrencyFromCents } from '@/lib/currency'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
 import { claveDia, isSunday, startOfDay } from '@/lib/disponibilidad'
 import { fechaLarga, hora as horaCorta } from '@/lib/fechas'
-import { humanDuration, cleanCategoryName, getProfessionalAvatar } from '@/lib/catalogo-ui'
-import Image from 'next/image'
+import {
+  humanDuration,
+  cleanCategoryName,
+  getProfessionalAvatar,
+  getServiceImage,
+} from '@/lib/catalogo-ui'
 import { normalizePhoneE164 } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { spring, tween } from '@/lib/motion'
@@ -35,29 +43,30 @@ import { Field } from '@/components/ui/field'
 import { Stepper } from '@/components/ui/segmented'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/common/EmptyState'
+import { Reveal } from '@/components/common/Reveal'
 import { Marca, TituloEditorial } from '@/components/brand'
 import type { Appointment, Category, Professional, Service } from '@/types'
 
 type Franja = { inicioUtc: string; professionalId: string; professionalNombre: string }
 
-const PASOS = ['Servicio', 'Profesional', 'Fecha y hora', 'Tus datos', 'Confirmar'] as const
+const PASOS = ['Servicio', 'Especialista', 'Fecha y hora', 'Tus datos', 'Confirmar'] as const
 const DIAS_VISIBLES = 14
 
 export function ReservaWizard({
   serviceIdInicial,
+  professionalIdInicial,
   categories,
   services,
   professionals,
   estado,
 }: {
   serviceIdInicial: string | null
+  professionalIdInicial?: string | null
   categories: Category[]
   services: Service[]
   professionals: Professional[]
   /**
-   * Píldora de «Abierto ahora», ya renderizada. Llega hecha desde `page.tsx`
-   * porque depende de la hora y este componente es de cliente: calculada aquí
-   * daría una hora distinta de la del HTML del servidor.
+   * Píldora de «Abierto ahora», ya renderizada desde page.tsx
    */
   estado?: React.ReactNode
 }) {
@@ -70,7 +79,9 @@ export function ReservaWizard({
   const [servicio, setServicio] = React.useState<Service | null>(
     () => services.find((s) => s.id === serviceIdInicial) ?? null
   )
-  const [profesional, setProfesional] = React.useState<Professional | null>(null)
+  const [profesional, setProfesional] = React.useState<Professional | null>(
+    () => professionals.find((p) => p.id === professionalIdInicial) ?? null
+  )
   const [dia, setDia] = React.useState<Date>(() => startOfDay(new Date()))
   const [franja, setFranja] = React.useState<Franja | null>(null)
 
@@ -90,11 +101,12 @@ export function ReservaWizard({
   const irA = React.useCallback((destino: number) => {
     setDireccion(destino > paso ? 1 : -1)
     setPaso(destino)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [paso])
 
   const profesionalesDelServicio = React.useMemo(
     () =>
-      servicio ? professionals.filter((p) => p.serviceIds.includes(servicio.id)) : [],
+      servicio ? professionals.filter((p) => (p.serviceIds ?? []).includes(servicio.id)) : [],
     [servicio, professionals]
   )
 
@@ -107,19 +119,10 @@ export function ReservaWizard({
     })
   }, [])
 
-  /* --- Disponibilidad: se pide al servidor, nunca se calcula en el navegador
-         con la tabla de citas de todas las clientas.
-
-     ⚠️ `paso` NO va en las dependencias. Estuvo, y provocaba esto: al avanzar
-     del paso 3 al 4 el efecto se volvía a ejecutar, hacía `setFranja(null)` y
-     borraba la hora que la clienta acababa de elegir — el paso de confirmación
-     se quedaba en blanco. La disponibilidad depende del servicio, de la
-     profesional y del día. De nada más.
-     ------------------------------------------------------------------------ */
+  /* --- Disponibilidad: se pide al servidor --- */
   React.useEffect(() => {
     if (!servicio) return
     let vivo = true
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCargandoFranjas(true)
     setFranja(null)
 
@@ -163,11 +166,11 @@ export function ReservaWizard({
 
   function validarDatos(): boolean {
     const e: Record<string, string> = {}
-    if (nombre.trim().length < 3) e.nombre = 'Escribe tu nombre y apellido.'
+    if (nombre.trim().length < 3) e.nombre = 'Escribe tu nombre y apellido completo.'
     const soloDigitos = telefono.replace(/\D/g, '')
-    if (soloDigitos.length < 10) e.telefono = 'Necesitamos 10 dígitos para escribirte por WhatsApp.'
+    if (soloDigitos.length < 10) e.telefono = 'Necesitamos 10 dígitos para contactarte por WhatsApp.'
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()))
-      e.email = 'Ese correo no parece válido.'
+      e.email = 'Ese correo electrónico no parece válido.'
     setErrores(e)
     return Object.keys(e).length === 0
   }
@@ -197,9 +200,8 @@ export function ReservaWizard({
 
     if (res.error === 'cupo_ocupado') {
       setErrorReserva(
-        'Ese cupo se acaba de ocupar. Elige otra hora — abajo están las siguientes libres.'
+        'Ese cupo se acaba de ocupar. Elige otra hora — abajo están las siguientes disponibles.'
       )
-      // Se recargan las horas del día para que la lista refleje la realidad.
       const nuevas = await franjasDelDiaAction(servicio.id, dia.toISOString(), profesional?.id)
       if (nuevas.ok) setFranjas(nuevas.data)
       setFranja(null)
@@ -211,85 +213,115 @@ export function ReservaWizard({
 
   /* ======================= PANTALLA DE ÉXITO ======================= */
   if (exito) {
-    return <Confirmacion cita={exito} servicio={servicio} onNueva={() => {
-      setExito(null)
-      setServicio(null)
-      setProfesional(null)
-      setFranja(null)
-      setNombre('')
-      setTelefono('')
-      setEmail('')
-      setPaso(0)
-    }} />
+    return (
+      <Confirmacion
+        cita={exito}
+        servicio={servicio}
+        onNueva={() => {
+          setExito(null)
+          setServicio(null)
+          setProfesional(null)
+          setFranja(null)
+          setNombre('')
+          setTelefono('')
+          setEmail('')
+          setPaso(0)
+        }}
+      />
+    )
   }
 
-  const puedeAvanzar =
-    (paso === 0 && !!servicio) ||
-    (paso === 1 && !!servicio) ||
-    (paso === 2 && !!franja) ||
-    paso === 3 ||
-    paso === 4
-
   return (
-    <div className="mx-auto max-w-3xl px-4 py-[var(--spacing-fib-3)] sm:px-6 sm:py-[var(--spacing-fib-4)]">
-      {/* --------- Cabecera con paso y resumen vivo --------- */}
-      <div className="sticky top-[68px] z-30 -mx-4 mb-[var(--spacing-fib-3)] px-4 py-3 sm:-mx-6 sm:px-6">
-        <Surface material="frost" radius="lg" pad="sm" className="space-y-3">
-          <div className="flex items-center gap-3">
-            {paso > 0 && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Volver al paso anterior"
-                onClick={() => irA(paso - 1)}
-              >
-                <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-              </Button>
-            )}
-            <div className="min-w-0 flex-1">
-              <Stepper steps={[...PASOS]} current={paso} onStepClick={irA} />
-            </div>
-          </div>
-
-          {servicio && (
-            <div className="flex flex-wrap items-center gap-1.5 border-t border-malva-100 pt-2.5">
-              <Badge tone="malva" size="sm">
-                {servicio.nombre}
-              </Badge>
-              {profesional && (
-                <Badge tone="glass" size="sm">
-                  {profesional.nombre}
-                </Badge>
-              )}
-              {franja && (
-                <Badge tone="glass" size="sm">
-                  {fechaLarga(franja.inicioUtc)} · {horaCorta(franja.inicioUtc)}
-                </Badge>
-              )}
-              <span className="tnum ml-auto text-[13px] font-semibold text-malva-700">
-                {formatCurrencyFromCents(servicio.precioCentavos)}
-              </span>
-            </div>
-          )}
-        </Surface>
+    <div className="relative min-h-[80vh] overflow-hidden pb-16">
+      {/* Aura ambiental orgánica de fondo */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[450px] w-[800px] rounded-full bg-gradient-to-br from-malva-200/30 via-blush/20 to-champagne/15 blur-[110px] dark:from-malva-950/40 dark:via-malva-900/20 dark:to-transparent" />
+        <div className="absolute top-[500px] -right-32 h-[450px] w-[450px] rounded-full bg-gradient-to-bl from-malva-300/20 via-blush/15 to-transparent blur-[120px] dark:from-malva-900/15 dark:to-transparent" />
       </div>
 
-      {errorReserva && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={tween.base}
-          role="alert"
-          className="mb-4 flex items-start gap-2.5 rounded-[var(--radius-md)] border border-danger/25 bg-danger-soft px-4 py-3 text-[13px] text-danger"
-        >
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
-          <p>{errorReserva}</p>
-        </motion.div>
-      )}
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-[var(--spacing-fib-3)] sm:py-[var(--spacing-fib-4)]">
+        
+        {/* --------- Cabecera con paso y resumen vivo --------- */}
+        <div className="sticky top-[68px] z-30 mb-[var(--spacing-fib-4)]">
+          <Surface
+            material="frost"
+            radius="xl"
+            pad="sm"
+            className="border border-malva-200/80 bg-[var(--card)]/90 shadow-md backdrop-blur-md dark:border-ink-800"
+          >
+            <div className="flex items-center gap-3">
+              {paso > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Volver al paso anterior"
+                  onClick={() => irA(paso - 1)}
+                  className="shrink-0 text-malva-700 hover:bg-malva-100"
+                >
+                  <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
+                </Button>
+              )}
+              <div className="min-w-0 flex-1">
+                <Stepper steps={[...PASOS]} current={paso} onStepClick={irA} />
+              </div>
+            </div>
 
-      {/* --------- Pasos --------- */}
-      <div className="relative overflow-hidden">
-        <div key={paso} className={direccion >= 0 ? 'paso-adelante' : 'paso-atras'}>
+            {servicio && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="flex flex-wrap items-center gap-2 border-t border-malva-100/90 dark:border-ink-800/80 pt-2.5 mt-2"
+              >
+                <Badge tone="malva" size="sm" className="font-medium">
+                  {servicio.nombre}
+                </Badge>
+                {profesional ? (
+                  <Badge tone="glass" size="sm" className="font-medium">
+                    {profesional.nombre}
+                  </Badge>
+                ) : paso >= 2 ? (
+                  <Badge tone="glass" size="sm" className="font-medium text-ink-500">
+                    Cualquier especialista
+                  </Badge>
+                ) : null}
+                {franja && (
+                  <Badge tone="glass" size="sm" className="font-medium text-malva-700 dark:text-malva-300">
+                    {fechaLarga(franja.inicioUtc)} · {horaCorta(franja.inicioUtc)}
+                  </Badge>
+                )}
+                <span className="tnum ml-auto font-display text-[14px] sm:text-[15px] font-bold text-malva-700 dark:text-malva-300">
+                  {formatCurrencyFromCents(servicio.precioCentavos)}
+                </span>
+              </motion.div>
+            )}
+          </Surface>
+        </div>
+
+        {errorReserva && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={tween.base}
+            role="alert"
+            className="mb-6 flex items-start gap-3 rounded-[var(--radius-lg)] border border-danger/25 bg-danger-soft p-4 text-[13.5px] text-danger shadow-sm"
+          >
+            <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
+            <p className="font-medium">{errorReserva}</p>
+          </motion.div>
+        )}
+
+        {/* --------- Contenedor de Pasos con Transición Editorial --------- */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={paso}
+            initial={{ opacity: 0, x: direccion * 18 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -direccion * 18 }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+          >
             {paso === 0 && (
               <PasoServicio
                 categories={categories}
@@ -359,16 +391,15 @@ export function ReservaWizard({
                 onConfirmar={confirmar}
               />
             )}
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
-
-      {!puedeAvanzar && null}
     </div>
   )
 }
 
 /* ========================================================================
-   PASO 1 — Servicio
+   PASO 1 — Selección de Servicio con Filtros por Especialidad
    ===================================================================== */
 function PasoServicio({
   categories,
@@ -383,86 +414,145 @@ function PasoServicio({
   onSelect: (s: Service) => void
   estado?: React.ReactNode
 }) {
+  const [categoriaFiltro, setCategoriaFiltro] = React.useState<string>('todas')
+
+  const categoriasConServicios = React.useMemo(
+    () => categories.filter((c) => services.some((s) => s.categoryId === c.id && s.activo)),
+    [categories, services]
+  )
+
+  const serviciosVisibles = React.useMemo(() => {
+    if (categoriaFiltro === 'todas') return services.filter((s) => s.activo)
+    return services.filter((s) => s.categoryId === categoriaFiltro && s.activo)
+  }, [categoriaFiltro, services])
+
   return (
-    <section className="space-y-[var(--spacing-fib-3)]">
-      {/*
-        Solo este paso lleva el titular de alta costura: es donde se llega desde
-        la portada y donde conviene que la marca siga sonando igual. Del paso 2
-        en adelante el wizard es un formulario, y un titular de 46px le robaría
-        a la rejilla de horas el sitio que necesita.
-      */}
-      <header>
-        {estado}
-        <TituloEditorial as="h1" size="seccion" resalte="te vas a hacer?" className="mt-3">
-          ¿Qué
+    <section className="space-y-6 sm:space-y-8">
+      <header className="text-center sm:text-left space-y-2">
+        <div className="flex items-center justify-center sm:justify-start gap-2">
+          {estado}
+          <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+            Paso 1 · Catálogo de autor
+          </span>
+        </div>
+        <TituloEditorial as="h1" size="seccion" resalte="te vas a regalar?" className="mt-2">
+          ¿Qué ritual
         </TituloEditorial>
-        <p className="mt-3 text-[15px] leading-relaxed text-ink-500">
-          Elige un servicio para ver las horas libres de verdad.
+        <p className="text-[15px] sm:text-[16px] text-ink-600 font-sans">
+          Elige el servicio que deseas para consultar la disponibilidad en tiempo real.
         </p>
       </header>
 
-      {categories.map((cat) => {
-        const items = services.filter((s) => s.categoryId === cat.id)
-        if (items.length === 0) return null
+      {/* Selector de pestañas por categoría */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <button
+          type="button"
+          onClick={() => setCategoriaFiltro('todas')}
+          className={cn(
+            'px-4 py-2 rounded-full text-[13px] font-semibold transition-all shrink-0 cursor-pointer',
+            categoriaFiltro === 'todas'
+              ? 'bg-malva-700 text-white shadow-sm'
+              : 'bg-[var(--card)] border border-ink-200/80 text-ink-600 hover:border-malva-300 hover:text-ink-900'
+          )}
+        >
+          Todos ({services.filter((s) => s.activo).length})
+        </button>
+        {categoriasConServicios.map((cat) => {
+          const conteo = services.filter((s) => s.categoryId === cat.id && s.activo).length
+          const activa = categoriaFiltro === cat.id
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setCategoriaFiltro(cat.id)}
+              className={cn(
+                'px-4 py-2 rounded-full text-[13px] font-semibold transition-all shrink-0 cursor-pointer',
+                activa
+                  ? 'bg-malva-700 text-white shadow-sm'
+                  : 'bg-[var(--card)] border border-ink-200/80 text-ink-600 hover:border-malva-300 hover:text-ink-900'
+              )}
+            >
+              {cleanCategoryName(cat.nombre)} ({conteo})
+            </button>
+          )
+        })}
+      </div>
 
-        return (
-          <div key={cat.id} className="space-y-2.5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-malva-600">
-              {cleanCategoryName(cat.nombre)}
-            </h2>
+      {/* Grilla editorial de servicios */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {serviciosVisibles.map((s) => {
+          const activo = seleccionado?.id === s.id
+          const imageUrl = getServiceImage(s)
+          const requiereConfirmacion =
+            s.requiereConfirmacion || s.precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos
 
-            <div className="grid gap-2.5 sm:grid-cols-2">
-              {items.map((s) => {
-                const activo = seleccionado?.id === s.id
-                return (
-                  <Surface
-                    key={s.id}
-                    as="div"
-                    interactive
-                    pad="sm"
-                    radius="md"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => onSelect(s)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        onSelect(s)
-                      }
-                    }}
-                    className={cn(
-                      'text-left',
-                      activo && 'ring-2 ring-malva-500 ring-offset-2 ring-offset-[var(--canvas)]'
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-[14.5px] font-semibold leading-snug text-ink-900">
-                        {s.nombre}
-                      </h3>
-                      <span className="tnum shrink-0 text-[14px] font-semibold text-malva-700">
-                        {formatCurrencyFromCents(s.precioCentavos)}
-                      </span>
-                    </div>
-                    <p className="mt-1 flex items-center gap-1.5 text-[12px] text-ink-400">
-                      <Clock className="h-3 w-3" strokeWidth={2} />
+          return (
+            <div
+              key={s.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => onSelect(s)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onSelect(s)
+                }
+              }}
+              className={cn(
+                'group relative flex flex-col justify-between rounded-[20px] border p-4 transition-all duration-300 cursor-pointer overflow-hidden',
+                'bg-[var(--card)] shadow-2xs hover:shadow-lg hover:shadow-malva-900/5 hover:-translate-y-0.5',
+                activo
+                  ? 'border-malva-600 ring-2 ring-malva-600/90 shadow-md'
+                  : 'border-ink-200/80 hover:border-malva-300'
+              )}
+            >
+              <div className="flex gap-4">
+                {/* Miniatura fotográfica */}
+                <div className="relative h-20 w-20 sm:h-22 sm:w-22 shrink-0 rounded-[14px] overflow-hidden bg-malva-100 shadow-2xs">
+                  <Image
+                    src={imageUrl}
+                    alt={s.nombre}
+                    fill
+                    sizes="88px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+
+                {/* Contenido textual */}
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-display text-[16px] sm:text-[17px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug">
+                      {s.nombre}
+                    </h3>
+                  </div>
+
+                  <span className="tnum block font-display text-[16px] sm:text-[17px] font-bold text-malva-700 dark:text-malva-300">
+                    {formatCurrencyFromCents(s.precioCentavos)}
+                  </span>
+
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[12px] text-ink-500">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-ink-100/70 px-2 py-0.5 font-medium text-ink-700">
+                      <Clock className="h-3 w-3 text-malva-600" />
                       {humanDuration(s.duracionMin)}
-                      {s.precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos && (
-                        <span className="ml-1 text-warning">· confirmamos por WhatsApp</span>
-                      )}
-                    </p>
-                  </Surface>
-                )
-              })}
+                    </span>
+                    {requiereConfirmacion && (
+                      <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                        · Confirmación previa
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </section>
   )
 }
 
 /* ========================================================================
-   PASO 2 — Profesional
+   PASO 2 — Selección de Especialista (Retratos de Alta Costura)
    ===================================================================== */
 function PasoProfesional({
   servicio,
@@ -476,27 +566,29 @@ function PasoProfesional({
   onSelect: (p: Professional | null) => void
 }) {
   return (
-    <section className="space-y-[var(--spacing-fib-3)]">
-      <header>
-        <h1 className="font-display text-[26px] font-semibold text-ink-900">
-          ¿Con quién?
-        </h1>
-        <p className="text-[13.5px] text-ink-500">
-          Solo aparecen quienes hacen <strong>{servicio.nombre}</strong>.
+    <section className="space-y-6 sm:space-y-8">
+      <header className="text-center sm:text-left space-y-2">
+        <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+          Paso 2 · Equipo de especialistas
+        </span>
+        <TituloEditorial as="h1" size="seccion" resalte="confías tu ritual?" className="mt-2">
+          ¿En manos de quién
+        </TituloEditorial>
+        <p className="text-[15px] sm:text-[16px] text-ink-600 font-sans">
+          Mostrando únicamente las profesionales certificadas para{' '}
+          <strong className="font-semibold text-ink-900">{servicio.nombre}</strong>.
         </p>
       </header>
 
       {opciones.length === 0 ? (
         <EmptyState
-          title="Nadie tiene este servicio habilitado"
-          description="El estudio asigna qué hace cada profesional desde su panel. Elige otro servicio o escríbenos."
+          title="Sin profesionales asignadas"
+          description="El estudio está configurando la asignación de este servicio. Por favor selecciona otro servicio o consúltanos."
         />
       ) : (
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          <Surface
-            interactive
-            pad="sm"
-            radius="md"
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Opción VIP: Primera disponible */}
+          <div
             role="button"
             tabIndex={0}
             onClick={() => onSelect(null)}
@@ -507,68 +599,94 @@ function PasoProfesional({
               }
             }}
             className={cn(
-              'sm:col-span-2',
-              seleccionado === null &&
-                'ring-2 ring-malva-500 ring-offset-2 ring-offset-[var(--canvas)]'
+              'sm:col-span-2 group relative flex items-center gap-4 rounded-[22px] border p-5 transition-all duration-300 cursor-pointer overflow-hidden',
+              'bg-gradient-to-r from-malva-50/70 via-[var(--card)] to-blush/30 dark:from-malva-950/40 dark:to-transparent',
+              seleccionado === null
+                ? 'border-malva-600 ring-2 ring-malva-600/90 shadow-md'
+                : 'border-ink-200/80 hover:border-malva-300 hover:shadow-md'
             )}
           >
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-malva-100 text-malva-600">
-                <Sparkles className="h-5 w-5" strokeWidth={1.6} />
-              </span>
-              <div>
-                <h3 className="text-[14.5px] font-semibold text-ink-900">
-                  La primera que esté libre
-                </h3>
-                <p className="text-[12.5px] text-ink-500">
-                  Más horas para elegir. Te decimos quién antes de confirmar.
-                </p>
-              </div>
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-malva-600 to-malva-800 text-white shadow-xs">
+              <Sparkles className="h-6 w-6 text-malva-200" strokeWidth={1.8} />
             </div>
-          </Surface>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-[17px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors">
+                  Cualquier especialista libre
+                </h3>
+                <span className="rounded-full bg-malva-100 px-2 py-0.5 text-[11px] font-bold text-malva-700">
+                  Más horarios
+                </span>
+              </div>
+              <p className="text-[13px] text-ink-500 mt-0.5">
+                Te asignamos la primera especialista disponible para que elijas entre la mayor cantidad de horas libres.
+              </p>
+            </div>
+          </div>
 
-          {opciones.map((p) => (
-            <Surface
-              key={p.id}
-              interactive
-              pad="sm"
-              radius="md"
-              role="button"
-              tabIndex={0}
-              onClick={() => onSelect(p)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  onSelect(p)
-                }
-              }}
-              className={cn(
-                seleccionado?.id === p.id &&
-                  'ring-2 ring-malva-500 ring-offset-2 ring-offset-[var(--canvas)]'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                {(() => {
-                const avatar = getProfessionalAvatar(p)
-                return avatar ? (
-                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 border-malva-200 shadow-sm">
-                    <Image src={avatar} alt={p.nombre} fill sizes="48px" className="object-cover" />
-                  </div>
-                ) : (
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-malva-500 to-malva-700 font-display text-lg font-semibold text-white">
-                    {p.nombre.charAt(0)}
-                  </span>
-                )
-              })()}
-                <div className="min-w-0">
-                  <h3 className="truncate text-[14.5px] font-semibold text-ink-900">
+          {/* Cards de Especialistas */}
+          {opciones.map((p) => {
+            const avatar = getProfessionalAvatar(p)
+            const activo = seleccionado?.id === p.id
+
+            return (
+              <div
+                key={p.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelect(p)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onSelect(p)
+                  }
+                }}
+                className={cn(
+                  'group relative flex items-center gap-4 rounded-[22px] border p-4.5 transition-all duration-300 cursor-pointer overflow-hidden',
+                  'bg-[var(--card)] shadow-2xs hover:shadow-lg hover:shadow-malva-900/5 hover:-translate-y-0.5',
+                  activo
+                    ? 'border-malva-600 ring-2 ring-malva-600/90 shadow-md'
+                    : 'border-ink-200/80 hover:border-malva-300'
+                )}
+              >
+                {/* Avatar fotográfico */}
+                <div className="relative h-16 w-16 shrink-0 rounded-2xl overflow-hidden border-2 border-malva-200/80 shadow-2xs bg-malva-100">
+                  {avatar ? (
+                    <Image
+                      src={avatar}
+                      alt={p.nombre}
+                      fill
+                      sizes="64px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <span className="grid h-full w-full place-items-center font-display text-xl font-semibold text-malva-700">
+                      {p.nombre.charAt(0)}
+                    </span>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-display text-[17px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-tight">
                     {p.nombre}
                   </h3>
-                  <p className="truncate text-[12.5px] text-ink-500">{p.cargo}</p>
+                  <p className="text-[13px] font-medium text-ink-500 mt-1">
+                    {p.cargo || 'Especialista en Belleza'}
+                  </p>
+                  <div className="flex items-center gap-1 mt-1 text-[11.5px] text-malva-600 font-medium">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-malva-500" />
+                    Disponible para este ritual
+                  </div>
                 </div>
+
+                {activo && (
+                  <div className="grid h-6 w-6 place-items-center rounded-full bg-malva-700 text-white shadow-xs shrink-0">
+                    <Check className="h-3.5 w-3.5" strokeWidth={2.8} />
+                  </div>
+                )}
               </div>
-            </Surface>
-          ))}
+            )
+          })}
         </div>
       )}
     </section>
@@ -576,7 +694,7 @@ function PasoProfesional({
 }
 
 /* ========================================================================
-   PASO 3 — Fecha y hora
+   PASO 3 — Calendario y Franja Horaria
    ===================================================================== */
 function PasoFechaHora({
   tira,
@@ -606,89 +724,110 @@ function PasoFechaHora({
   const total = manana.length + tarde.length
 
   return (
-    <section className="space-y-[var(--spacing-fib-3)]">
-      <header>
-        <h1 className="font-display text-[26px] font-semibold text-ink-900">
-          ¿Cuándo te viene bien?
-        </h1>
-        <p className="text-[13.5px] text-ink-500">
-          Los domingos cerramos y de 13:00 a 14:00 almorzamos.
+    <section className="space-y-6 sm:space-y-8">
+      <header className="text-center sm:text-left space-y-2">
+        <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+          Paso 3 · Agenda y horario
+        </span>
+        <TituloEditorial as="h1" size="seccion" resalte="te queda mejor?" className="mt-2">
+          ¿Qué día y hora
+        </TituloEditorial>
+        <p className="text-[15px] sm:text-[16px] text-ink-600 font-sans">
+          Abierto de lunes a sábado. Horario continuo con reserva previa garantizada.
         </p>
       </header>
 
-      {/* Tira de días */}
-      <div
-        className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0"
-        role="group"
-        aria-label="Elegir día"
-      >
-        {tira.map((d) => {
-          const domingo = isSunday(d)
-          const cupos = cuposPorDia[claveDia(d)]
-          const sinCupos = cupos === 0
-          const activo = startOfDay(dia).getTime() === d.getTime()
-          const deshabilitado = domingo || sinCupos
+      {/* Carrusel de días */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-ink-500">
+            Próximos 14 días disponibles
+          </span>
+          <span className="text-[11.5px] text-ink-400">Desliza para ver más días →</span>
+        </div>
 
-          return (
-            <motion.button
-              key={d.toISOString()}
-              type="button"
-              disabled={deshabilitado}
-              onClick={() => onDia(d)}
-              whileTap={deshabilitado ? undefined : { scale: 0.94 }}
-              transition={spring.snappy}
-              aria-pressed={activo}
-              aria-label={`${fechaLarga(d)}${
-                domingo ? ' (cerrado)' : sinCupos ? ' (sin cupos)' : ''
-              }`}
-              className={cn(
-                'flex w-[62px] shrink-0 flex-col items-center gap-0.5 rounded-[var(--radius-md)] border px-2 py-2.5 transition-colors',
-                activo
-                  ? 'border-transparent bg-malva-600 text-white shadow-[var(--shadow-malva)]'
-                  : deshabilitado
-                    ? 'cursor-not-allowed border-ink-100 bg-ink-50 text-ink-300'
-                    : 'border-ink-100 bg-[var(--glass-tint)] text-ink-900 backdrop-blur-sm hover:border-malva-300'
-              )}
-            >
-              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-80">
-                {d.toLocaleDateString('es-CO', { weekday: 'short' }).replace('.', '')}
-              </span>
-              <span className="tnum text-[19px] font-semibold leading-none">
-                {d.getDate()}
-              </span>
-              <span className="text-[9.5px] opacity-70">
-                {domingo
-                  ? 'cerrado'
-                  : cupos === undefined
-                    ? d.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')
-                    : sinCupos
-                      ? 'lleno'
-                      : `${cupos} libres`}
-              </span>
-            </motion.button>
-          )
-        })}
+        <div
+          className="scrollbar-none -mx-4 flex gap-2.5 overflow-x-auto px-4 pb-2 pt-1 sm:mx-0 sm:px-0"
+          role="group"
+          aria-label="Elegir día de cita"
+        >
+          {tira.map((d) => {
+            const domingo = isSunday(d)
+            const cupos = cuposPorDia[claveDia(d)]
+            const sinCupos = cupos === 0
+            const activo = startOfDay(dia).getTime() === d.getTime()
+            const deshabilitado = domingo || sinCupos
+
+            return (
+              <motion.button
+                key={d.toISOString()}
+                type="button"
+                disabled={deshabilitado}
+                onClick={() => onDia(d)}
+                whileTap={deshabilitado ? undefined : { scale: 0.95 }}
+                aria-pressed={activo}
+                className={cn(
+                  'flex w-[70px] sm:w-[76px] shrink-0 flex-col items-center gap-1 rounded-[18px] border p-3 transition-all duration-200 cursor-pointer',
+                  activo
+                    ? 'border-malva-700 bg-malva-700 text-white shadow-md shadow-malva-900/20 scale-[1.02]'
+                    : deshabilitado
+                      ? 'cursor-not-allowed border-ink-100 bg-ink-50/60 text-ink-300 dark:border-ink-800 dark:bg-ink-900/40'
+                      : 'border-ink-200/80 bg-[var(--card)] text-ink-900 hover:border-malva-300 hover:shadow-xs'
+                )}
+              >
+                <span
+                  className={cn(
+                    'text-[11px] font-bold uppercase tracking-wider',
+                    activo ? 'text-malva-100' : 'text-ink-400'
+                  )}
+                >
+                  {d.toLocaleDateString('es-CO', { weekday: 'short' }).replace('.', '')}
+                </span>
+                <span className="tnum font-display text-[21px] font-bold leading-none">
+                  {d.getDate()}
+                </span>
+                <span
+                  className={cn(
+                    'text-[10px] font-medium leading-tight',
+                    activo ? 'text-malva-200' : 'text-ink-500'
+                  )}
+                >
+                  {domingo
+                    ? 'Cerrado'
+                    : cupos === undefined
+                      ? d.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')
+                      : sinCupos
+                        ? 'Lleno'
+                        : `${cupos} libre${cupos > 1 ? 's' : ''}`}
+                </span>
+              </motion.button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Horas */}
-      <div className="space-y-[var(--spacing-fib-2)]">
+      {/* Grilla de Horas */}
+      <div className="space-y-5">
         {cargando ? (
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-11" />
-            ))}
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-32" />
+            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 rounded-xl" />
+              ))}
+            </div>
           </div>
         ) : total === 0 ? (
           <EmptyState
             compact
             icon={Clock}
-            title="No queda nada libre ese día"
-            description="Prueba con otro día de la tira de arriba: los que están apagados ya están llenos."
+            title="Sin cupos disponibles para esta fecha"
+            description="Elige otro día en la barra superior. Si requieres un horario especial, consúltanos por chat."
           />
         ) : (
-          <>
+          <div className="space-y-6">
             <BloqueHoras
-              titulo="Mañana"
+              titulo="Jornada Mañana"
               icono={Sun}
               franjas={manana}
               seleccionada={franja}
@@ -696,26 +835,29 @@ function PasoFechaHora({
               mostrarProfesional={mostrarProfesional}
             />
             <BloqueHoras
-              titulo="Tarde"
+              titulo="Jornada Tarde"
               icono={Sunset}
               franjas={tarde}
               seleccionada={franja}
               onSelect={onFranja}
               mostrarProfesional={mostrarProfesional}
             />
-          </>
+          </div>
         )}
       </div>
 
+      {/* Botón flotante para continuar tras seleccionar hora */}
       <AnimatePresence>
         {franja && (
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
+            exit={{ opacity: 0, y: 12 }}
             transition={spring.gentle}
+            className="pt-4"
           >
-            <Button size="lg" full onClick={onContinuar}>
+            <Button size="xl" full onClick={onContinuar}>
+              <CalendarCheck2 className="h-5 w-5" strokeWidth={1.8} />
               Continuar · {horaCorta(franja.inicioUtc)} con {franja.professionalNombre}
             </Button>
           </motion.div>
@@ -743,16 +885,18 @@ function BloqueHoras({
   if (franjas.length === 0) return null
 
   return (
-    <div className="space-y-2">
-      <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-400">
-        <Icono className="h-3.5 w-3.5" strokeWidth={2} />
-        {titulo}
-        <span className="tnum ml-auto normal-case tracking-normal">
-          {franjas.length} cupos
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 border-b border-ink-100/90 dark:border-ink-800 pb-2">
+        <Icono className="h-4 w-4 text-malva-600" strokeWidth={2} />
+        <h3 className="text-[12px] font-bold uppercase tracking-[0.14em] text-ink-700">
+          {titulo}
+        </h3>
+        <span className="tnum ml-auto text-[12px] font-semibold text-ink-500">
+          {franjas.length} franja{franjas.length > 1 ? 's' : ''}
         </span>
-      </h3>
+      </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 md:grid-cols-6">
         {franjas.map((f) => {
           const activa = seleccionada?.inicioUtc === f.inicioUtc
           return (
@@ -760,23 +904,25 @@ function BloqueHoras({
               key={f.inicioUtc}
               type="button"
               onClick={() => onSelect(f)}
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.96 }}
               transition={spring.snappy}
               aria-pressed={activa}
               className={cn(
-                'tnum flex h-11 flex-col items-center justify-center rounded-[var(--radius-sm)] border text-[13.5px] font-semibold transition-colors',
+                'tnum flex h-13 flex-col items-center justify-center rounded-[16px] border p-1 transition-all duration-200 cursor-pointer',
                 activa
-                  ? 'border-transparent bg-malva-600 text-white shadow-[var(--shadow-malva)]'
-                  : 'border-ink-100 bg-[var(--glass-tint)] text-ink-900 backdrop-blur-sm hover:border-malva-300'
+                  ? 'border-malva-700 bg-malva-700 text-white shadow-md shadow-malva-900/20 font-bold'
+                  : 'border-ink-200/80 bg-[var(--card)] text-ink-900 hover:border-malva-400 hover:bg-malva-50/50'
               )}
             >
-              {horaCorta(f.inicioUtc)}
+              <span className="font-display text-[15px] font-semibold leading-tight">
+                {horaCorta(f.inicioUtc)}
+              </span>
               {mostrarProfesional && (
                 <span
                   className={cn(
-                    'text-[9.5px] font-normal',
-                    activa ? 'text-white/75' : 'text-ink-400'
+                    'text-[10px] font-medium truncate max-w-[90%]',
+                    activa ? 'text-malva-200' : 'text-ink-500'
                   )}
                 >
                   {f.professionalNombre.split(' ')[0]}
@@ -791,7 +937,7 @@ function BloqueHoras({
 }
 
 /* ========================================================================
-   PASO 4 — Datos
+   PASO 4 — Datos de la Clienta (Sin fricción ni registros)
    ===================================================================== */
 function PasoDatos({
   nombre,
@@ -813,73 +959,90 @@ function PasoDatos({
   onContinuar: () => void
 }) {
   return (
-    <section className="space-y-[var(--spacing-fib-3)]">
-      <header>
-        <h1 className="font-display text-[26px] font-semibold text-ink-900">
-          ¿Cómo te escribimos?
-        </h1>
-        <p className="text-[13.5px] text-ink-500">
-          No hace falta crear una cuenta. Con tu número basta.
+    <section className="space-y-6 sm:space-y-8 max-w-xl mx-auto">
+      <header className="text-center space-y-2">
+        <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+          Paso 4 · Contacto de confirmación
+        </span>
+        <TituloEditorial as="h1" size="seccion" resalte="tus datos?" className="mt-2">
+          ¿A nombre de quién
+        </TituloEditorial>
+        <p className="text-[15px] text-ink-600 font-sans">
+          Sin crear contraseñas. Con tu número nos comunicamos para confirmar y recordarte la cita.
         </p>
       </header>
 
-      <form
-        className="max-w-md space-y-[var(--spacing-fib-2)]"
-        onSubmit={(e) => {
-          e.preventDefault()
-          onContinuar()
-        }}
+      <Surface
+        material="frost"
+        radius="xl"
+        pad="lg"
+        className="border border-malva-200/80 bg-[var(--card)] shadow-md dark:border-ink-800 space-y-5"
       >
-        <Field
-          label="Nombre y apellido"
-          required
-          icon={User}
-          autoComplete="name"
-          placeholder="María Fernanda Gómez"
-          value={nombre}
-          error={errores.nombre}
-          onChange={(e) => onNombre(e.target.value)}
-        />
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            onContinuar()
+          }}
+        >
+          <Field
+            label="Nombre y apellido completo"
+            required
+            icon={User}
+            autoComplete="name"
+            placeholder="Ej: Valentina Restrepo"
+            value={nombre}
+            error={errores.nombre}
+            onChange={(e) => onNombre(e.target.value)}
+          />
 
-        <Field
-          label="Celular (WhatsApp)"
-          required
-          icon={Phone}
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel"
-          placeholder="300 123 4567"
-          value={telefono}
-          error={errores.telefono}
-          hint={
-            telefono.replace(/\D/g, '').length >= 10
-              ? `Se guardará como ${normalizePhoneE164(telefono)}`
-              : 'Aquí te llega la confirmación y el recordatorio.'
-          }
-          onChange={(e) => onTelefono(e.target.value)}
-        />
+          <Field
+            label="Celular (WhatsApp para confirmación)"
+            required
+            icon={Phone}
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
+            placeholder="300 123 4567"
+            value={telefono}
+            error={errores.telefono}
+            hint={
+              telefono.replace(/\D/g, '').length >= 10
+                ? `Formato internacional: ${normalizePhoneE164(telefono)}`
+                : 'Te enviaremos los detalles y recordatorios a este número.'
+            }
+            onChange={(e) => onTelefono(e.target.value)}
+          />
 
-        <Field
-          label="Correo (opcional)"
-          icon={Mail}
-          type="email"
-          autoComplete="email"
-          placeholder="maria@correo.com"
-          value={email}
-          error={errores.email}
-          onChange={(e) => onEmail(e.target.value)}
-        />
+          <Field
+            label="Correo electrónico (opcional para recibo)"
+            icon={Mail}
+            type="email"
+            autoComplete="email"
+            placeholder="valentina@ejemplo.com"
+            value={email}
+            error={errores.email}
+            onChange={(e) => onEmail(e.target.value)}
+          />
 
-        <Button type="submit" size="lg" full>
-          Revisar la reserva
-        </Button>
-      </form>
+          <div className="pt-2">
+            <Button type="submit" size="xl" full>
+              Revisar resumen y confirmar
+            </Button>
+          </div>
+        </form>
+
+        <div className="flex items-center gap-2 pt-2 border-t border-ink-100 dark:border-ink-800 text-[12px] text-ink-500">
+          <ShieldCheck className="h-4 w-4 text-malva-600 shrink-0" />
+          <span>Tus datos son 100% privados y nunca enviamos publicidad no deseada.</span>
+        </div>
+      </Surface>
     </section>
   )
 }
 
 /* ========================================================================
-   PASO 5 — Confirmar
+   PASO 5 — Resumen Editorial & Confirmación Transaccional
    ===================================================================== */
 function PasoConfirmar({
   servicio,
@@ -901,74 +1064,105 @@ function PasoConfirmar({
     servicio.precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos
 
   return (
-    <section className="space-y-[var(--spacing-fib-3)]">
-      <header>
-        <h1 className="font-display text-[26px] font-semibold text-ink-900">
-          Todo listo, ¿confirmamos?
-        </h1>
-        <p className="text-[13.5px] text-ink-500">
-          Revisa los datos. El cupo se bloquea al confirmar.
+    <section className="space-y-6 sm:space-y-8 max-w-xl mx-auto">
+      <header className="text-center space-y-2">
+        <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+          Paso 5 · Resumen de reserva
+        </span>
+        <TituloEditorial as="h1" size="seccion" resalte="tu cita?" className="mt-2">
+          ¿Confirmamos
+        </TituloEditorial>
+        <p className="text-[15px] text-ink-600 font-sans">
+          Revisa que todo esté correcto. El cupo queda apartado inmediatamente al presionar el botón.
         </p>
       </header>
 
-      <Surface material="frost" radius="lg" pad="md" className="space-y-[var(--spacing-fib-2)]">
-        <div className="flex items-start justify-between gap-3 border-b border-malva-100 pb-3">
+      {/* Ticket Editorial de Alta Costura */}
+      <Surface
+        material="frost"
+        radius="xl"
+        pad="lg"
+        className="border border-malva-300/80 bg-[var(--card)] shadow-xl dark:border-ink-800 space-y-5"
+      >
+        {/* Cabecera del ticket */}
+        <div className="flex items-start justify-between gap-4 border-b border-malva-100/90 dark:border-ink-800 pb-4">
           <div>
-            <h2 className="font-display text-[19px] font-semibold text-ink-900">
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-malva-600">
+              Ritual Seleccionado
+            </span>
+            <h2 className="font-display text-[20px] sm:text-[22px] font-semibold text-ink-900 mt-0.5">
               {servicio.nombre}
             </h2>
-            <p className="text-[12.5px] text-ink-400">
-              {humanDuration(servicio.duracionMin)} en la silla
+            <p className="text-[13px] text-ink-500 font-medium mt-0.5">
+              Duración estimada: {humanDuration(servicio.duracionMin)}
             </p>
           </div>
-          <span className="tnum shrink-0 font-display text-[22px] font-semibold text-malva-700">
-            {formatCurrencyFromCents(servicio.precioCentavos)}
-          </span>
+          <div className="text-right">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">
+              Inversión
+            </span>
+            <span className="tnum block font-display text-[22px] sm:text-[24px] font-bold text-malva-700 dark:text-malva-300 leading-tight">
+              {formatCurrencyFromCents(servicio.precioCentavos)}
+            </span>
+          </div>
         </div>
 
-        <dl className="grid grid-cols-2 gap-y-3 text-[13px]">
-          <Dato etiqueta="Cuándo" valor={`${fechaLarga(franja.inicioUtc)}, ${horaCorta(franja.inicioUtc)}`} />
-          <Dato etiqueta="Con" valor={franja.professionalNombre} />
-          <Dato etiqueta="A nombre de" valor={nombre} />
-          <Dato etiqueta="Celular" valor={normalizePhoneE164(telefono)} />
+        {/* Desglose de Datos */}
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[13.5px]">
+          <Dato
+            etiqueta="Fecha y hora"
+            valor={`${fechaLarga(franja.inicioUtc)}, ${horaCorta(franja.inicioUtc)}`}
+          />
+          <Dato etiqueta="Especialista" valor={franja.professionalNombre} />
+          <Dato etiqueta="Clienta" valor={nombre} />
+          <Dato etiqueta="WhatsApp" valor={normalizePhoneE164(telefono)} />
         </dl>
 
         {requiereConfirmacion && (
-          <div className="flex items-start gap-2.5 rounded-[var(--radius-sm)] border border-warning/25 bg-warning-soft px-3.5 py-3 text-[12.5px] leading-relaxed text-warning">
-            <Info className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
+          <div className="flex items-start gap-3 rounded-[16px] border border-amber-500/30 bg-amber-500/10 p-3.5 text-[12.5px] leading-relaxed text-amber-900 dark:text-amber-200">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={2.2} />
             <p>
-              Es un servicio largo, así que lo dejamos{' '}
-              <strong className="font-semibold">por confirmar</strong> y te
-              escribimos por WhatsApp para cerrarlo. El cupo queda apartado
-              mientras tanto.
+              Por ser un servicio de alta especialización, queda registrado como{' '}
+              <strong className="font-semibold">por confirmar</strong> y te escribiremos directamente
+              para afinar los detalles de tu preparación.
             </p>
           </div>
         )}
+
+        <div className="pt-2">
+          <Button
+            size="xl"
+            full
+            loading={enviando}
+            loadingText="Apartando tu cupo..."
+            onClick={onConfirmar}
+          >
+            <CalendarCheck2 className="h-5 w-5" strokeWidth={1.8} />
+            Confirmar y apartar cupo
+          </Button>
+        </div>
+
+        <p className="text-center text-[12px] text-ink-500">
+          Al confirmar, aceptas nuestras políticas de reserva y puntualidad.
+        </p>
       </Surface>
-
-      <Button size="xl" full loading={enviando} loadingText="Reservando tu cupo…" onClick={onConfirmar}>
-        <CalendarCheck2 className="h-[18px] w-[18px]" strokeWidth={1.75} />
-        Confirmar mi cita
-      </Button>
-
-      <p className="text-center text-[11.5px] text-ink-400">
-        Al confirmar aceptas que te escribamos por WhatsApp sobre esta cita.
-      </p>
     </section>
   )
 }
 
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
-    <div>
-      <dt className="text-[11px] uppercase tracking-[0.1em] text-ink-400">{etiqueta}</dt>
-      <dd className="mt-0.5 font-semibold text-ink-900 first-letter:uppercase">{valor}</dd>
+    <div className="space-y-0.5">
+      <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">{etiqueta}</dt>
+      <dd className="font-semibold text-ink-900 first-letter:uppercase text-[14px] leading-snug">
+        {valor}
+      </dd>
     </div>
   )
 }
 
 /* ========================================================================
-   Pantalla final
+   PANTALLA DE ÉXITO (Ticket de Cita Confirmada)
    ===================================================================== */
 function Confirmacion({
   cita,
@@ -981,7 +1175,7 @@ function Confirmacion({
 }) {
   return (
     <div className="mx-auto max-w-lg px-4 py-[var(--spacing-fib-5)] sm:px-6">
-      <div className="relative mx-auto flex flex-col items-center justify-center">
+      <div className="relative mx-auto flex flex-col items-center justify-center text-center">
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -993,58 +1187,71 @@ function Confirmacion({
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 450, damping: 18, delay: 0.45 }}
-            className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--card)] bg-success text-white shadow-sm"
+            className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full border-2 border-[var(--card)] bg-emerald-600 text-white shadow-sm"
           >
-            <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
+            <CheckCircle2 className="h-5 w-5" strokeWidth={2.5} />
           </motion.span>
         </motion.div>
-      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...tween.base, delay: 0.18 }}
-        className="mt-[var(--spacing-fib-3)] text-center"
-      >
-        <h1 className="font-display text-[30px] font-semibold leading-tight text-ink-900">
-          {cita.estado === 'pendiente' ? 'Cupo apartado' : '¡Cita agendada!'}
-        </h1>
-        <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-ink-500">
-          {cita.estado === 'pendiente'
-            ? 'Te escribimos por WhatsApp para confirmarla. Tu cupo queda apartado mientras tanto.'
-            : 'Te esperamos en Casa Malva. Si necesitas moverla, escríbenos y la cambiamos.'}
-        </p>
-      </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...tween.base, delay: 0.18 }}
+          className="mt-6"
+        >
+          <span className="text-[11.5px] font-bold uppercase tracking-[0.14em] text-malva-700">
+            Reserva completada con éxito
+          </span>
+          <h1 className="font-display text-[32px] sm:text-[36px] font-semibold leading-tight text-ink-900 mt-1">
+            {cita.estado === 'pendiente' ? 'Cupo apartado' : '¡Tu cita está lista!'}
+          </h1>
+          <p className="mx-auto mt-2 max-w-sm text-[15px] leading-relaxed text-ink-600">
+            {cita.estado === 'pendiente'
+              ? 'Te escribiremos por WhatsApp para terminar de confirmarla.'
+              : 'Te esperamos en Casa Malva para brindarte una experiencia memorable.'}
+          </p>
+        </motion.div>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ...spring.gentle, delay: 0.26 }}
-        className="mt-[var(--spacing-fib-4)]"
+        className="mt-8"
       >
-        <Surface material="frost" radius="xl" pad="md" className="space-y-[var(--spacing-fib-2)]">
+        <Surface
+          material="frost"
+          radius="xl"
+          pad="lg"
+          className="border border-malva-300/80 bg-[var(--card)] shadow-xl dark:border-ink-800 space-y-4"
+        >
           <div className="flex items-center justify-between border-b border-malva-100 pb-3">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-ink-400">
-              Código de reserva
+            <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-ink-400">
+              Código de cita
             </span>
-            <span className="tnum font-mono text-[12.5px] font-semibold text-malva-700">
+            <span className="tnum font-mono text-[13px] font-bold text-malva-700 dark:text-malva-300 bg-malva-50 dark:bg-malva-950/60 px-2.5 py-0.5 rounded-md border border-malva-200/60">
               {cita.id}
             </span>
           </div>
 
-          <dl className="grid grid-cols-2 gap-y-3 text-[13px]">
-            <Dato etiqueta="Servicio" valor={servicio?.nombre ?? 'Servicio'} />
-            <Dato etiqueta="Cuándo" valor={`${fechaLarga(cita.inicioUtc)}, ${horaCorta(cita.inicioUtc)}`} />
+          <dl className="grid grid-cols-2 gap-y-3 text-[13.5px]">
+            <Dato etiqueta="Servicio" valor={servicio?.nombre ?? 'Ritual de Belleza'} />
+            <Dato
+              etiqueta="Fecha y hora"
+              valor={`${fechaLarga(cita.inicioUtc)}, ${horaCorta(cita.inicioUtc)}`}
+            />
             <div>
-              <dt className="text-[11px] uppercase tracking-[0.1em] text-ink-400">
-                Precio congelado
+              <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">
+                Inversión congelada
               </dt>
-              <dd className="tnum mt-0.5 font-semibold text-malva-700">
+              <dd className="tnum mt-0.5 font-display text-[16px] font-bold text-malva-700 dark:text-malva-300">
                 {formatCurrencyFromCents(cita.precioCentavos)}
               </dd>
             </div>
             <div>
-              <dt className="text-[11px] uppercase tracking-[0.1em] text-ink-400">Estado</dt>
+              <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">
+                Estado
+              </dt>
               <dd className="mt-0.5">
                 <StatusPill estado={cita.estado} size="md" />
               </dd>
@@ -1056,14 +1263,14 @@ function Confirmacion({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="mt-[var(--spacing-fib-3)] flex flex-col gap-2 sm:flex-row"
+        transition={{ delay: 0.38 }}
+        className="mt-6 flex flex-col gap-3 sm:flex-row"
       >
         <Button variant="glass" size="lg" full onClick={onNueva}>
-          Agendar otra cita
+          Agendar otro ritual
         </Button>
         <Link href="/inicio" className={buttonClass({ variant: 'soft', size: 'lg', full: true })}>
-          Volver al inicio
+          Volver a la portada
         </Link>
       </motion.div>
     </div>

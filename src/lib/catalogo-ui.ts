@@ -6,7 +6,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from 'lucide-react'
-import type { Category, Service } from '@/types'
+import type { Category, Professional, Service } from '@/types'
 
 /**
  * Presentación de las categorías del catálogo.
@@ -131,4 +131,19 @@ export function humanDuration(duracionMin: number): string {
   const m = duracionMin % 60
   if (m === 0) return `${h} h`
   return `${h} h ${m} min`
+}
+
+/**
+ * Retorna la lista de profesionales activas que ofrecen servicios dentro de una categoría.
+ */
+export function getSpecialistsForCategory(
+  professionals: Professional[],
+  category: Category,
+  services: Service[]
+): Professional[] {
+  const catServices = servicesOf(services, category).filter((s) => s.activo)
+  const catServiceIds = new Set(catServices.map((s) => s.id))
+  return professionals.filter(
+    (p) => p.activo && (p.serviceIds ?? []).some((sId: string) => catServiceIds.has(sId))
+  )
 }
