@@ -1,3 +1,17 @@
+> ## ⚠️ Documento histórico — hallazgos cerrados
+>
+> Esta auditoría es del **13 de agosto de 2026** y describe el estado del proyecto **en esa
+> fecha**. Los hallazgos críticos se corrigieron en el commit `3436dc2` (13-ago-2026) y
+> siguientes. En el código actual:
+>
+> - Las Server Actions **verifican sesión** antes de leer o mutar datos.
+> - `SESSION_SECRET` **ya no tiene valor por defecto**: la aplicación se niega a arrancar sin él.
+> - El usuario sembrado con contraseña `admin123` **fue eliminado**.
+> - Las claves de Firebase se leen **solo de variables de entorno**, sin valores de reserva.
+>
+> Se publica sin recortar a propósito: el proyecto encargó una auditoría independiente,
+> aceptó los hallazgos y los cerró. Eso es la parte que importa.
+
 # AUDITORÍA DE ESTADO REAL — CASA MALVA (spa-demo)
 **Fecha:** 2026-08-13  
 **Agente auditor:** Antigravity/gemini-3.6-flash  
