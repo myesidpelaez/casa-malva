@@ -3,50 +3,54 @@
 import * as React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-// framer-motion
-import { ChevronLeft, ChevronRight, Sparkles, Calendar, Award } from 'lucide-react'
-import type { Professional } from '@/types'
+import { Award, Calendar, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, ShieldCheck } from 'lucide-react'
 import { getProfessionalAvatar } from '@/lib/catalogo-ui'
 import { cn } from '@/lib/utils'
+import type { Professional } from '@/types'
 
-interface CopywritingEspecialista {
+type BioEspecialista = {
+  experiencia: string
   destaque: string
   bioCorta: string
-  experiencia: string
 }
 
-const BIO_ESPECIALISTAS: Record<string, CopywritingEspecialista> = {
-  pro_camila: {
-    destaque: 'Arquitectura de Mirada',
-    bioCorta: 'Diseño hiperrealista, lifting y laminado orgánico que potencian la armonía de tus facciones sin perder naturalidad.',
-    experiencia: '6+ años exp.',
-  },
+const BIO_ESPECIALISTAS: Record<string, BioEspecialista> = {
   pro_daniela: {
-    destaque: 'Balayage & Visagismo',
-    bioCorta: 'Colorimetría de autor y cortes de precisión con diagnóstico previo para un cabello radiante, sedoso y con caída natural.',
-    experiencia: '8+ años exp.',
+    experiencia: '8+ años de trayectoria',
+    destaque: 'Balayage & Colorimetría de Autor',
+    bioCorta:
+      'Colorimetría de alta precisión y cortes con diagnóstico previo para un cabello radiante, sedoso y con caída natural.',
   },
-  prof_marcela: {
-    destaque: 'Maquillaje & Novias',
-    bioCorta: 'Técnicas editoriales de alta definición y peinados de alfombra roja diseñados para durar impecables en tus eventos clave.',
-    experiencia: '7+ años exp.',
-  },
-  pro_valentina: {
-    destaque: 'Spa & Nail Art',
-    bioCorta: 'Escultura de uñas y esmaltado semipermanente de máxima duración con productos hipoalergénicos de grado premium.',
-    experiencia: '5+ años exp.',
+  pro_camila: {
+    experiencia: '6+ años de trayectoria',
+    destaque: 'Arquitectura de Mirada & Cejas',
+    bioCorta:
+      'Diseño hiperrealista, lifting y laminado botánico que potencian la armonía de tus facciones sin perder naturalidad.',
   },
   pro_sara: {
+    experiencia: '6+ años de trayectoria',
     destaque: 'Terapia & Spa Capilar',
-    bioCorta: 'Rituales de desintoxicación, nutrición intensiva y masajes relajantes que devuelven la fuerza y salud a tu fibra capilar.',
-    experiencia: '6+ años exp.',
+    bioCorta:
+      'Rituales de nutrición intensiva, detox y masajes relajantes que devuelven la fuerza, elasticidad y salud a tu fibra capilar.',
+  },
+  pro_valentina: {
+    experiencia: '5+ años de trayectoria',
+    destaque: 'Escultura & Spa de Uñas',
+    bioCorta:
+      'Escultura y esmaltado semipermanente de máxima duración con productos hipoalergénicos y cuidado de cutícula rusa.',
+  },
+  pro_marcela: {
+    experiencia: '7+ años de trayectoria',
+    destaque: 'Maquillaje Editorial & Social',
+    bioCorta:
+      'Técnicas de piel blindada, visagismo y acabados luminosos para novias, eventos de gala y sesiones fotográficas.',
   },
 }
 
-const BIO_FALLBACK: CopywritingEspecialista = {
+const BIO_FALLBACK: BioEspecialista = {
+  experiencia: '5+ años de trayectoria',
   destaque: 'Especialista de Autor',
-  bioCorta: 'Atención personalizada y técnicas botánicas para una experiencia de belleza inolvidable y resultados excepcionales.',
-  experiencia: 'Certificada',
+  bioCorta: 'Experta certificada en técnicas avanzadas de belleza y bienestar botánico.',
 }
 
 export function EquipoSlider({ professionals }: { professionals: Professional[] }) {
@@ -55,33 +59,32 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
   const [canScrollRight, setCanScrollRight] = React.useState(true)
   const [activeIndex, setActiveIndex] = React.useState(0)
 
-  const checkScroll = React.useCallback(() => {
+  const checkScrollability = React.useCallback(() => {
     if (!containerRef.current) return
     const { scrollLeft, scrollWidth, clientWidth } = containerRef.current
     setCanScrollLeft(scrollLeft > 10)
     setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
-    
-    // Calcular índice aproximado
-    const itemWidth = 320 + 20 // card width + gap
-    const newIndex = Math.round(scrollLeft / itemWidth)
-    setActiveIndex(Math.min(newIndex, professionals.length - 1))
+
+    const itemWidth = 390
+    const currentIndex = Math.round(scrollLeft / itemWidth)
+    setActiveIndex(Math.min(Math.max(currentIndex, 0), professionals.length - 1))
   }, [professionals.length])
 
   React.useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    checkScroll()
-    el.addEventListener('scroll', checkScroll, { passive: true })
-    window.addEventListener('resize', checkScroll)
+    checkScrollability()
+    el.addEventListener('scroll', checkScrollability, { passive: true })
+    window.addEventListener('resize', checkScrollability)
     return () => {
-      el.removeEventListener('scroll', checkScroll)
-      window.removeEventListener('resize', checkScroll)
+      el.removeEventListener('scroll', checkScrollability)
+      window.removeEventListener('resize', checkScrollability)
     }
-  }, [checkScroll])
+  }, [checkScrollability])
 
   const scroll = (direction: 'left' | 'right') => {
     if (!containerRef.current) return
-    const scrollAmount = 340
+    const scrollAmount = 400
     containerRef.current.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth',
@@ -90,7 +93,7 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
 
   const scrollToIndex = (index: number) => {
     if (!containerRef.current) return
-    const itemWidth = 340
+    const itemWidth = 400
     containerRef.current.scrollTo({
       left: index * itemWidth,
       behavior: 'smooth',
@@ -99,15 +102,15 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
 
   return (
     <div className="relative w-full">
-      {/* Controles del Slider en Desktop / Tablet */}
+      {/* Controles del Slider */}
       <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-malva-100/80 dark:bg-malva-950/60 px-3 py-1 text-[12px] font-semibold text-malva-700 dark:text-malva-300 border border-malva-200/50 dark:border-malva-800/60">
-            <Award className="h-3.5 w-3.5 text-[#C5A059]" />
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-malva-100/90 dark:bg-malva-950/80 px-3.5 py-1.5 text-[12.5px] font-bold text-malva-800 dark:text-malva-200 border border-malva-200/80 dark:border-malva-800 shadow-xs">
+            <Award className="h-4 w-4 text-[#C5A059]" />
             {professionals.length} Maestras en escena
           </span>
-          <span className="hidden text-xs text-ink-400 sm:inline">
-            Desliza para conocer a cada especialista
+          <span className="hidden text-[13px] text-ink-500 dark:text-ink-400 sm:inline font-medium">
+            3 especialistas por vista · Desliza para explorar el equipo
           </span>
         </div>
 
@@ -117,9 +120,9 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
             disabled={!canScrollLeft}
             aria-label="Anterior especialista"
             className={cn(
-              'grid h-10 w-10 place-items-center rounded-full border transition-all duration-200',
+              'grid h-10 w-10 place-items-center rounded-full border transition-all duration-200 cursor-pointer',
               canScrollLeft
-                ? 'border-malva-200/80 bg-white/90 text-malva-800 shadow-sm hover:bg-malva-50 hover:border-malva-300 active:scale-95 dark:bg-ink-900/80 dark:border-ink-700 dark:text-malva-200'
+                ? 'border-malva-300 bg-[var(--card)] text-malva-800 shadow-sm hover:bg-malva-50 hover:border-malva-400 active:scale-95 dark:border-ink-700 dark:text-malva-200'
                 : 'border-ink-100 bg-ink-50/50 text-ink-300 opacity-40 cursor-not-allowed dark:border-ink-800 dark:bg-ink-950 dark:text-ink-700'
             )}
           >
@@ -130,9 +133,9 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
             disabled={!canScrollRight}
             aria-label="Siguiente especialista"
             className={cn(
-              'grid h-10 w-10 place-items-center rounded-full border transition-all duration-200',
+              'grid h-10 w-10 place-items-center rounded-full border transition-all duration-200 cursor-pointer',
               canScrollRight
-                ? 'border-malva-200/80 bg-white/90 text-malva-800 shadow-sm hover:bg-malva-50 hover:border-malva-300 active:scale-95 dark:bg-ink-900/80 dark:border-ink-700 dark:text-malva-200'
+                ? 'border-malva-300 bg-[var(--card)] text-malva-800 shadow-sm hover:bg-malva-50 hover:border-malva-400 active:scale-95 dark:border-ink-700 dark:text-malva-200'
                 : 'border-ink-100 bg-ink-50/50 text-ink-300 opacity-40 cursor-not-allowed dark:border-ink-800 dark:bg-ink-950 dark:text-ink-700'
             )}
           >
@@ -141,7 +144,7 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
         </div>
       </div>
 
-      {/* Pista deslizable con Snap y soporte táctil */}
+      {/* Pista deslizable panorámica (3 columnas en desktop) */}
       <div
         ref={containerRef}
         className="no-scrollbar flex gap-6 overflow-x-auto scroll-smooth pb-6 pt-2 snap-x snap-mandatory focus:outline-none"
@@ -154,77 +157,80 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
           return (
             <div
               key={prof.id}
-              className="w-[285px] sm:w-[320px] shrink-0 snap-start flex flex-col"
+              className="w-[330px] sm:w-[380px] lg:w-[calc((100%-48px)/3)] shrink-0 snap-start flex flex-col"
             >
               <div
                 className={cn(
-                  'glass-card-editorial group flex h-full flex-col justify-between rounded-[24px] p-6 transition-all duration-300',
-                  'hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(61,20,56,0.12)] dark:hover:shadow-[0_16px_36px_rgba(0,0,0,0.5)]'
+                  'group flex h-full flex-col justify-between rounded-[26px] p-6 transition-all duration-300',
+                  'bg-[var(--card)] border border-ink-200/90 dark:border-ink-800 shadow-xs',
+                  'hover:-translate-y-1.5 hover:shadow-xl hover:shadow-malva-900/10 hover:border-malva-300 dark:hover:border-malva-500/50'
                 )}
               >
-                {/* Cabecera de la Card: Foto + Badges */}
+                {/* Cabecera Panorámica: Retrato + Identidad */}
                 <div>
-                  <div className="relative mx-auto mb-4 h-28 w-28">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-malva-500 via-[var(--color-oro-editorial)] to-malva-300 p-[2.5px] shadow-[0_6px_20px_rgba(102,61,91,0.22)]">
-                      <div className="relative h-full w-full overflow-hidden rounded-full bg-white dark:bg-ink-950">
-                        {avatar ? (
-                          <Image
-                            src={avatar}
-                            alt={prof.nombre}
-                            fill
-                            sizes="112px"
-                            className="object-cover transition-transform duration-500 group-hover:scale-108"
-                          />
-                        ) : (
-                          <span className="grid h-full w-full place-items-center bg-gradient-to-br from-malva-600 to-malva-800 font-display text-3xl font-semibold text-white">
-                            {prof.nombre.charAt(0)}
-                          </span>
-                        )}
-                      </div>
+                  <div className="flex items-start gap-4">
+                    {/* Retrato de la Maestra */}
+                    <div className="relative h-22 w-22 sm:h-24 sm:w-24 shrink-0 rounded-2xl overflow-hidden border-2 border-malva-200/90 dark:border-malva-800 shadow-md bg-malva-100">
+                      {avatar ? (
+                        <Image
+                          src={avatar}
+                          alt={prof.nombre}
+                          fill
+                          sizes="96px"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <span className="grid h-full w-full place-items-center font-display text-2xl font-bold text-malva-700">
+                          {prof.nombre.charAt(0)}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Badge flotante de experiencia */}
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/80 bg-white/95 px-2.5 py-0.5 text-[10.5px] font-semibold text-malva-800 shadow-sm backdrop-blur-md dark:border-ink-700 dark:bg-ink-900/90 dark:text-malva-200">
-                      {copy.experiencia}
+                    {/* Títulos y Especialidad */}
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <span className="inline-block rounded-md bg-malva-100/90 dark:bg-malva-950/80 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-malva-800 dark:text-malva-200">
+                        {copy.experiencia}
+                      </span>
+                      <h3 className="font-display text-[20px] sm:text-[21px] font-semibold text-ink-900 dark:text-white group-hover:text-malva-700 dark:group-hover:text-malva-300 transition-colors leading-tight">
+                        {prof.nombre}
+                      </h3>
+                      <p className="text-[13px] font-medium text-malva-700 dark:text-malva-300 leading-snug">
+                        {prof.cargo || 'Especialista de Autor'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Destaque de Maestría */}
+                  <div className="mt-4 rounded-xl bg-malva-50/70 dark:bg-malva-950/40 p-2.5 border border-malva-100/80 dark:border-malva-900/50">
+                    <span className="text-[11.5px] font-bold uppercase tracking-wide text-[#C5A059] block">
+                      ✦ {copy.destaque}
                     </span>
                   </div>
 
-                  {/* Nombre y Cargo */}
-                  <div className="text-center mt-2">
-                    <h3 className="font-display text-[20px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors">
-                      {prof.nombre}
-                    </h3>
-                    <p className="text-[13px] font-medium text-malva-600 dark:text-malva-400">
-                      {prof.cargo}
-                    </p>
-                    <span className="inline-block mt-1 text-[11px] font-semibold tracking-wide text-[#C5A059] uppercase">
-                      {copy.destaque}
-                    </span>
-                  </div>
-
-                  {/* Copywriting persuasivo de venta */}
-                  <p className="mt-3 text-center text-[13px] leading-relaxed text-ink-600 dark:text-ink-400 font-sans line-clamp-3">
+                  {/* Copywriting de Autor */}
+                  <p className="mt-3.5 text-[13.5px] leading-relaxed text-ink-600 dark:text-ink-300 font-sans line-clamp-3">
                     {copy.bioCorta}
                   </p>
                 </div>
 
-                {/* Footer de la Card: Cantidad de Tratamientos + CTA */}
-                <div className="mt-6 border-t border-malva-100/70 dark:border-malva-900/60 pt-4 flex flex-col gap-3">
-                  <div className="flex items-center justify-between text-xs text-ink-500">
-                    <span className="inline-flex items-center gap-1">
+                {/* Footer de la Card: Metadatos y CTA */}
+                <div className="mt-6 border-t border-ink-100/90 dark:border-ink-800/90 pt-4 space-y-3">
+                  <div className="flex items-center justify-between text-[12px] font-medium text-ink-500 dark:text-ink-400">
+                    <span className="inline-flex items-center gap-1.5">
                       <Sparkles className="h-3.5 w-3.5 text-[#C5A059]" />
-                      {prof.serviceIds.length} tratamientos
+                      {(prof.serviceIds ?? []).length} tratamientos de autor
                     </span>
-                    <span className="text-[11px] font-medium text-ink-400">
-                      Cita previa
+                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Agenda abierta
                     </span>
                   </div>
 
                   <Link
                     href={`/reservar?professionalId=${prof.id}`}
-                    className="glass-button-primary flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] font-semibold shadow-sm"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-malva-700 hover:bg-malva-800 text-white dark:bg-malva-600 dark:hover:bg-malva-500 py-3 text-[13.5px] font-bold shadow-md shadow-malva-900/15 transition-all duration-200 cursor-pointer"
                   >
-                    <Calendar className="h-4 w-4" strokeWidth={1.8} />
+                    <Calendar className="h-4 w-4" strokeWidth={2} />
                     <span>Agendar con {prof.nombre.split(' ')[0]}</span>
                   </Link>
                 </div>
@@ -235,16 +241,16 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
       </div>
 
       {/* Indicadores de Paginación Dots */}
-      <div className="mt-4 flex items-center justify-center gap-1.5">
+      <div className="mt-4 flex items-center justify-center gap-2">
         {professionals.map((_, index) => (
           <button
             key={index}
             onClick={() => scrollToIndex(index)}
             aria-label={`Ir a especialista ${index + 1}`}
             className={cn(
-              'h-2 rounded-full transition-all duration-300',
+              'h-2 rounded-full transition-all duration-300 cursor-pointer',
               activeIndex === index
-                ? 'w-6 bg-malva-600 dark:bg-malva-400'
+                ? 'w-7 bg-malva-600 dark:bg-malva-400'
                 : 'w-2 bg-malva-200 hover:bg-malva-300 dark:bg-ink-700'
             )}
           />

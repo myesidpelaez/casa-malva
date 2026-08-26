@@ -324,20 +324,20 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                               <h3 className="font-display text-[18px] sm:text-[19px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug">
                                 {service.nombre}
                               </h3>
-                              <span className="tnum font-display text-[18px] sm:text-[19px] font-bold text-malva-700 dark:text-malva-300 shrink-0">
+                              <span className="tnum font-display text-[18px] sm:text-[19px] font-bold text-malva-700 dark:text-malva-200 font-bold shrink-0">
                                 {formatCurrencyFromCents(service.precioCentavos)}
                               </span>
                             </div>
 
                             {/* Fila 2: Duración y Badge de Confirmación si aplica */}
                             <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-ink-500 font-medium">
-                              <span className="inline-flex items-center gap-1.5 rounded-md bg-ink-100/70 px-2 py-0.5 text-ink-700">
+                              <span className="inline-flex items-center gap-1.5 rounded-md bg-ink-100/80 dark:bg-ink-900/90 px-2.5 py-1 text-ink-800 dark:text-ink-200 border border-transparent dark:border-ink-700/60">
                                 <Clock className="h-3.5 w-3.5 text-malva-600 shrink-0" strokeWidth={2} />
                                 {humanDuration(service.duracionMin)}
                               </span>
 
                               {requiereConfirmacion && (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[11.5px] font-semibold text-amber-700 dark:text-amber-300">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[11.5px] font-semibold text-amber-800 dark:text-amber-200 font-semibold">
                                   <Info className="h-3 w-3 shrink-0" />
                                   Confirmación previa
                                 </span>
@@ -373,7 +373,7 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                                     )
                                   })}
                                 </div>
-                                <span className="text-[12px] text-ink-600 font-medium truncate">
+                                <span className="text-[12px] text-ink-600 dark:text-ink-300 font-medium truncate">
                                   {profsQueLoPrestan.map((p) => p.nombre.split(' ')[0]).join(', ')}
                                 </span>
                               </div>

@@ -113,25 +113,27 @@ export default async function InicioPage() {
                 {/* Degradado para garantizar contraste fotográfico */}
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950/75 via-ink-950/15 to-transparent" />
 
-                {/* Badge flotante inferior con Glassmorphism Cristalino y Alto Contraste */}
-                <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/80 bg-white/95 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-xl dark:bg-ink-950/95 dark:border-white/15 transition-all">
+                {/* Pasaporte Boutique / Sello de Casa Malva (Alto Contraste Bimodal Garantizado) */}
+                <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 rounded-2xl border border-white/90 dark:border-malva-400/30 bg-white/95 dark:bg-[#1C151B]/95 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-all">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-malva-50 dark:bg-malva-950/80 border border-malva-200/50 dark:border-malva-800">
-                        <Marca size={28} animate="breathe" className="text-malva-600 dark:text-malva-300 shrink-0" />
+                    <div className="flex items-center gap-3.5">
+                      {/* Monograma de la Marca en Oro/Malva con Contraste Puro */}
+                      <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-malva-700 via-malva-800 to-malva-950 text-white shadow-md shadow-malva-900/40 border border-white/20">
+                        <Marca size={24} variant="solida" color="#ffffff" animate="breathe" className="shrink-0" />
                       </div>
                       <div>
-                        <p className="font-display text-[15.5px] font-semibold text-ink-900 dark:text-ink-50">
+                        <p className="font-display text-[16px] font-bold text-ink-950 dark:text-white leading-tight">
                           Casa Malva Estudio
                         </p>
-                        <p className="text-[12px] font-medium text-ink-600 dark:text-ink-400">
-                          {REGLAS_NEGOCIO.sede.direccion}
+                        <p className="text-[12.5px] font-medium text-ink-600 dark:text-malva-200/90 flex items-center gap-1 mt-0.5">
+                          <MapPin className="h-3.5 w-3.5 text-malva-600 dark:text-[#C5A059] shrink-0" />
+                          <span>{REGLAS_NEGOCIO.sede.direccion}</span>
                         </p>
                       </div>
                     </div>
                     
-                    <span className="rounded-full bg-malva-700 dark:bg-malva-600 px-3.5 py-1.5 text-[11.5px] font-semibold text-white shrink-0 shadow-sm">
-                      {professionals.length} Especialistas
+                    <span className="rounded-full bg-gradient-to-r from-malva-700 to-malva-900 dark:from-malva-600 dark:to-[var(--color-oro-editorial)] px-3.5 py-1.5 text-[12px] font-bold text-white shrink-0 shadow-sm border border-white/20">
+                      {professionals.length} Maestras de Autor
                     </span>
                   </div>
                 </div>

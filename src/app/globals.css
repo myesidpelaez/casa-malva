@@ -139,42 +139,44 @@
 }
 
 [data-theme='dark'] {
-  --canvas: #171316;
-  --card: #221c21;
+  --canvas: #120d11;
+  --card: #1c151b;
 
-  --cm-success: #48bb78;
-  --cm-success-soft: rgba(72, 187, 120, 0.16);
-  --cm-warning: #ecc94b;
-  --cm-warning-soft: rgba(236, 201, 75, 0.16);
-  --cm-danger: #f56565;
-  --cm-danger-soft: rgba(245, 101, 101, 0.16);
-  --cm-info: #63b3ed;
-  --cm-info-soft: rgba(99, 179, 237, 0.16);
-  --glass-tint: rgba(34, 28, 33, 0.65);
-  --glass-tint-strong: rgba(34, 28, 33, 0.85);
-  --glass-tint-deep: rgba(18, 14, 17, 0.85);
-  --glass-border: rgba(201, 163, 186, 0.2);
-  --glass-hairline: rgba(201, 163, 186, 0.12);
+  --cm-success: #4ade80;
+  --cm-success-soft: rgba(74, 222, 128, 0.18);
+  --cm-warning: #fbbf24;
+  --cm-warning-soft: rgba(251, 191, 36, 0.18);
+  --cm-danger: #f87171;
+  --cm-danger-soft: rgba(248, 113, 113, 0.18);
+  --cm-info: #60a5fa;
+  --cm-info-soft: rgba(96, 165, 250, 0.18);
+  --glass-tint: rgba(28, 21, 27, 0.75);
+  --glass-tint-strong: rgba(36, 27, 35, 0.92);
+  --glass-tint-deep: rgba(18, 13, 17, 0.92);
+  --glass-border: rgba(220, 186, 207, 0.25);
+  --glass-hairline: rgba(220, 186, 207, 0.16);
 
-  --cm-ink-900: #efe8ec;
-  --cm-ink-700: #ded5da;
-  --cm-ink-500: #a89aa4;
-  --cm-ink-400: #8d848a;
-  --cm-ink-300: #6b6268;
-  --cm-ink-200: #453d43;
-  --cm-ink-100: #2a2228;
-  --cm-ink-50: #221c21;
+  /* Neutros en Modo Oscuro: Altos ratios de contraste garantizados (WCAG AAA) */
+  --cm-ink-900: #ffffff;
+  --cm-ink-700: #f5edf2;
+  --cm-ink-500: #d4c5cf;
+  --cm-ink-400: #b3a0ac;
+  --cm-ink-300: #4a3a45;
+  --cm-ink-200: #382933;
+  --cm-ink-100: #2c1f28;
+  --cm-ink-50: #1a1218;
 
-  --cm-malva-50: #2a1b26;
-  --cm-malva-100: #3b2435;
-  --cm-malva-200: #523049;
-  --cm-malva-300: #703f64;
-  --cm-malva-400: #965786;
-  --cm-malva-500: #b878a6;
-  --cm-malva-600: #c9a3ba;
-  --cm-malva-700: #dcbacf;
-  --cm-malva-800: #ebdce4;
-  --cm-malva-900: #f7f0f4;
+  /* Escala Malva luminosa y elegante en Dark Mode */
+  --cm-malva-50: #261622;
+  --cm-malva-100: #382032;
+  --cm-malva-200: #552d4b;
+  --cm-malva-300: #7b406c;
+  --cm-malva-400: #a75892;
+  --cm-malva-500: #cb7bb4;
+  --cm-malva-600: #e2a0cd;
+  --cm-malva-700: #f2cbe3;
+  --cm-malva-800: #fae4f2;
+  --cm-malva-900: #fff5fb;
 }
 
 * {

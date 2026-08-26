@@ -288,11 +288,11 @@ export function ReservaWizard({
                   </Badge>
                 ) : null}
                 {franja && (
-                  <Badge tone="glass" size="sm" className="font-medium text-malva-700 dark:text-malva-300">
+                  <Badge tone="glass" size="sm" className="font-medium text-malva-700 dark:text-malva-200 font-bold">
                     {fechaLarga(franja.inicioUtc)} · {horaCorta(franja.inicioUtc)}
                   </Badge>
                 )}
-                <span className="tnum ml-auto font-display text-[14px] sm:text-[15px] font-bold text-malva-700 dark:text-malva-300">
+                <span className="tnum ml-auto font-display text-[14px] sm:text-[15px] font-bold text-malva-700 dark:text-malva-200 font-bold">
                   {formatCurrencyFromCents(servicio.precioCentavos)}
                 </span>
               </motion.div>
@@ -526,12 +526,12 @@ function PasoServicio({
                     </h3>
                   </div>
 
-                  <span className="tnum block font-display text-[16px] sm:text-[17px] font-bold text-malva-700 dark:text-malva-300">
+                  <span className="tnum block font-display text-[16px] sm:text-[17px] font-bold text-malva-700 dark:text-malva-200 font-bold">
                     {formatCurrencyFromCents(s.precioCentavos)}
                   </span>
 
                   <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[12px] text-ink-500">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-ink-100/70 px-2 py-0.5 font-medium text-ink-700">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-ink-100/80 dark:bg-ink-900/90 px-2 py-0.5 font-medium text-ink-800 dark:text-ink-200 border border-transparent dark:border-ink-700/60">
                       <Clock className="h-3 w-3 text-malva-600" />
                       {humanDuration(s.duracionMin)}
                     </span>
@@ -1101,7 +1101,7 @@ function PasoConfirmar({
             <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">
               Inversión
             </span>
-            <span className="tnum block font-display text-[22px] sm:text-[24px] font-bold text-malva-700 dark:text-malva-300 leading-tight">
+            <span className="tnum block font-display text-[22px] sm:text-[24px] font-bold text-malva-700 dark:text-malva-200 font-bold leading-tight">
               {formatCurrencyFromCents(servicio.precioCentavos)}
             </span>
           </div>
@@ -1229,7 +1229,7 @@ function Confirmacion({
             <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-ink-400">
               Código de cita
             </span>
-            <span className="tnum font-mono text-[13px] font-bold text-malva-700 dark:text-malva-300 bg-malva-50 dark:bg-malva-950/60 px-2.5 py-0.5 rounded-md border border-malva-200/60">
+            <span className="tnum font-mono text-[13px] font-bold text-malva-700 dark:text-malva-200 font-bold bg-malva-50 dark:bg-malva-950/60 px-2.5 py-0.5 rounded-md border border-malva-200/60">
               {cita.id}
             </span>
           </div>
@@ -1244,7 +1244,7 @@ function Confirmacion({
               <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">
                 Inversión congelada
               </dt>
-              <dd className="tnum mt-0.5 font-display text-[16px] font-bold text-malva-700 dark:text-malva-300">
+              <dd className="tnum mt-0.5 font-display text-[16px] font-bold text-malva-700 dark:text-malva-200 font-bold">
                 {formatCurrencyFromCents(cita.precioCentavos)}
               </dd>
             </div>
