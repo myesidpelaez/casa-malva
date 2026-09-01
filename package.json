@@ -18,7 +18,7 @@
     "prueba:reportes": "tsx scripts/prueba-reportes.ts",
     "prueba:marca": "tsx scripts/prueba-marca.ts",
     "prueba:personas": "tsx scripts/prueba-personas.ts",
-    "verificar": "npm run tsc && npm run lint && npm run prueba:zona && npm run prueba:rutas && npm run prueba:permisos && npm run prueba:ocupacion && npm run prueba:lecturas && npm run prueba:reportes && npm run prueba:marca && npm run prueba:personas && npm run prueba:webhook-firma && npm run prueba:plan && npm run prueba:idempotencia && npm run prueba:limite && npm run prueba:chat-web && npm run build",
+    "verificar": "npm run tsc && npm run lint && npm run prueba:zona && npm run prueba:rutas && npm run prueba:permisos && npm run prueba:ocupacion && npm run prueba:lecturas && npm run prueba:reportes && npm run prueba:marca && npm run prueba:personas && npm run prueba:cobros && npm run prueba:webhook-firma && npm run prueba:plan && npm run prueba:idempotencia && npm run prueba:limite && npm run prueba:chat-web && npm run build",
     "verificar:nube": "npm run prueba:doble-reserva && npm run prueba:lecturas-nube && npm run prueba:cobro-nube && npm run prueba:chat-nube && npm run prueba:fusion-nube",
     "prueba:rutas": "tsx scripts/prueba-rutas.ts",
     "prueba:cobros": "tsx scripts/prueba-cobros.ts",
