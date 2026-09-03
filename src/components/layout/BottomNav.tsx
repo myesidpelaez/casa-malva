@@ -58,13 +58,13 @@ export function BottomNav({ items = PUBLIC_ITEMS }: { items?: Item[] }) {
                 className="relative z-10"
               >
                 <Icon
-                  className={cn('h-[21px] w-[21px]', active ? 'text-malva-700' : 'text-ink-400')}
+                  className={cn('h-5 w-5', active ? 'text-malva-700' : 'text-ink-400')}
                   strokeWidth={active ? 2 : 1.6}
                 />
               </motion.span>
               <span
                 className={cn(
-                  'relative z-10 text-[10.5px] font-semibold',
+                  'relative z-10 text-2xs font-semibold',
                   active ? 'text-malva-700' : 'text-ink-400'
                 )}
               >

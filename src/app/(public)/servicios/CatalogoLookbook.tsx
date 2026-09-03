@@ -69,9 +69,9 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
       >
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[450px] w-[800px] rounded-full bg-gradient-to-br from-malva-200/35 via-blush/25 to-champagne/20 blur-[110px] dark:from-malva-950/40 dark:via-malva-900/20 dark:to-transparent" />
-        <div className="absolute top-[600px] -right-32 h-[500px] w-[500px] rounded-full bg-gradient-to-bl from-malva-300/20 via-blush/20 to-transparent blur-[120px] dark:from-malva-900/15 dark:to-transparent" />
-        <div className="absolute top-[1200px] -left-32 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-champagne/25 via-malva-200/20 to-transparent blur-[120px] dark:from-malva-950/20 dark:to-transparent" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-112 w-200 rounded-full bg-gradient-to-br from-malva-200/35 via-blush/25 to-champagne/20 blur-[110px] dark:from-malva-950/40 dark:via-malva-900/20 dark:to-transparent" />
+        <div className="absolute top-[600px] -right-32 h-125 w-125 rounded-full bg-gradient-to-bl from-malva-300/20 via-blush/20 to-transparent blur-[120px] dark:from-malva-900/15 dark:to-transparent" />
+        <div className="absolute top-[1200px] -left-32 h-125 w-125 rounded-full bg-gradient-to-tr from-champagne/25 via-malva-200/20 to-transparent blur-[120px] dark:from-malva-950/20 dark:to-transparent" />
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-8 py-[var(--spacing-fib-4)] sm:py-[var(--spacing-fib-5)]">
@@ -85,7 +85,7 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
             
             {/* Canales Oficiales Redes Sociales */}
             <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-malva-200/80 bg-[var(--card)]/90 px-3 py-1.5 shadow-xs backdrop-blur-md">
-              <span className="text-[11.5px] font-semibold text-ink-500 mr-1">Síguenos:</span>
+              <span className="text-xs font-semibold text-ink-500 mr-1">Síguenos:</span>
               <a
                 href={REDES_SOCIALES.instagram.url}
                 target="_blank"
@@ -127,7 +127,7 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
           >
             El arte del cuidado,
           </TituloEditorial>
-          <p className="mt-4 max-w-2xl text-[16px] sm:text-[18px] leading-relaxed text-ink-600 font-sans">
+          <p className="mt-4 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-600 font-sans">
             Cada ritual es una experiencia personalizada realizada por especialistas
             apasionadas por realzar tu bienestar, con técnicas de alta precisión y cosmética botánica.
           </p>
@@ -149,20 +149,20 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-malva-700">
+                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-malva-700">
                       Selecciona una especialidad
                     </span>
-                    <span className="text-[11.5px] text-ink-400">· Toca para filtrar</span>
+                    <span className="text-xs text-ink-400">· Toca para filtrar</span>
                   </div>
                   {categoriaSeleccionada !== 'todas' ? (
                     <button
                       onClick={() => setCategoriaSeleccionada('todas')}
-                      className="text-[12.5px] font-semibold text-malva-700 hover:text-malva-900 underline underline-offset-4 transition-colors cursor-pointer"
+                      className="text-xs font-semibold text-malva-700 hover:text-malva-900 underline underline-offset-4 transition-colors cursor-pointer"
                     >
                       Ver todas ({totalServicios})
                     </button>
                   ) : (
-                    <span className="text-[12px] font-medium text-ink-500 hidden sm:inline">
+                    <span className="text-xs font-medium text-ink-500 hidden sm:inline">
                       {totalServicios} servicios en catálogo
                     </span>
                   )}
@@ -181,12 +181,12 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                         key={cat.id}
                         onClick={() => setCategoriaSeleccionada(activa ? 'todas' : cat.id)}
                         className={cn(
-                          'group relative flex flex-col text-left rounded-[22px] overflow-hidden transition-all duration-300 cursor-pointer',
+                          'group relative flex flex-col text-left rounded-lg overflow-hidden transition-all duration-300 cursor-pointer',
                           'bg-[var(--card)] border',
                           activa
                             ? 'border-malva-500 ring-2 ring-malva-600/90 shadow-xl shadow-malva-900/10 scale-[1.01]'
                             : 'border-ink-200/80 hover:border-malva-300 hover:shadow-md hover:shadow-malva-900/5 hover:-translate-y-0.5',
-                          'flex-shrink-0 w-[240px] sm:w-auto'
+                          'flex-shrink-0 w-60 sm:w-auto'
                         )}
                       >
                         {/* Fotografía limpia de la especialidad */}
@@ -202,7 +202,7 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
 
                           {activa && (
                             <div className="absolute top-2.5 right-2.5">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-malva-700/90 backdrop-blur-md px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-sm border border-white/20">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-malva-700/90 backdrop-blur-md px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm border border-white/20">
                                 <Check className="h-3 w-3" strokeWidth={2.8} />
                                 Activa
                               </span>
@@ -213,10 +213,10 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                         {/* Bloque Informativo de la Card */}
                         <div className="p-4 flex flex-col justify-between flex-1 space-y-3 bg-[var(--card)]">
                           <div>
-                            <h3 className="font-display text-[17px] sm:text-[18px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-tight">
+                            <h3 className="font-display text-lg sm:text-lg font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-tight">
                               {cleanCategoryName(cat.nombre)}
                             </h3>
-                            <p className="text-[12px] font-medium text-ink-500 mt-1">
+                            <p className="text-xs font-medium text-ink-500 mt-1">
                               {conteo} servicio{conteo > 1 ? 's' : ''} disponibles
                             </p>
                           </div>
@@ -242,7 +242,7 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                                           className="object-cover"
                                         />
                                       ) : (
-                                        <span className="grid h-full w-full place-items-center text-[10px] font-bold text-malva-700">
+                                        <span className="grid h-full w-full place-items-center text-2xs font-bold text-malva-700">
                                           {prof.nombre.charAt(0)}
                                         </span>
                                       )}
@@ -250,7 +250,7 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                                   )
                                 })}
                               </div>
-                              <span className="text-[11.5px] font-medium text-ink-600 truncate">
+                              <span className="text-xs font-medium text-ink-600 truncate">
                                 {especialistas.map((p) => p.nombre.split(' ')[0]).join(', ')}
                               </span>
                             </div>
@@ -270,13 +270,13 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
               <div className="flex items-center justify-between border-b border-malva-100/80 pb-3">
                 <div className="flex items-center gap-2.5">
                   <Sparkles className="h-5 w-5 text-malva-600" />
-                  <h2 className="font-display text-[21px] sm:text-[23px] font-semibold text-ink-900">
+                  <h2 className="font-display text-xl sm:text-2xl font-semibold text-ink-900">
                     {categoriaSeleccionada === 'todas'
                       ? 'Todos los servicios de autor'
                       : `Especialidad: ${cleanCategoryName(categoriaActivaObj?.nombre ?? '')}`}
                   </h2>
                 </div>
-                <span className="text-[13px] font-semibold text-ink-500">
+                <span className="text-sm font-semibold text-ink-500">
                   {serviciosFiltrados.length} servicio{serviciosFiltrados.length > 1 ? 's' : ''}
                 </span>
               </div>
@@ -302,7 +302,7 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                     return (
                       <div
                         key={service.id}
-                        className="group flex flex-col justify-between rounded-[22px] border border-ink-200/80 bg-[var(--card)] shadow-xs transition-all duration-300 hover:border-malva-300 hover:shadow-xl hover:shadow-malva-900/10 overflow-hidden"
+                        className="group flex flex-col justify-between rounded-lg border border-ink-200/80 bg-[var(--card)] shadow-xs transition-all duration-300 hover:border-malva-300 hover:shadow-xl hover:shadow-malva-900/10 overflow-hidden"
                       >
                         {/* Cabecera con Fotografía 100% Limpia (sin badges flotantes) */}
                         <div className="relative aspect-[4/3] w-full overflow-hidden bg-malva-100">
@@ -321,23 +321,23 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                           <div className="space-y-3">
                             {/* Fila 1: Título y Precio */}
                             <div className="flex items-start justify-between gap-2.5">
-                              <h3 className="font-display text-[18px] sm:text-[19px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug">
+                              <h3 className="font-display text-lg sm:text-xl font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug">
                                 {service.nombre}
                               </h3>
-                              <span className="tnum font-display text-[18px] sm:text-[19px] font-bold text-malva-700 dark:text-malva-200 font-bold shrink-0">
+                              <span className="tnum font-display text-lg sm:text-xl font-bold text-malva-700 dark:text-malva-200 font-bold shrink-0">
                                 {formatCurrencyFromCents(service.precioCentavos)}
                               </span>
                             </div>
 
                             {/* Fila 2: Duración y Badge de Confirmación si aplica */}
-                            <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-ink-500 font-medium">
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-ink-500 font-medium">
                               <span className="inline-flex items-center gap-1.5 rounded-md bg-ink-100/80 dark:bg-ink-900/90 px-2.5 py-1 text-ink-800 dark:text-ink-200 border border-transparent dark:border-ink-700/60">
                                 <Clock className="h-3.5 w-3.5 text-malva-600 shrink-0" strokeWidth={2} />
                                 {humanDuration(service.duracionMin)}
                               </span>
 
                               {requiereConfirmacion && (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[11.5px] font-semibold text-amber-800 dark:text-amber-200 font-semibold">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-200 font-semibold">
                                   <Info className="h-3 w-3 shrink-0" />
                                   Confirmación previa
                                 </span>
@@ -365,7 +365,7 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                                             className="object-cover"
                                           />
                                         ) : (
-                                          <span className="grid h-full w-full place-items-center text-[10px] font-bold text-malva-700">
+                                          <span className="grid h-full w-full place-items-center text-2xs font-bold text-malva-700">
                                             {p.nombre.charAt(0)}
                                           </span>
                                         )}
@@ -373,7 +373,7 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
                                     )
                                   })}
                                 </div>
-                                <span className="text-[12px] text-ink-600 dark:text-ink-300 font-medium truncate">
+                                <span className="text-xs text-ink-600 dark:text-[#d4c5cf] font-medium truncate">
                                   {profsQueLoPrestan.map((p) => p.nombre.split(' ')[0]).join(', ')}
                                 </span>
                               </div>
@@ -411,11 +411,11 @@ export function CatalogoLookbook({ categories, services, professionals, estado }
           <Surface material="frost" pad="lg" radius="xl" className="border border-malva-200/60 dark:border-ink-800">
             <div className="flex items-center gap-2.5">
               <ShieldCheck className="h-5 w-5 text-malva-700 shrink-0" />
-              <h3 className="text-[15px] font-semibold text-ink-900">
+              <h3 className="text-base font-semibold text-ink-900">
                 Garantías y Políticas de tu Reserva
               </h3>
             </div>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2 text-[13px] leading-relaxed text-ink-600">
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2 text-sm leading-relaxed text-ink-600">
               <li className="flex items-start gap-2">
                 <span className="text-malva-600 font-bold">·</span>
                 <span>

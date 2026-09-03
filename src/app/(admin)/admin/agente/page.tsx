@@ -44,13 +44,13 @@ export default function AdminAgentePage() {
       <WhatsAppTesterCard />
 
       <Surface material="deep" radius="xl" pad="lg" className="my-[var(--spacing-fib-3)]">
-        <span className="grid h-12 w-12 place-items-center rounded-[16px] bg-white/15 text-white">
+        <span className="grid h-12 w-12 place-items-center rounded-md bg-white/15 text-white">
           <Bot className="h-6 w-6" strokeWidth={1.5} />
         </span>
-        <h2 className="mt-3 font-display text-[24px] font-semibold text-white">
+        <h2 className="mt-3 font-display text-2xl font-semibold text-white">
           Notificaciones y Automatización Conversacional
         </h2>
-        <p className="mt-1.5 max-w-lg text-[13.5px] leading-relaxed text-white/70">
+        <p className="mt-1.5 max-w-lg text-sm leading-relaxed text-white/70">
           Casa Malva ya dispara mensajes de confirmación automáticos por WhatsApp cada vez que una clienta completa su reserva en la web.
         </p>
       </Surface>
@@ -60,8 +60,8 @@ export default function AdminAgentePage() {
           <RevealItem key={h.titulo} variant="pop">
             <Surface pad="md" radius="lg" className="h-full">
               <h.icon className="h-5 w-5 text-malva-500" strokeWidth={1.75} aria-hidden />
-              <h3 className="mt-2.5 text-[14px] font-semibold text-ink-900">{h.titulo}</h3>
-              <p className="mt-1 text-[12.5px] leading-relaxed text-ink-500">{h.texto}</p>
+              <h3 className="mt-2.5 text-sm font-semibold text-ink-900">{h.titulo}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-ink-500">{h.texto}</p>
             </Surface>
           </RevealItem>
         ))}

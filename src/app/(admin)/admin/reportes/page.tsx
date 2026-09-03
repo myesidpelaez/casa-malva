@@ -187,7 +187,7 @@ export default async function ReportesPage({
                       <td className="px-4 py-3 font-medium text-ink-900">{mapProf.get(p.professionalId) || p.professionalId}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="font-semibold text-ink-900">{formatCurrencyFromCents(p.ingresoCentavos)}</div>
-                        <div className="text-[10px] text-ink-400">{p.porcentajeDelTotal.toFixed(1)}% del total</div>
+                        <div className="text-2xs text-ink-400">{p.porcentajeDelTotal.toFixed(1)}% del total</div>
                       </td>
                       <td className="px-4 py-3 text-right text-ink-600">{formatCurrencyFromCents(p.ticketPromedioCentavos)}</td>
                       <td className="px-4 py-3 text-right">
@@ -279,7 +279,7 @@ export default async function ReportesPage({
             <EmptyState title="Sin franjas" description="No hay suficientes citas para graficar concentración." icon={CalendarClock} compact />
           ) : (
             <div className="bg-[var(--card)] rounded-[var(--radius-lg)] border border-ink-100 p-4 shadow-sm overflow-x-auto">
-              <div className="min-w-[600px]">
+              <div className="min-w-xl">
                 <div className="grid grid-cols-[auto_repeat(7,1fr)] gap-1">
                   <div className="col-span-1" />
                   {/* Días 1 a 7 (Lunes a Domingo), en el reporte 0 es Dom pero se convierte al pintar */}
@@ -299,7 +299,7 @@ export default async function ReportesPage({
                         return (
                           <div 
                             key={`${dia}-${hora}`} 
-                            className="h-8 rounded-sm transition-colors border border-transparent hover:border-malva-400 flex items-center justify-center text-[10px] font-bold text-ink-900"
+                            className="h-8 rounded-sm transition-colors border border-transparent hover:border-malva-400 flex items-center justify-center text-2xs font-bold text-ink-900"
                             style={{ backgroundColor: `rgba(188, 143, 169, ${opacidad})` }}
                             title={`${franja?.servicios || 0} servicios`}
                           >
@@ -325,7 +325,7 @@ export default async function ReportesPage({
             <EmptyState title="Sin historial" description="No hay servicios prestados en este periodo." icon={Calendar} compact />
           ) : (
             <div className="bg-[var(--card)] rounded-[var(--radius-lg)] border border-ink-100 shadow-sm overflow-hidden overflow-x-auto">
-              <table className="w-full text-left text-sm whitespace-nowrap min-w-[700px]">
+              <table className="w-full text-left text-sm whitespace-nowrap min-w-2xl">
                 <thead className="bg-ink-100/40 text-ink-500 border-b border-ink-100 text-xs">
                   <tr>
                     <th className="px-4 py-2 font-medium">Fecha</th>

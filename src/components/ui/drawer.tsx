@@ -73,9 +73,7 @@ export function RightDrawer({
   }, [])
 
   /**
-   * En móvil se arrastra hacia abajo para cerrar: el gesto que cualquiera que use un
-   * celular ya tiene en los dedos. Venía del `Sheet` al que este componente sustituye,
-   * y se conserva a propósito — Casa Malva se demuestra en el celular del dueño.
+   * En móvil se arrastra hacia abajo para cerrar: el gesto nativo para teléfonos.
    */
   const alSoltarElArrastre = (_: unknown, info: PanInfo) => {
     if (info.offset.y > 120 || info.velocity.y > 600) onOpenChange(false)
@@ -92,7 +90,7 @@ export function RightDrawer({
                 initial="hidden"
                 animate="show"
                 exit="exit"
-                className="fixed inset-0 z-50 bg-ink-950/40 backdrop-blur-[5px]"
+                className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-md"
               />
             </Dialog.Overlay>
 
@@ -107,9 +105,12 @@ export function RightDrawer({
                 dragElastic={{ top: 0, bottom: 0.4 }}
                 onDragEnd={alSoltarElArrastre}
                 className={cn(
-                  'fixed z-50 flex flex-col bg-[var(--card)] text-ink-900 shadow-2xl border-ink-100',
+                  'fixed z-50 flex flex-col shadow-2xl transition-colors',
+                  // Surface styling: Liquid Glass Haute Couture
+                  'bg-[#fdfafc] dark:bg-[#160f15] text-ink-950 dark:text-[#fbf7fa]',
+                  'border-malva-200/80 dark:border-[#c5a059]/30',
                   // Mobile: Bottom Sheet
-                  'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-[28px] border-t',
+                  'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-[32px] border-t',
                   // Desktop: Right Drawer (Full Height, Cero Scroll)
                   'sm:inset-y-0 sm:right-0 sm:left-auto sm:max-h-full sm:h-full sm:w-full sm:rounded-none sm:border-l',
                   sizeClasses[size],
@@ -118,17 +119,17 @@ export function RightDrawer({
               >
                 {/* Drag pill indicator on Mobile */}
                 <div className="flex shrink-0 justify-center pt-3 pb-1 sm:hidden">
-                  <div className="h-1.5 w-12 rounded-full bg-ink-200" aria-hidden />
+                  <div className="h-1.5 w-12 rounded-full bg-ink-300 dark:bg-white/20" aria-hidden />
                 </div>
 
                 {/* Fixed Header */}
-                <div className="flex shrink-0 items-start justify-between gap-4 border-b border-malva-100 px-6 py-4.5 bg-malva-50/40">
-                  <div className="min-w-0 space-y-1">
-                    <Dialog.Title className="font-display text-[20px] sm:text-[22px] font-semibold text-ink-900 leading-tight">
-                      {title}
+                <div className="flex shrink-0 items-start justify-between gap-4 border-b border-malva-100 dark:border-white/10 px-6 py-5 bg-white/70 dark:bg-[#1c131a]/80 backdrop-blur-xl">
+                  <div className="min-w-0 space-y-1.5">
+                    <Dialog.Title asChild>
+                      <div>{title}</div>
                     </Dialog.Title>
                     {description && (
-                      <Dialog.Description className="text-[13px] leading-relaxed text-ink-500">
+                      <Dialog.Description className="text-sm leading-relaxed text-ink-600 dark:text-[#d4c5cf] font-sans">
                         {description}
                       </Dialog.Description>
                     )}
@@ -138,7 +139,7 @@ export function RightDrawer({
                     <button
                       type="button"
                       aria-label="Cerrar panel"
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--glass-tint-strong)] text-ink-500 hover:bg-malva-100 hover:text-ink-900 transition-colors border border-ink-100 shadow-sm"
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/80 dark:bg-white/10 text-ink-600 dark:text-white/80 hover:text-ink-950 dark:hover:text-white hover:bg-malva-100 dark:hover:bg-white/20 hover:border-[#c5a059] transition-all border border-malva-200/70 dark:border-white/10 shadow-xs cursor-pointer active:scale-95"
                     >
                       <X className="h-4 w-4" strokeWidth={2} />
                     </button>
@@ -152,7 +153,7 @@ export function RightDrawer({
 
                 {/* Fixed Footer */}
                 {footer && (
-                  <div className="shrink-0 border-t border-malva-100 bg-malva-50/60 px-6 py-4 backdrop-blur-md">
+                  <div className="shrink-0 border-t border-malva-100 dark:border-white/10 bg-white/80 dark:bg-[#1c131a]/90 px-6 py-4 backdrop-blur-xl">
                     {footer}
                   </div>
                 )}

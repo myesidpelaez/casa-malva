@@ -63,14 +63,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh">
       {/* ---------- Barra lateral (escritorio) ---------- */}
-      <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-[var(--glass-hairline)] bg-[var(--glass-tint)] p-3 backdrop-blur-xl md:flex">
+      <aside className="sticky top-0 hidden h-dvh w-62 shrink-0 flex-col border-r border-[var(--glass-hairline)] bg-[var(--glass-tint)] p-3 backdrop-blur-xl md:flex">
         <Link href="/admin" className="group flex items-center gap-2.5 px-2 py-3">
           <Marca size={36} interactive className="text-malva-600 transition-transform duration-200 group-hover:scale-105" />
           <span className="leading-tight">
-            <span className="block font-display text-[16px] font-semibold text-ink-900">
+            <span className="block font-display text-base font-semibold text-ink-900">
               Casa Malva
             </span>
-            <span className="block text-[11px] text-ink-400">Panel del estudio</span>
+            <span className="block text-xs text-ink-400">Panel del estudio</span>
           </span>
         </Link>
 
@@ -84,7 +84,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 aria-current={activo ? 'page' : undefined}
                 className={cn(
-                  'relative flex items-center gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-[13.5px] font-semibold transition-colors',
+                  'relative flex items-center gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-semibold transition-colors',
                   activo ? 'text-malva-700' : 'text-ink-500 hover:text-ink-900'
                 )}
               >
@@ -96,7 +96,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   />
                 )}
                 <Icon
-                  className="relative z-10 h-[18px] w-[18px]"
+                  className="relative z-10 h-4.5 w-4.5"
                   strokeWidth={activo ? 2 : 1.6}
                 />
                 <span className="relative z-10">{item.label}</span>
@@ -107,12 +107,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
         <div className="space-y-1 border-t border-ink-100 pt-3">
           <div className="flex items-center justify-between px-3 py-1.5">
-            <span className="text-[12.5px] font-semibold text-ink-400">Tema</span>
+            <span className="text-xs font-semibold text-ink-400">Tema</span>
             <ThemeToggle />
           </div>
           <Link
             href="/inicio"
-            className="flex items-center gap-2.5 rounded-[var(--radius-sm)] px-3 py-2 text-[12.5px] font-semibold text-ink-400 transition-colors hover:text-malva-700"
+            className="flex items-center gap-2.5 rounded-[var(--radius-sm)] px-3 py-2 text-xs font-semibold text-ink-400 transition-colors hover:text-malva-700"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
             Ver el sitio público
@@ -170,7 +170,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 />
                 <span
                   className={cn(
-                    'relative z-10 text-[10px] font-semibold',
+                    'relative z-10 text-2xs font-semibold',
                     activo ? 'text-malva-700' : 'text-ink-400'
                   )}
                 >
@@ -198,10 +198,10 @@ export function AdminHeader({
   return (
     <header className="mb-[var(--spacing-fib-3)] flex flex-col gap-3 border-b border-ink-100 pb-[var(--spacing-fib-2)] sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <h1 className="font-display text-[26px] font-semibold leading-tight text-ink-900">
+        <h1 className="font-display text-3xl font-semibold leading-tight text-ink-900">
           {title}
         </h1>
-        {subtitle && <div className="mt-0.5 text-[13px] text-ink-500">{subtitle}</div>}
+        {subtitle && <div className="mt-0.5 text-sm text-ink-500">{subtitle}</div>}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
     </header>

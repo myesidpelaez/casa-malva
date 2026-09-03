@@ -64,7 +64,7 @@ export function MarcaLockup({
         <span
           className={cn(
             'block font-display font-semibold tracking-tight text-ink-900',
-            size >= 40 ? 'text-[19px]' : 'text-[16px]',
+            size >= 40 ? 'text-xl' : 'text-base',
             titleClassName
           )}
         >
@@ -74,7 +74,7 @@ export function MarcaLockup({
           <span
             className={cn(
               'block tracking-wide text-ink-400',
-              size >= 40 ? 'text-[11.5px]' : 'text-[11px]',
+              size >= 40 ? 'text-xs' : 'text-xs',
               subtitleClassName
             )}
           >

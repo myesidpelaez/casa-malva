@@ -212,10 +212,10 @@ export default function AdminCatalogoPage() {
                       <Icon className="h-4 w-4" strokeWidth={1.8} />
                     </span>
                     <div className="min-w-0">
-                      <h2 className="font-display text-[17px] sm:text-[18px] font-semibold text-ink-900 truncate">
+                      <h2 className="font-display text-lg sm:text-lg font-semibold text-ink-900 truncate">
                         {cleanCategoryName(cat.nombre)}
                       </h2>
-                      <p className="text-[11.5px] text-ink-400">{items.length} servicios</p>
+                      <p className="text-xs text-ink-400">{items.length} servicios</p>
                     </div>
                   </div>
 
@@ -250,10 +250,10 @@ export default function AdminCatalogoPage() {
                         >
                           <div>
                             <div className="flex items-start justify-between gap-2">
-                              <h3 className="text-[14.5px] sm:text-[15px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug break-words">
+                              <h3 className="text-sm sm:text-base font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug break-words">
                                 {svc.nombre}
                               </h3>
-                              <span className="tnum font-display text-[15px] sm:text-[16px] font-semibold text-malva-700 shrink-0 whitespace-nowrap">
+                              <span className="tnum font-display text-base sm:text-base font-semibold text-malva-700 shrink-0 whitespace-nowrap">
                                 {formatCurrencyFromCents(svc.precioCentavos)}
                               </span>
                             </div>
@@ -294,7 +294,7 @@ export default function AdminCatalogoPage() {
                             </div>
 
                             {tieneProfesionales && (
-                              <div className="mt-3 flex items-center gap-1.5 pt-2 border-t border-malva-100/60 text-[11.5px] text-ink-500">
+                              <div className="mt-3 flex items-center gap-1.5 pt-2 border-t border-malva-100/60 text-xs text-ink-500">
                                 <div className="flex -space-x-1.5 overflow-hidden">
                                   {profsQueLoPrestan.slice(0, 4).map((p) => {
                                     const avatar = getProfessionalAvatar(p)
@@ -307,7 +307,7 @@ export default function AdminCatalogoPage() {
                                         {avatar ? (
                                           <Image src={avatar} alt={p.nombre} fill sizes="20px" className="object-cover" />
                                         ) : (
-                                          <span className="grid h-full w-full place-items-center text-[9px] font-semibold text-malva-700">
+                                          <span className="grid h-full w-full place-items-center text-2xs font-semibold text-malva-700">
                                             {p.nombre.charAt(0)}
                                           </span>
                                         )}
@@ -377,12 +377,12 @@ export default function AdminCatalogoPage() {
         <div className="space-y-5 sm:space-y-6">
           {/* Bloque 1: Datos del Servicio */}
           <div className="space-y-3.5 sm:space-y-4">
-            <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-malva-700">
               1. Detalles del servicio
             </h3>
 
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-semibold text-ink-700">
+              <label className="block text-sm font-semibold text-ink-700">
                 Categoría
               </label>
               <select
@@ -418,7 +418,7 @@ export default function AdminCatalogoPage() {
                 }
                 className="tnum"
               />
-              <p className="mt-1 text-[11.5px] text-ink-400">
+              <p className="mt-1 text-xs text-ink-400">
                 Equivale a {formatCurrencyFromCents(toCents(form.precioCop))} en el sitio web.
               </p>
             </div>
@@ -472,10 +472,10 @@ export default function AdminCatalogoPage() {
           <div className="space-y-4 border-t border-malva-100 pt-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-malva-700">
                   2. ¿Quiénes realizan este servicio?
                 </h3>
-                <p className="text-[12.5px] text-ink-500">
+                <p className="text-xs text-ink-500">
                   {form.assignedProfessionalIds.length} de {equipo.length} profesional(es) asignadas.
                 </p>
               </div>
@@ -485,21 +485,21 @@ export default function AdminCatalogoPage() {
                 <button
                   type="button"
                   onClick={asignarEspecialistasCategoria}
-                  className="rounded-md bg-malva-100 px-2 py-1 text-[11px] font-medium text-malva-800 hover:bg-malva-200 transition-colors"
+                  className="rounded-md bg-malva-100 px-2 py-1 text-xs font-medium text-malva-800 hover:bg-malva-200 transition-colors"
                 >
                   Especialistas de categoría
                 </button>
                 <button
                   type="button"
                   onClick={asignarTodoElEquipo}
-                  className="rounded-md bg-malva-100 px-2 py-1 text-[11px] font-medium text-malva-800 hover:bg-malva-200 transition-colors"
+                  className="rounded-md bg-malva-100 px-2 py-1 text-xs font-medium text-malva-800 hover:bg-malva-200 transition-colors"
                 >
                   Todo el equipo
                 </button>
                 <button
                   type="button"
                   onClick={desmarcarTodas}
-                  className="rounded-md bg-ink-100 px-2 py-1 text-[11px] font-medium text-ink-600 hover:bg-ink-200 transition-colors"
+                  className="rounded-md bg-ink-100 px-2 py-1 text-xs font-medium text-ink-600 hover:bg-ink-200 transition-colors"
                 >
                   Desmarcar
                 </button>
@@ -507,7 +507,7 @@ export default function AdminCatalogoPage() {
             </div>
 
             {form.assignedProfessionalIds.length === 0 && (
-              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-[12.5px] text-amber-800 flex items-start gap-2">
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>
                   <strong>Atención:</strong> Si no asignas ninguna profesional, las clientas no podrán reservar este servicio en línea.
@@ -544,10 +544,10 @@ export default function AdminCatalogoPage() {
                       </div>
 
                       <div className="min-w-0">
-                        <p className="truncate text-[13.5px] font-semibold text-ink-900 leading-tight">
+                        <p className="truncate text-sm font-semibold text-ink-900 leading-tight">
                           {prof.nombre}
                         </p>
-                        <p className="truncate text-[11.5px] text-ink-400">
+                        <p className="truncate text-xs text-ink-400">
                           {prof.cargo}
                         </p>
                       </div>

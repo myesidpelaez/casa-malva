@@ -21,13 +21,13 @@ export function SiteFooter() {
               Casa Malva
             </span>
           </div>
-          <p className="max-w-xs text-[13px] leading-relaxed text-ink-500">
+          <p className="max-w-xs text-sm leading-relaxed text-ink-500">
             Estudio de belleza de demostración. Cuidamos el detalle, empezando por
             tu tiempo.
           </p>
         </div>
 
-        <div className="space-y-2 text-[13px] text-ink-500">
+        <div className="space-y-2 text-sm text-ink-500">
           <p className="flex items-start gap-2">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-malva-500" strokeWidth={1.75} />
             <span>{REGLAS_NEGOCIO.sede.direccion}</span>
@@ -44,7 +44,7 @@ export function SiteFooter() {
         </div>
 
         <div className="space-y-3">
-          <nav className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-semibold text-ink-500">
+          <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-ink-500">
             <Link href="/servicios" className="hover:text-malva-700">
               Servicios
             </Link>
@@ -56,7 +56,7 @@ export function SiteFooter() {
             </Link>
           </nav>
 
-          <p className="rounded-[var(--radius-sm)] border border-champagne/60 bg-champagne/20 px-3 py-2 text-[11.5px] leading-relaxed text-ink-500">
+          <p className="rounded-[var(--radius-sm)] border border-champagne/60 bg-champagne/20 px-3 py-2 text-xs leading-relaxed text-ink-500">
             <strong className="font-semibold text-ink-700">Demostración.</strong>{' '}
             Casa Malva es un negocio ficticio construido por MeJorÍA. Servicios,
             precios, equipo y citas son datos de maqueta.

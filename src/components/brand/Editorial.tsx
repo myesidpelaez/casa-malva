@@ -41,8 +41,8 @@ export function TituloEditorial({
       className={cn(
         'font-display font-semibold text-ink-900',
         size === 'hero'
-          ? 'text-[44px] leading-[1.03] tracking-[-0.03em] sm:text-[68px]'
-          : 'text-[32px] leading-[1.06] tracking-[-0.02em] sm:text-[46px]',
+          ? 'text-5xl leading-[1.03] tracking-[-0.03em] sm:text-6xl'
+          : 'text-4xl leading-[1.06] tracking-[-0.02em] sm:text-5xl',
         className
       )}
     >

@@ -145,7 +145,7 @@ export default function AdminClientasPage() {
       </AdminHeader>
 
       {pares.length > 0 && (
-        <div className="mb-4 flex items-center justify-between rounded-lg bg-amber-50 p-3 text-[13px] text-amber-800 border border-amber-200">
+        <div className="mb-4 flex items-center justify-between rounded-lg bg-amber-50 p-3 text-sm text-amber-800 border border-amber-200">
           <span>{pares.length} posibles fichas repetidas</span>
           <Button variant="outline" size="sm" onClick={() => setDuplicadasAbierto(true)}>
             Revisar
@@ -204,10 +204,10 @@ export default function AdminClientasPage() {
                     {cli.nombre.charAt(0).toUpperCase()}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-[14px] font-semibold text-ink-900">
+                    <h2 className="truncate text-sm font-semibold text-ink-900">
                       {cli.nombre}
                     </h2>
-                    <p className="tnum flex items-center gap-1 truncate text-[12px] text-ink-400">
+                    <p className="tnum flex items-center gap-1 truncate text-xs text-ink-400">
                       <Phone className="h-3 w-3" strokeWidth={2} />
                       {cli.telefonoE164}
                     </p>
@@ -246,7 +246,7 @@ export default function AdminClientasPage() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-[13px] font-semibold text-ink-700">Historial</h3>
+              <h3 className="text-sm font-semibold text-ink-700">Historial</h3>
 
               {detalle.appointments.length === 0 ? (
                 <EmptyState compact title="Sin citas registradas" />
@@ -259,18 +259,18 @@ export default function AdminClientasPage() {
                       <Surface material="solid" radius="md" pad="sm">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate text-[13px] font-semibold text-ink-900">
+                            <p className="truncate text-sm font-semibold text-ink-900">
                               {servicios.find((s) => s.id === cita.serviceId)?.nombre ??
                                 'Servicio'}
                             </p>
-                            <p className="tnum text-[11.5px] text-ink-400 first-letter:uppercase">
+                            <p className="tnum text-xs text-ink-400 first-letter:uppercase">
                               {fechaHoraConAnio(cita.inicioUtc)}
                               {' · '}
                               {equipo.find((p) => p.id === cita.professionalId)?.nombre ?? '—'}
                             </p>
                           </div>
                           <div className="shrink-0 text-right">
-                            <p className="tnum text-[13px] font-semibold text-malva-700">
+                            <p className="tnum text-sm font-semibold text-malva-700">
                               {formatCurrencyFromCents(cita.precioCentavos)}
                             </p>
                             <div className="mt-1">
@@ -281,12 +281,12 @@ export default function AdminClientasPage() {
 
                         {cita.historial?.length > 0 && (
                           <details className="mt-2 border-t border-ink-100 pt-2">
-                            <summary className="cursor-pointer text-[11.5px] font-semibold text-ink-400 hover:text-malva-700">
+                            <summary className="cursor-pointer text-xs font-semibold text-ink-400 hover:text-malva-700">
                               Traza ({cita.historial.length})
                             </summary>
                             <ul className="mt-1.5 space-y-1">
                               {cita.historial.map((h, i) => (
-                                <li key={i} className="text-[11px] leading-relaxed text-ink-400">
+                                <li key={i} className="text-xs leading-relaxed text-ink-400">
                                   <span className="tnum">
                                     {selloCorto(h.fechaUtc)}
                                   </span>{' '}
@@ -335,10 +335,10 @@ export default function AdminClientasPage() {
             type="email"
           />
           <div className="space-y-1">
-            <label className="text-[13px] font-medium text-ink-700">Notas</label>
+            <label className="text-sm font-medium text-ink-700">Notas</label>
             <textarea
               name="notas"
-              className="w-full rounded-[var(--radius-md)] border border-ink-200 bg-white p-2.5 text-[13.5px] text-ink-900 outline-none transition focus:border-malva-400 focus:ring-4 focus:ring-malva-400/20"
+              className="w-full rounded-[var(--radius-md)] border border-ink-200 bg-white p-2.5 text-sm text-ink-900 outline-none transition focus:border-malva-400 focus:ring-4 focus:ring-malva-400/20"
               rows={3}
             />
           </div>
@@ -413,10 +413,10 @@ function Metrica({
 }) {
   return (
     <div className="rounded-[var(--radius-md)] border border-ink-100 bg-[var(--glass-tint)] px-2.5 py-3 text-center">
-      <p className="text-[10.5px] uppercase tracking-[0.1em] text-ink-400">{etiqueta}</p>
+      <p className="text-2xs uppercase tracking-[0.1em] text-ink-400">{etiqueta}</p>
       <p
         className={cn(
-          'tnum mt-0.5 text-[16px] font-semibold',
+          'tnum mt-0.5 text-base font-semibold',
           acento && 'text-malva-700',
           tono === 'alerta' && 'text-danger',
           tono === 'bien' && 'text-success',
@@ -425,7 +425,7 @@ function Metrica({
       >
         {valor}
       </p>
-      {nota && <p className="text-[9.5px] text-ink-300">{nota}</p>}
+      {nota && <p className="text-2xs text-ink-300">{nota}</p>}
     </div>
   )
 }

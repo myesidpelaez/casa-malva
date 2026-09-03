@@ -74,26 +74,48 @@ export function estadoApertura(ahora: Date = new Date()): EstadoApertura {
 export function BadgeApertura({ className }: { className?: string }) {
   const { abierto, texto } = estadoApertura()
 
+  // Formato editorial que comunica apertura física sin dar sensación de servicio cerrado
+  const textoEstudio = abierto
+    ? texto.replace('Abierto ahora · ', 'Estudio abierto · ')
+    : texto
+        .replace('Cerrado ahora · Abrimos ', 'Atención presencial ')
+        .replace('Abrimos hoy ', 'Atención presencial hoy ')
+
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-2 rounded-full border border-malva-200/80 bg-[var(--card)]/90 px-3.5 py-1.5 shadow-sm backdrop-blur-md',
+        'group inline-flex flex-wrap items-center gap-2.5 rounded-full border border-malva-200/90 dark:border-[#c5a059]/35 bg-white/95 dark:bg-[#1c151b]/95 px-4 py-2 shadow-[0_4px_20px_rgba(61,37,55,0.06)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:border-[#c5a059]/60 hover:shadow-[0_6px_24px_rgba(197,160,89,0.18)]',
         className
       )}
     >
-      <span className="relative flex h-2 w-2">
-        {abierto && (
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+      <span className="relative flex h-2.5 w-2.5 shrink-0">
+        {abierto ? (
+          <>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-80" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
+          </>
+        ) : (
+          <>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c5a059] opacity-40 duration-1000" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#c5a059] shadow-[0_0_6px_rgba(197,160,89,0.6)]" />
+          </>
         )}
-        <span
-          className={cn(
-            'relative inline-flex h-2 w-2 rounded-full',
-            abierto ? 'bg-emerald-500' : 'bg-ink-300'
-          )}
-        />
       </span>
-      <span className="text-xs font-semibold tracking-wide text-ink-700">
-        {texto} · {REGLAS_NEGOCIO.sede.ciudad.split(',')[0]}
+
+      <span className="text-xs font-medium tracking-tight text-ink-900 dark:text-[#f5edf2]">
+        {textoEstudio}
+      </span>
+
+      <span className="text-[#c5a059]/80 dark:text-[#c5a059] text-xs" aria-hidden>
+        ·
+      </span>
+
+      <span className="text-xs font-semibold text-malva-700 dark:text-[#f3d99e]">
+        Agenda online 24/7
+      </span>
+
+      <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-ink-500 dark:text-ink-400 border-l border-malva-200/80 dark:border-ink-800 pl-2">
+        <span>El Poblado</span>
       </span>
     </div>
   )

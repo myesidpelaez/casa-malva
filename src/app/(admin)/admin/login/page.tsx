@@ -54,17 +54,17 @@ export default function AdminLoginPage() {
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={spring.gentle}
-        className="w-full max-w-[400px]"
+        className="w-full max-w-sm"
       >
         <Surface material="frost" radius="xl" pad="lg" className="space-y-[var(--spacing-fib-3)]">
           <div className="text-center">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-[18px] bg-malva-600 font-display text-2xl font-semibold text-white shadow-[var(--shadow-malva)]">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-md bg-malva-600 font-display text-2xl font-semibold text-white shadow-[var(--shadow-malva)]">
               M
             </span>
-            <h1 className="mt-3 font-display text-[24px] font-semibold text-ink-900">
+            <h1 className="mt-3 font-display text-2xl font-semibold text-ink-900">
               Panel del estudio
             </h1>
-            <p className="text-[13px] text-ink-500">{REGLAS_NEGOCIO.sede.nombre}</p>
+            <p className="text-sm text-ink-500">{REGLAS_NEGOCIO.sede.nombre}</p>
           </div>
 
           <form onSubmit={entrar} className="space-y-[var(--spacing-fib-2)]">
@@ -94,7 +94,7 @@ export default function AdminLoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={tween.fast}
                 role="alert"
-                className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-danger/25 bg-danger-soft px-3 py-2.5 text-[12.5px] text-danger"
+                className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-danger/25 bg-danger-soft px-3 py-2.5 text-xs text-danger"
               >
                 <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
                 {error}
@@ -123,7 +123,7 @@ export default function AdminLoginPage() {
         <div className="mt-4 text-center">
           <Link
             href="/inicio"
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ink-400 transition-colors hover:text-malva-700"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-400 transition-colors hover:text-malva-700"
           >
             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />
             Volver al sitio

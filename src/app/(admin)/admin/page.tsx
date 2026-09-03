@@ -283,10 +283,10 @@ export default function AdminAgendaPage() {
           </Button>
 
           <div className="min-w-0 flex-1 px-1 text-center">
-            <p className="truncate font-display text-[15px] sm:text-[18px] font-semibold leading-tight text-ink-900 first-letter:uppercase">
+            <p className="truncate font-display text-base sm:text-lg font-semibold leading-tight text-ink-900 first-letter:uppercase">
               {fechaLarga(dia)}
             </p>
-            <p className="tnum truncate text-[11px] sm:text-[12px] text-ink-400">
+            <p className="tnum truncate text-xs sm:text-xs text-ink-400">
               {citasDelDia.length} cita{citasDelDia.length === 1 ? '' : 's'} ·{' '}
               {formatCurrencyFromCents(ingresoPrevisto)} previstos
             </p>
@@ -297,7 +297,7 @@ export default function AdminAgendaPage() {
               <Button
                 variant="soft"
                 size="sm"
-                className="h-8 px-2 text-[11px] sm:h-9 sm:px-3 sm:text-xs"
+                className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-xs"
                 onClick={() => setDia(startOfDay(new Date()))}
               >
                 Hoy
@@ -322,7 +322,7 @@ export default function AdminAgendaPage() {
           type="button"
           onClick={() => setProfesionalMovil('todas')}
           className={cn(
-            'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all',
+            'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all',
             profesionalMovil === 'todas'
               ? 'bg-malva-600 text-white shadow-[var(--shadow-malva)]'
               : 'border border-ink-100 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)]'
@@ -332,7 +332,7 @@ export default function AdminAgendaPage() {
           <span>Todo el equipo</span>
           <span
             className={cn(
-              'rounded-full px-1.5 py-px text-[10px] tnum',
+              'rounded-full px-1.5 py-px text-2xs tnum',
               profesionalMovil === 'todas' ? 'bg-white/20 text-white' : 'bg-ink-100 text-ink-600'
             )}
           >
@@ -350,7 +350,7 @@ export default function AdminAgendaPage() {
               type="button"
               onClick={() => setProfesionalMovil(prof.id)}
               className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all',
+                'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all',
                 active
                   ? 'bg-malva-600 text-white shadow-[var(--shadow-malva)]'
                   : 'border border-ink-100 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)]'
@@ -358,7 +358,7 @@ export default function AdminAgendaPage() {
             >
               <span
                 className={cn(
-                  'grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] font-bold',
+                  'grid h-4 w-4 shrink-0 place-items-center rounded-full text-2xs font-bold',
                   active ? 'bg-white/25 text-white' : 'bg-malva-100 text-malva-700'
                 )}
               >
@@ -368,7 +368,7 @@ export default function AdminAgendaPage() {
               {count > 0 && (
                 <span
                   className={cn(
-                    'rounded-full px-1.5 py-px text-[10px] tnum',
+                    'rounded-full px-1.5 py-px text-2xs tnum',
                     active ? 'bg-white/20 text-white' : 'bg-malva-100 text-malva-700'
                   )}
                 >
@@ -391,8 +391,8 @@ export default function AdminAgendaPage() {
         ) : citasMovil.length === 0 ? (
           <Surface radius="lg" pad="md" className="text-center py-10">
             <Calendar className="mx-auto h-8 w-8 text-ink-300" strokeWidth={1.5} />
-            <p className="mt-2 text-[14px] font-semibold text-ink-900">Sin citas para este día</p>
-            <p className="mt-1 text-[12px] text-ink-400">
+            <p className="mt-2 text-sm font-semibold text-ink-900">Sin citas para este día</p>
+            <p className="mt-1 text-xs text-ink-400">
               {profesionalMovil === 'todas'
                 ? 'No hay reservas registradas en el estudio.'
                 : 'Esta profesional no tiene citas en esta fecha.'}
@@ -462,17 +462,17 @@ export default function AdminAgendaPage() {
                   key={prof.id}
                   radius="lg"
                   pad="sm"
-                  className="flex min-h-[220px] flex-col"
+                  className="flex min-h-56 flex-col"
                 >
                   <div className="flex items-center gap-2.5 border-b border-malva-100 pb-2.5">
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-malva-500 to-malva-700 font-display text-sm font-semibold text-white">
                       {prof.nombre.charAt(0)}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-[13.5px] font-semibold text-ink-900">
+                      <h2 className="truncate text-sm font-semibold text-ink-900">
                         {prof.nombre}
                       </h2>
-                      <p className="truncate text-[11px] text-ink-400">{prof.cargo}</p>
+                      <p className="truncate text-xs text-ink-400">{prof.cargo}</p>
                     </div>
                     <Badge tone={suyas.length ? 'malva' : 'neutral'} size="sm">
                       {suyas.length}
@@ -481,7 +481,7 @@ export default function AdminAgendaPage() {
 
                   <div className="mt-2.5 flex-1 space-y-2">
                     {suyas.length === 0 && (
-                      <p className="rounded-[var(--radius-sm)] border border-dashed border-malva-200 py-6 text-center text-[11.5px] text-ink-400">
+                      <p className="rounded-[var(--radius-sm)] border border-dashed border-malva-200 py-6 text-center text-xs text-ink-400">
                         Sin citas
                       </p>
                     )}
@@ -549,10 +549,10 @@ export default function AdminAgendaPage() {
         <div className="space-y-3">
           {cancelando && (
             <Surface material="solid" radius="md" pad="sm">
-              <p className="text-[13px] font-semibold text-ink-900">
+              <p className="text-sm font-semibold text-ink-900">
                 {servicios.find((s) => s.id === cancelando.serviceId)?.nombre}
               </p>
-              <p className="tnum text-[12px] text-ink-500">
+              <p className="tnum text-xs text-ink-500">
                 {fechaHoraLarga(cancelando.inicioUtc)}
               </p>
             </Surface>
@@ -661,12 +661,12 @@ function TarjetaCita({
       <div className="space-y-2 p-2.5 sm:p-3">
         <div className="flex items-center justify-between gap-2">
           {cita.estado === 'completada' ? (
-            <div className="flex items-center gap-1.5 text-[12px] font-medium text-emerald-700">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
               <Check className="h-3.5 w-3.5" />
               {cita.historial?.find(h => h.estado === 'completada')?.nota || 'Completada'}
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 text-[12px] font-medium text-ink-500">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-ink-500">
               <Clock className="h-3.5 w-3.5" />
               {hora(cita.inicioUtc)} - {hora(cita.finUtc)}
             </div>
@@ -674,11 +674,11 @@ function TarjetaCita({
 
           <div className="flex items-center gap-1.5">
             {mostrarProfesional && profesional && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-malva-100 px-2 py-0.5 text-[11px] font-semibold text-malva-700">
-                <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-malva-600 text-[8.5px] font-bold text-white">
+              <span className="inline-flex items-center gap-1 rounded-full bg-malva-100 px-2 py-0.5 text-xs font-semibold text-malva-700">
+                <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-malva-600 text-2xs font-bold text-white">
                   {profesional.nombre.charAt(0)}
                 </span>
-                <span className="truncate max-w-[80px] sm:max-w-none">
+                <span className="truncate max-w-20 sm:max-w-none">
                   {nombreCorto(profesional.id, equipo)}
                 </span>
               </span>
@@ -688,10 +688,10 @@ function TarjetaCita({
         </div>
 
         <div className="min-w-0">
-          <p className="truncate text-[13.5px] font-semibold text-ink-900">
+          <p className="truncate text-sm font-semibold text-ink-900">
             {servicio?.nombre ?? 'Servicio'}
           </p>
-          <p className="truncate text-[11.5px] text-ink-500">
+          <p className="truncate text-xs text-ink-500">
             {clienta?.nombre ?? 'Clienta'}
             {clienta?.telefonoE164 && (
               <span className="tnum text-ink-400"> · {clienta.telefonoE164}</span>
@@ -700,11 +700,11 @@ function TarjetaCita({
         </div>
 
         <div className="flex items-center justify-between pt-0.5">
-          <span className="inline-flex items-center gap-1 text-[11px] text-ink-400">
+          <span className="inline-flex items-center gap-1 text-xs text-ink-400">
             <Origen className="h-3.5 w-3.5" strokeWidth={1.75} />
             {ORIGEN_META[cita.origen]?.label ?? 'Web'}
           </span>
-          <span className="tnum text-[13px] font-semibold text-malva-700">
+          <span className="tnum text-sm font-semibold text-malva-700">
             {formatCurrencyFromCents(cita.precioCentavos)}
           </span>
         </div>
@@ -717,7 +717,7 @@ function TarjetaCita({
                   variant="success"
                   size="sm"
                   onClick={onConfirmar}
-                  className="!h-8 !px-3 text-[12px]"
+                  className="!h-8 !px-3 text-xs"
                 >
                   <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                   Confirmar
@@ -730,7 +730,7 @@ function TarjetaCita({
                     variant="soft"
                     size="sm"
                     onClick={onCobrar}
-                    className="!h-8 !px-3 text-[12px]"
+                    className="!h-8 !px-3 text-xs"
                   >
                     <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
                     Realizada
@@ -739,7 +739,7 @@ function TarjetaCita({
                     variant="ghost"
                     size="sm"
                     onClick={onNoAsistio}
-                    className="!h-8 !px-2.5 !text-warning text-[12px] hover:!bg-warning-soft"
+                    className="!h-8 !px-2.5 !text-warning text-xs hover:!bg-warning-soft"
                   >
                     <UserX className="h-3.5 w-3.5" strokeWidth={2} />
                     No vino

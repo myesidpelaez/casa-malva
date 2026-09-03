@@ -55,7 +55,7 @@ export function Segmented<T extends string>({
               'relative shrink-0 rounded-full px-2.5 sm:px-4 font-semibold transition-colors duration-200',
               fullWidth && 'flex-1 justify-center',
               h,
-              size === 'sm' ? 'text-[11.5px] sm:text-[12.5px]' : 'text-[12.5px] sm:text-[13.5px]',
+              size === 'sm' ? 'text-xs sm:text-xs' : 'text-xs sm:text-sm',
               active ? 'text-white' : 'text-ink-500 hover:text-ink-900'
             )}
           >
@@ -71,7 +71,7 @@ export function Segmented<T extends string>({
               {typeof opt.count === 'number' && (
                 <span
                   className={cn(
-                    'tnum rounded-full px-1.5 py-px text-[9.5px] sm:text-[10px]',
+                    'tnum rounded-full px-1.5 py-px text-2xs sm:text-2xs',
                     active ? 'bg-white/22 text-white' : 'bg-ink-100 text-ink-500'
                   )}
                 >
@@ -102,10 +102,10 @@ export function Stepper({
   return (
     <div className="space-y-2.5">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-malva-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-malva-600">
           Paso {current + 1} de {steps.length}
         </p>
-        <p className="text-[13px] font-semibold text-ink-700">{steps[current]}</p>
+        <p className="text-sm font-semibold text-ink-700">{steps[current]}</p>
       </div>
 
       <div

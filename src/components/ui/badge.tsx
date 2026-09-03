@@ -26,9 +26,9 @@ const badgeVariants = cva(
         glass: 'glass text-ink-700',
       },
       size: {
-        sm: 'px-2 py-0.5 text-[10.5px] rounded-md',
-        md: 'px-2.5 py-1 text-[11.5px] rounded-lg',
-        lg: 'px-3.5 py-1.5 text-[13px] rounded-full',
+        sm: 'px-2 py-0.5 text-2xs rounded-md',
+        md: 'px-2.5 py-1 text-xs rounded-lg',
+        lg: 'px-3.5 py-1.5 text-sm rounded-full',
       },
       uppercase: { true: 'uppercase tracking-[0.08em]', false: '' },
     },
@@ -115,7 +115,7 @@ export function StatusPill({
 /** Punto latiendo. Señal de "esto está vivo" en la cabecera del panel. */
 export function LivePulse({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-2 text-[11.5px] font-semibold text-ink-500">
+    <span className="inline-flex items-center gap-2 text-xs font-semibold text-ink-500">
       <span className="relative flex h-2 w-2">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-70" />
         <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />

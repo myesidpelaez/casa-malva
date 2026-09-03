@@ -46,9 +46,9 @@ export const buttonVariants = cva(
         ],
       },
       size: {
-        sm: 'h-9 rounded-[var(--radius-xs)] px-3.5 text-[13px]',
+        sm: 'h-9 rounded-[var(--radius-xs)] px-3.5 text-sm',
         md: 'h-11 rounded-[var(--radius-sm)] px-5 text-sm touch-target',
-        lg: 'h-13 rounded-[var(--radius-md)] px-7 text-[15px] touch-target',
+        lg: 'h-13 rounded-[var(--radius-md)] px-7 text-base touch-target',
         xl: 'h-14 rounded-[var(--radius-lg)] px-8 text-base touch-target',
         icon: 'h-11 w-11 rounded-[var(--radius-sm)] p-0 touch-target',
         'icon-sm': 'h-9 w-9 rounded-[var(--radius-xs)] p-0',

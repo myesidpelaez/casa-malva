@@ -108,7 +108,7 @@ export function WhatsAppTesterCard() {
             <p className="leading-relaxed">
               Cada agendamiento dispara de inmediato una confirmación con fecha, hora, estilista y ubicación en Medellín.
             </p>
-            <div className="pt-1.5 border-t border-malva-200/50 flex flex-wrap gap-2 text-[11px] text-ink-600">
+            <div className="pt-1.5 border-t border-malva-200/50 flex flex-wrap gap-2 text-xs text-ink-600">
               <span>• Tarifa Meta Utility: <strong>~$3 COP / msg</strong></span>
               <span>• Cero intermediarios</span>
               <span>• 100% automático</span>
@@ -118,11 +118,11 @@ export function WhatsAppTesterCard() {
           <div className="text-xs text-ink-500">
             {status.configurado ? (
               <p className="text-emerald-700 font-medium">
-                ✅ Credenciales detectadas en <code className="bg-emerald-50 px-1.5 py-0.5 rounded text-[11px]">.env.local</code>. Los mensajes se envían a la red real de WhatsApp.
+                ✅ Credenciales detectadas en <code className="bg-emerald-50 px-1.5 py-0.5 rounded text-xs">.env.local</code>. Los mensajes se envían a la red real de WhatsApp.
               </p>
             ) : (
               <p className="text-amber-800">
-                ℹ️ Para conectar tu número real o de pruebas, agrega <code className="bg-amber-100/70 px-1 py-0.5 rounded text-[11px]">WHATSAPP_ACCESS_TOKEN</code> y <code className="bg-amber-100/70 px-1 py-0.5 rounded text-[11px]">WHATSAPP_PHONE_NUMBER_ID</code> en <code className="bg-amber-100/70 px-1 py-0.5 rounded text-[11px]">.env.local</code>.
+                ℹ️ Para conectar tu número real o de pruebas, agrega <code className="bg-amber-100/70 px-1 py-0.5 rounded text-xs">WHATSAPP_ACCESS_TOKEN</code> y <code className="bg-amber-100/70 px-1 py-0.5 rounded text-xs">WHATSAPP_PHONE_NUMBER_ID</code> en <code className="bg-amber-100/70 px-1 py-0.5 rounded text-xs">.env.local</code>.
               </p>
             )}
           </div>
@@ -187,7 +187,7 @@ export function WhatsAppTesterCard() {
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     {result.simulado ? 'Mensaje Simulado con Éxito' : '¡Mensaje Entregado a Meta!'}
                   </div>
-                  <p className="text-[11px] opacity-90">
+                  <p className="text-xs opacity-90">
                     {result.simulado
                       ? 'Revisa la consola del servidor para ver el cuerpo exacto del mensaje.'
                       : `ID de mensaje: ${result.mensajeId}`}
@@ -199,7 +199,7 @@ export function WhatsAppTesterCard() {
                     <AlertCircle className="h-4 w-4 text-rose-600" />
                     Error en el envío
                   </div>
-                  <p className="text-[11px] opacity-90">{result.error}</p>
+                  <p className="text-xs opacity-90">{result.error}</p>
                 </div>
               )}
             </div>

@@ -13,7 +13,7 @@ export interface EsperaMarcaProps {
    */
   label?: string
   /**
-   * Si es true, ocupa el alto completo centrado (h-full / min-h-[300px]).
+   * Si es true, ocupa el alto completo centrado (h-full / min-h-72).
    * @default false
    */
   fullPage?: boolean
@@ -44,7 +44,7 @@ export function EsperaMarca({
     >
       <Marca size={size} animate="espera" className="text-malva-600" />
       {label && (
-        <p className="font-display text-[14px] font-medium tracking-tight text-ink-500 animate-pulse">
+        <p className="font-display text-sm font-medium tracking-tight text-ink-500 animate-pulse">
           {label}
         </p>
       )}

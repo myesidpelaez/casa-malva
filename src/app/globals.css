@@ -15,6 +15,10 @@
     system-ui, sans-serif;
   --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
 
+  /* ---- Escala tipográfica complementaria -------------------------------- */
+  --text-2xs: 10px;
+  --text-2xs--line-height: 14px;
+
   /* ---- Escala malva (el acento de marca) -------------------------------- */
   --color-malva-50: var(--cm-malva-50);
   --color-malva-100: var(--cm-malva-100);
@@ -245,7 +249,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   .aurora — el telón de fondo sobre el que el vidrio tiene sentido.
+   .aurora — el telón de fondo botánico y living aura sobre el que el vidrio tiene sentido.
    ------------------------------------------------------------------------ */
 .aurora {
   position: fixed;
@@ -253,7 +257,20 @@ body {
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  background: var(--canvas);
+  background: radial-gradient(
+    circle at 50% 10%,
+    rgba(243, 234, 240, 0.5) 0%,
+    var(--canvas) 62%
+  );
+}
+
+[data-theme='dark'] .aurora {
+  background: radial-gradient(
+    circle at 50% 12%,
+    rgba(61, 37, 55, 0.45) 0%,
+    rgba(197, 160, 89, 0.05) 38%,
+    var(--canvas) 72%
+  );
 }
 
 .aurora::before,
@@ -261,61 +278,115 @@ body {
   content: "";
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.55;
+  filter: blur(90px);
+  will-change: transform, opacity;
 }
 
 .aurora::before {
-  width: 60vw;
-  height: 60vw;
-  max-width: 720px;
-  max-height: 720px;
-  top: -18vw;
-  right: -12vw;
+  width: 65vw;
+  height: 65vw;
+  max-width: 780px;
+  max-height: 780px;
+  top: -16vw;
+  right: -10vw;
   background: radial-gradient(
-    circle at 30% 30%,
+    circle at 35% 35%,
     var(--color-malva-200),
-    transparent 68%
+    rgba(197, 160, 89, 0.18) 50%,
+    transparent 70%
   );
-  animation: aurora-drift-a 26s var(--ease-in-out-soft) infinite alternate;
+  animation: aurora-drift-a 22s var(--ease-in-out-soft) infinite alternate;
 }
 
 .aurora::after {
-  width: 52vw;
-  height: 52vw;
-  max-width: 620px;
-  max-height: 620px;
-  bottom: -16vw;
-  left: -10vw;
-  background: radial-gradient(circle at 60% 40%, var(--color-blush), transparent 66%);
-  animation: aurora-drift-b 32s var(--ease-in-out-soft) infinite alternate;
+  width: 58vw;
+  height: 58vw;
+  max-width: 680px;
+  max-height: 680px;
+  bottom: -14vw;
+  left: -8vw;
+  background: radial-gradient(
+    circle at 55% 45%,
+    var(--color-blush),
+    rgba(230, 213, 189, 0.22) 45%,
+    transparent 68%
+  );
+  animation: aurora-drift-b 28s var(--ease-in-out-soft) infinite alternate;
+}
+
+.aurora-core {
+  position: absolute;
+  top: 28%;
+  left: 32%;
+  width: 46vw;
+  height: 46vw;
+  max-width: 540px;
+  max-height: 540px;
+  border-radius: 50%;
+  filter: blur(100px);
+  background: radial-gradient(circle, rgba(197, 160, 89, 0.12) 0%, transparent 68%);
+  animation: aurora-breathe 18s var(--ease-in-out-soft) infinite alternate;
+  will-change: transform, opacity;
 }
 
 [data-theme='dark'] .aurora::before {
   background: radial-gradient(
-    circle at 30% 30%,
-    rgba(123, 75, 110, 0.35),
-    transparent 68%
+    circle at 35% 35%,
+    rgba(123, 75, 110, 0.42),
+    rgba(197, 160, 89, 0.14) 48%,
+    transparent 72%
   );
 }
 
 [data-theme='dark'] .aurora::after {
   background: radial-gradient(
-    circle at 60% 40%,
-    rgba(102, 61, 91, 0.3),
-    transparent 66%
+    circle at 55% 45%,
+    rgba(102, 61, 91, 0.38),
+    rgba(82, 50, 74, 0.25) 50%,
+    transparent 70%
   );
 }
 
+[data-theme='dark'] .aurora-core {
+  background: radial-gradient(circle, rgba(197, 160, 89, 0.08) 0%, transparent 68%);
+}
+
 @keyframes aurora-drift-a {
-  to {
-    transform: translate3d(-6%, 8%, 0) scale(1.12);
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate3d(-7%, 9%, 0) scale(1.15);
+    opacity: 0.58;
   }
 }
 
 @keyframes aurora-drift-b {
-  to {
-    transform: translate3d(8%, -6%, 0) scale(1.08);
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(9%, -7%, 0) scale(1.12);
+    opacity: 0.54;
+  }
+}
+
+@keyframes aurora-breathe {
+  0% {
+    transform: scale(0.88) translate3d(0, 0, 0);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.18) translate3d(4%, 3%, 0);
+    opacity: 0.8;
   }
 }
 

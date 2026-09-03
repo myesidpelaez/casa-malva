@@ -52,13 +52,13 @@ export function EmptyState({
         <h4
           className={cn(
             'font-display font-semibold text-ink-900',
-            compact ? 'text-[15px]' : 'text-lg'
+            compact ? 'text-base' : 'text-lg'
           )}
         >
           {title}
         </h4>
         {description && (
-          <p className="mx-auto max-w-sm text-[13px] leading-relaxed text-ink-500">
+          <p className="mx-auto max-w-sm text-sm leading-relaxed text-ink-500">
             {description}
           </p>
         )}

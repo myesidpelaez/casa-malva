@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Award, Calendar, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { Award, Calendar, ChevronLeft, ChevronRight, Sparkles, CheckCircle2 } from 'lucide-react'
 import { getProfessionalAvatar } from '@/lib/catalogo-ui'
 import { cn } from '@/lib/utils'
 import type { Professional } from '@/types'
@@ -105,11 +105,11 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
       {/* Controles del Slider */}
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-malva-100/90 dark:bg-malva-950/80 px-3.5 py-1.5 text-[12.5px] font-bold text-malva-800 dark:text-malva-200 border border-malva-200/80 dark:border-malva-800 shadow-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-malva-100/90 dark:bg-malva-950/80 px-3.5 py-1.5 text-xs font-bold text-malva-800 dark:text-malva-200 border border-malva-200/80 dark:border-malva-800 shadow-xs">
             <Award className="h-4 w-4 text-[#C5A059]" />
             {professionals.length} Maestras en escena
           </span>
-          <span className="hidden text-[13px] text-ink-500 dark:text-ink-400 sm:inline font-medium">
+          <span className="hidden text-sm text-ink-500 dark:text-ink-400 sm:inline font-medium">
             3 especialistas por vista · Desliza para explorar el equipo
           </span>
         </div>
@@ -157,12 +157,12 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
           return (
             <div
               key={prof.id}
-              className="w-[330px] sm:w-[380px] lg:w-[calc((100%-48px)/3)] shrink-0 snap-start flex flex-col"
+              className="w-80 sm:w-96 lg:w-[calc((100%-48px)/3)] shrink-0 snap-start flex flex-col"
             >
               <div
                 className={cn(
-                  'group flex h-full flex-col justify-between rounded-[26px] p-6 transition-all duration-300',
-                  'bg-[var(--card)] border border-ink-200/90 dark:border-ink-800 shadow-xs',
+                  'group flex h-full flex-col justify-between rounded-xl p-6 transition-all duration-300',
+                  'bg-white dark:bg-[#181116] border border-malva-200/90 dark:border-[#c5a059]/30 shadow-sm',
                   'hover:-translate-y-1.5 hover:shadow-xl hover:shadow-malva-900/10 hover:border-malva-300 dark:hover:border-malva-500/50'
                 )}
               >
@@ -188,34 +188,34 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
 
                     {/* Títulos y Especialidad */}
                     <div className="min-w-0 flex-1 space-y-1">
-                      <span className="inline-block rounded-md bg-malva-100/90 dark:bg-malva-950/80 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-malva-800 dark:text-malva-200">
+                      <span className="inline-block rounded-md bg-malva-100/90 dark:bg-malva-950/80 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-malva-800 dark:text-malva-200">
                         {copy.experiencia}
                       </span>
-                      <h3 className="font-display text-[20px] sm:text-[21px] font-semibold text-ink-900 dark:text-white group-hover:text-malva-700 dark:group-hover:text-malva-300 transition-colors leading-tight">
+                      <h3 className="font-display text-xl sm:text-xl font-semibold text-ink-900 dark:text-white group-hover:text-malva-700 dark:group-hover:text-malva-300 transition-colors leading-tight">
                         {prof.nombre}
                       </h3>
-                      <p className="text-[13px] font-medium text-malva-700 dark:text-malva-300 leading-snug">
+                      <p className="text-sm font-medium text-malva-700 dark:text-malva-300 leading-snug">
                         {prof.cargo || 'Especialista de Autor'}
                       </p>
                     </div>
                   </div>
 
                   {/* Destaque de Maestría */}
-                  <div className="mt-4 rounded-xl bg-malva-50/70 dark:bg-malva-950/40 p-2.5 border border-malva-100/80 dark:border-malva-900/50">
-                    <span className="text-[11.5px] font-bold uppercase tracking-wide text-[#C5A059] block">
+                  <div className="mt-4 rounded-xl bg-malva-50/90 dark:bg-[#231520] p-2.5 border border-malva-200/80 dark:border-[#c5a059]/35">
+                    <span className="text-xs font-bold uppercase tracking-wide text-[#C5A059] block">
                       ✦ {copy.destaque}
                     </span>
                   </div>
 
                   {/* Copywriting de Autor */}
-                  <p className="mt-3.5 text-[13.5px] leading-relaxed text-ink-600 dark:text-ink-300 font-sans line-clamp-3">
+                  <p className="mt-3.5 text-sm leading-relaxed text-ink-600 dark:text-[#ede4eb] font-sans line-clamp-3">
                     {copy.bioCorta}
                   </p>
                 </div>
 
                 {/* Footer de la Card: Metadatos y CTA */}
                 <div className="mt-6 border-t border-ink-100/90 dark:border-ink-800/90 pt-4 space-y-3">
-                  <div className="flex items-center justify-between text-[12px] font-medium text-ink-500 dark:text-ink-400">
+                  <div className="flex items-center justify-between text-xs font-medium text-ink-500 dark:text-ink-400">
                     <span className="inline-flex items-center gap-1.5">
                       <Sparkles className="h-3.5 w-3.5 text-[#C5A059]" />
                       {(prof.serviceIds ?? []).length} tratamientos de autor
@@ -228,7 +228,7 @@ export function EquipoSlider({ professionals }: { professionals: Professional[] 
 
                   <Link
                     href={`/reservar?professionalId=${prof.id}`}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-malva-700 hover:bg-malva-800 text-white dark:bg-malva-600 dark:hover:bg-malva-500 py-3 text-[13.5px] font-bold shadow-md shadow-malva-900/15 transition-all duration-200 cursor-pointer"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-malva-700 hover:bg-malva-800 text-white dark:bg-[#2e1528] dark:hover:bg-[#3d1c35] dark:border dark:border-[#c5a059]/45 dark:text-white py-3 text-sm font-bold shadow-md shadow-malva-900/15 transition-all duration-200 cursor-pointer"
                   >
                     <Calendar className="h-4 w-4" strokeWidth={2} />
                     <span>Agendar con {prof.nombre.split(' ')[0]}</span>

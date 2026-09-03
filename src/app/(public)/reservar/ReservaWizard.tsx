@@ -238,8 +238,8 @@ export function ReservaWizard({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
       >
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[450px] w-[800px] rounded-full bg-gradient-to-br from-malva-200/30 via-blush/20 to-champagne/15 blur-[110px] dark:from-malva-950/40 dark:via-malva-900/20 dark:to-transparent" />
-        <div className="absolute top-[500px] -right-32 h-[450px] w-[450px] rounded-full bg-gradient-to-bl from-malva-300/20 via-blush/15 to-transparent blur-[120px] dark:from-malva-900/15 dark:to-transparent" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-112 w-200 rounded-full bg-gradient-to-br from-malva-200/30 via-blush/20 to-champagne/15 blur-[110px] dark:from-malva-950/40 dark:via-malva-900/20 dark:to-transparent" />
+        <div className="absolute top-[500px] -right-32 h-112 w-112 rounded-full bg-gradient-to-bl from-malva-300/20 via-blush/15 to-transparent blur-[120px] dark:from-malva-900/15 dark:to-transparent" />
       </div>
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-[var(--spacing-fib-3)] sm:py-[var(--spacing-fib-4)]">
@@ -292,7 +292,7 @@ export function ReservaWizard({
                     {fechaLarga(franja.inicioUtc)} · {horaCorta(franja.inicioUtc)}
                   </Badge>
                 )}
-                <span className="tnum ml-auto font-display text-[14px] sm:text-[15px] font-bold text-malva-700 dark:text-malva-200 font-bold">
+                <span className="tnum ml-auto font-display text-sm sm:text-base font-bold text-malva-700 dark:text-malva-200 font-bold">
                   {formatCurrencyFromCents(servicio.precioCentavos)}
                 </span>
               </motion.div>
@@ -306,7 +306,7 @@ export function ReservaWizard({
             animate={{ opacity: 1, y: 0 }}
             transition={tween.base}
             role="alert"
-            className="mb-6 flex items-start gap-3 rounded-[var(--radius-lg)] border border-danger/25 bg-danger-soft p-4 text-[13.5px] text-danger shadow-sm"
+            className="mb-6 flex items-start gap-3 rounded-[var(--radius-lg)] border border-danger/25 bg-danger-soft p-4 text-sm text-danger shadow-sm"
           >
             <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
             <p className="font-medium">{errorReserva}</p>
@@ -431,14 +431,14 @@ function PasoServicio({
       <header className="text-center sm:text-left space-y-2">
         <div className="flex items-center justify-center sm:justify-start gap-2">
           {estado}
-          <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-malva-700">
             Paso 1 · Catálogo de autor
           </span>
         </div>
         <TituloEditorial as="h1" size="seccion" resalte="te vas a regalar?" className="mt-2">
           ¿Qué ritual
         </TituloEditorial>
-        <p className="text-[15px] sm:text-[16px] text-ink-600 font-sans">
+        <p className="text-base sm:text-base text-ink-600 font-sans">
           Elige el servicio que deseas para consultar la disponibilidad en tiempo real.
         </p>
       </header>
@@ -449,7 +449,7 @@ function PasoServicio({
           type="button"
           onClick={() => setCategoriaFiltro('todas')}
           className={cn(
-            'px-4 py-2 rounded-full text-[13px] font-semibold transition-all shrink-0 cursor-pointer',
+            'px-4 py-2 rounded-full text-sm font-semibold transition-all shrink-0 cursor-pointer',
             categoriaFiltro === 'todas'
               ? 'bg-malva-700 text-white shadow-sm'
               : 'bg-[var(--card)] border border-ink-200/80 text-ink-600 hover:border-malva-300 hover:text-ink-900'
@@ -466,7 +466,7 @@ function PasoServicio({
               type="button"
               onClick={() => setCategoriaFiltro(cat.id)}
               className={cn(
-                'px-4 py-2 rounded-full text-[13px] font-semibold transition-all shrink-0 cursor-pointer',
+                'px-4 py-2 rounded-full text-sm font-semibold transition-all shrink-0 cursor-pointer',
                 activa
                   ? 'bg-malva-700 text-white shadow-sm'
                   : 'bg-[var(--card)] border border-ink-200/80 text-ink-600 hover:border-malva-300 hover:text-ink-900'
@@ -499,7 +499,7 @@ function PasoServicio({
                 }
               }}
               className={cn(
-                'group relative flex flex-col justify-between rounded-[20px] border p-4 transition-all duration-300 cursor-pointer overflow-hidden',
+                'group relative flex flex-col justify-between rounded-lg border p-4 transition-all duration-300 cursor-pointer overflow-hidden',
                 'bg-[var(--card)] shadow-2xs hover:shadow-lg hover:shadow-malva-900/5 hover:-translate-y-0.5',
                 activo
                   ? 'border-malva-600 ring-2 ring-malva-600/90 shadow-md'
@@ -508,7 +508,7 @@ function PasoServicio({
             >
               <div className="flex gap-4">
                 {/* Miniatura fotográfica */}
-                <div className="relative h-20 w-20 sm:h-22 sm:w-22 shrink-0 rounded-[14px] overflow-hidden bg-malva-100 shadow-2xs">
+                <div className="relative h-20 w-20 sm:h-22 sm:w-22 shrink-0 rounded-sm overflow-hidden bg-malva-100 shadow-2xs">
                   <Image
                     src={imageUrl}
                     alt={s.nombre}
@@ -521,22 +521,22 @@ function PasoServicio({
                 {/* Contenido textual */}
                 <div className="min-w-0 flex-1 space-y-1.5">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-display text-[16px] sm:text-[17px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug">
+                    <h3 className="font-display text-base sm:text-lg font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug">
                       {s.nombre}
                     </h3>
                   </div>
 
-                  <span className="tnum block font-display text-[16px] sm:text-[17px] font-bold text-malva-700 dark:text-malva-200 font-bold">
+                  <span className="tnum block font-display text-base sm:text-lg font-bold text-malva-700 dark:text-malva-200 font-bold">
                     {formatCurrencyFromCents(s.precioCentavos)}
                   </span>
 
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[12px] text-ink-500">
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs text-ink-500">
                     <span className="inline-flex items-center gap-1 rounded-md bg-ink-100/80 dark:bg-ink-900/90 px-2 py-0.5 font-medium text-ink-800 dark:text-ink-200 border border-transparent dark:border-ink-700/60">
                       <Clock className="h-3 w-3 text-malva-600" />
                       {humanDuration(s.duracionMin)}
                     </span>
                     {requiereConfirmacion && (
-                      <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                      <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
                         · Confirmación previa
                       </span>
                     )}
@@ -568,13 +568,13 @@ function PasoProfesional({
   return (
     <section className="space-y-6 sm:space-y-8">
       <header className="text-center sm:text-left space-y-2">
-        <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-malva-700">
           Paso 2 · Equipo de especialistas
         </span>
         <TituloEditorial as="h1" size="seccion" resalte="confías tu ritual?" className="mt-2">
           ¿En manos de quién
         </TituloEditorial>
-        <p className="text-[15px] sm:text-[16px] text-ink-600 font-sans">
+        <p className="text-base sm:text-base text-ink-600 font-sans">
           Mostrando únicamente las profesionales certificadas para{' '}
           <strong className="font-semibold text-ink-900">{servicio.nombre}</strong>.
         </p>
@@ -599,7 +599,7 @@ function PasoProfesional({
               }
             }}
             className={cn(
-              'sm:col-span-2 group relative flex items-center gap-4 rounded-[22px] border p-5 transition-all duration-300 cursor-pointer overflow-hidden',
+              'sm:col-span-2 group relative flex items-center gap-4 rounded-lg border p-5 transition-all duration-300 cursor-pointer overflow-hidden',
               'bg-gradient-to-r from-malva-50/70 via-[var(--card)] to-blush/30 dark:from-malva-950/40 dark:to-transparent',
               seleccionado === null
                 ? 'border-malva-600 ring-2 ring-malva-600/90 shadow-md'
@@ -611,14 +611,14 @@ function PasoProfesional({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="font-display text-[17px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors">
+                <h3 className="font-display text-lg font-semibold text-ink-900 group-hover:text-malva-700 transition-colors">
                   Cualquier especialista libre
                 </h3>
-                <span className="rounded-full bg-malva-100 px-2 py-0.5 text-[11px] font-bold text-malva-700">
+                <span className="rounded-full bg-malva-100 px-2 py-0.5 text-xs font-bold text-malva-700">
                   Más horarios
                 </span>
               </div>
-              <p className="text-[13px] text-ink-500 mt-0.5">
+              <p className="text-sm text-ink-500 mt-0.5">
                 Te asignamos la primera especialista disponible para que elijas entre la mayor cantidad de horas libres.
               </p>
             </div>
@@ -642,7 +642,7 @@ function PasoProfesional({
                   }
                 }}
                 className={cn(
-                  'group relative flex items-center gap-4 rounded-[22px] border p-4.5 transition-all duration-300 cursor-pointer overflow-hidden',
+                  'group relative flex items-center gap-4 rounded-lg border p-4.5 transition-all duration-300 cursor-pointer overflow-hidden',
                   'bg-[var(--card)] shadow-2xs hover:shadow-lg hover:shadow-malva-900/5 hover:-translate-y-0.5',
                   activo
                     ? 'border-malva-600 ring-2 ring-malva-600/90 shadow-md'
@@ -667,13 +667,13 @@ function PasoProfesional({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-[17px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-tight">
+                  <h3 className="font-display text-lg font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-tight">
                     {p.nombre}
                   </h3>
-                  <p className="text-[13px] font-medium text-ink-500 mt-1">
+                  <p className="text-sm font-medium text-ink-500 mt-1">
                     {p.cargo || 'Especialista en Belleza'}
                   </p>
-                  <div className="flex items-center gap-1 mt-1 text-[11.5px] text-malva-600 font-medium">
+                  <div className="flex items-center gap-1 mt-1 text-xs text-malva-600 font-medium">
                     <CheckCircle2 className="h-3.5 w-3.5 text-malva-500" />
                     Disponible para este ritual
                   </div>
@@ -726,13 +726,13 @@ function PasoFechaHora({
   return (
     <section className="space-y-6 sm:space-y-8">
       <header className="text-center sm:text-left space-y-2">
-        <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-malva-700">
           Paso 3 · Agenda y horario
         </span>
         <TituloEditorial as="h1" size="seccion" resalte="te queda mejor?" className="mt-2">
           ¿Qué día y hora
         </TituloEditorial>
-        <p className="text-[15px] sm:text-[16px] text-ink-600 font-sans">
+        <p className="text-base sm:text-base text-ink-600 font-sans">
           Abierto de lunes a sábado. Horario continuo con reserva previa garantizada.
         </p>
       </header>
@@ -740,10 +740,10 @@ function PasoFechaHora({
       {/* Carrusel de días */}
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-ink-500">
+          <span className="text-xs font-bold uppercase tracking-[0.12em] text-ink-500">
             Próximos 14 días disponibles
           </span>
-          <span className="text-[11.5px] text-ink-400">Desliza para ver más días →</span>
+          <span className="text-xs text-ink-400">Desliza para ver más días →</span>
         </div>
 
         <div
@@ -767,7 +767,7 @@ function PasoFechaHora({
                 whileTap={deshabilitado ? undefined : { scale: 0.95 }}
                 aria-pressed={activo}
                 className={cn(
-                  'flex w-[70px] sm:w-[76px] shrink-0 flex-col items-center gap-1 rounded-[18px] border p-3 transition-all duration-200 cursor-pointer',
+                  'flex w-17.5 sm:w-19 shrink-0 flex-col items-center gap-1 rounded-md border p-3 transition-all duration-200 cursor-pointer',
                   activo
                     ? 'border-malva-700 bg-malva-700 text-white shadow-md shadow-malva-900/20 scale-[1.02]'
                     : deshabilitado
@@ -777,18 +777,18 @@ function PasoFechaHora({
               >
                 <span
                   className={cn(
-                    'text-[11px] font-bold uppercase tracking-wider',
+                    'text-xs font-bold uppercase tracking-wider',
                     activo ? 'text-malva-100' : 'text-ink-400'
                   )}
                 >
                   {d.toLocaleDateString('es-CO', { weekday: 'short' }).replace('.', '')}
                 </span>
-                <span className="tnum font-display text-[21px] font-bold leading-none">
+                <span className="tnum font-display text-xl font-bold leading-none">
                   {d.getDate()}
                 </span>
                 <span
                   className={cn(
-                    'text-[10px] font-medium leading-tight',
+                    'text-2xs font-medium leading-tight',
                     activo ? 'text-malva-200' : 'text-ink-500'
                   )}
                 >
@@ -888,10 +888,10 @@ function BloqueHoras({
     <div className="space-y-3">
       <div className="flex items-center gap-2 border-b border-ink-100/90 dark:border-ink-800 pb-2">
         <Icono className="h-4 w-4 text-malva-600" strokeWidth={2} />
-        <h3 className="text-[12px] font-bold uppercase tracking-[0.14em] text-ink-700">
+        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-700">
           {titulo}
         </h3>
-        <span className="tnum ml-auto text-[12px] font-semibold text-ink-500">
+        <span className="tnum ml-auto text-xs font-semibold text-ink-500">
           {franjas.length} franja{franjas.length > 1 ? 's' : ''}
         </span>
       </div>
@@ -909,19 +909,19 @@ function BloqueHoras({
               transition={spring.snappy}
               aria-pressed={activa}
               className={cn(
-                'tnum flex h-13 flex-col items-center justify-center rounded-[16px] border p-1 transition-all duration-200 cursor-pointer',
+                'tnum flex h-13 flex-col items-center justify-center rounded-md border p-1 transition-all duration-200 cursor-pointer',
                 activa
                   ? 'border-malva-700 bg-malva-700 text-white shadow-md shadow-malva-900/20 font-bold'
                   : 'border-ink-200/80 bg-[var(--card)] text-ink-900 hover:border-malva-400 hover:bg-malva-50/50'
               )}
             >
-              <span className="font-display text-[15px] font-semibold leading-tight">
+              <span className="font-display text-base font-semibold leading-tight">
                 {horaCorta(f.inicioUtc)}
               </span>
               {mostrarProfesional && (
                 <span
                   className={cn(
-                    'text-[10px] font-medium truncate max-w-[90%]',
+                    'text-2xs font-medium truncate max-w-[90%]',
                     activa ? 'text-malva-200' : 'text-ink-500'
                   )}
                 >
@@ -961,13 +961,13 @@ function PasoDatos({
   return (
     <section className="space-y-6 sm:space-y-8 max-w-xl mx-auto">
       <header className="text-center space-y-2">
-        <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-malva-700">
           Paso 4 · Contacto de confirmación
         </span>
         <TituloEditorial as="h1" size="seccion" resalte="tus datos?" className="mt-2">
           ¿A nombre de quién
         </TituloEditorial>
-        <p className="text-[15px] text-ink-600 font-sans">
+        <p className="text-base text-ink-600 font-sans">
           Sin crear contraseñas. Con tu número nos comunicamos para confirmar y recordarte la cita.
         </p>
       </header>
@@ -1032,7 +1032,7 @@ function PasoDatos({
           </div>
         </form>
 
-        <div className="flex items-center gap-2 pt-2 border-t border-ink-100 dark:border-ink-800 text-[12px] text-ink-500">
+        <div className="flex items-center gap-2 pt-2 border-t border-ink-100 dark:border-ink-800 text-xs text-ink-500">
           <ShieldCheck className="h-4 w-4 text-malva-600 shrink-0" />
           <span>Tus datos son 100% privados y nunca enviamos publicidad no deseada.</span>
         </div>
@@ -1066,13 +1066,13 @@ function PasoConfirmar({
   return (
     <section className="space-y-6 sm:space-y-8 max-w-xl mx-auto">
       <header className="text-center space-y-2">
-        <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-malva-700">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-malva-700">
           Paso 5 · Resumen de reserva
         </span>
         <TituloEditorial as="h1" size="seccion" resalte="tu cita?" className="mt-2">
           ¿Confirmamos
         </TituloEditorial>
-        <p className="text-[15px] text-ink-600 font-sans">
+        <p className="text-base text-ink-600 font-sans">
           Revisa que todo esté correcto. El cupo queda apartado inmediatamente al presionar el botón.
         </p>
       </header>
@@ -1087,28 +1087,28 @@ function PasoConfirmar({
         {/* Cabecera del ticket */}
         <div className="flex items-start justify-between gap-4 border-b border-malva-100/90 dark:border-ink-800 pb-4">
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-malva-600">
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-malva-600">
               Ritual Seleccionado
             </span>
-            <h2 className="font-display text-[20px] sm:text-[22px] font-semibold text-ink-900 mt-0.5">
+            <h2 className="font-display text-xl sm:text-2xl font-semibold text-ink-900 mt-0.5">
               {servicio.nombre}
             </h2>
-            <p className="text-[13px] text-ink-500 font-medium mt-0.5">
+            <p className="text-sm text-ink-500 font-medium mt-0.5">
               Duración estimada: {humanDuration(servicio.duracionMin)}
             </p>
           </div>
           <div className="text-right">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">
+            <span className="text-xs font-bold uppercase tracking-[0.12em] text-ink-400">
               Inversión
             </span>
-            <span className="tnum block font-display text-[22px] sm:text-[24px] font-bold text-malva-700 dark:text-malva-200 font-bold leading-tight">
+            <span className="tnum block font-display text-2xl sm:text-2xl font-bold text-malva-700 dark:text-malva-200 font-bold leading-tight">
               {formatCurrencyFromCents(servicio.precioCentavos)}
             </span>
           </div>
         </div>
 
         {/* Desglose de Datos */}
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[13.5px]">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <Dato
             etiqueta="Fecha y hora"
             valor={`${fechaLarga(franja.inicioUtc)}, ${horaCorta(franja.inicioUtc)}`}
@@ -1119,7 +1119,7 @@ function PasoConfirmar({
         </dl>
 
         {requiereConfirmacion && (
-          <div className="flex items-start gap-3 rounded-[16px] border border-amber-500/30 bg-amber-500/10 p-3.5 text-[12.5px] leading-relaxed text-amber-900 dark:text-amber-200">
+          <div className="flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs leading-relaxed text-amber-900 dark:text-amber-200">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={2.2} />
             <p>
               Por ser un servicio de alta especialización, queda registrado como{' '}
@@ -1142,7 +1142,7 @@ function PasoConfirmar({
           </Button>
         </div>
 
-        <p className="text-center text-[12px] text-ink-500">
+        <p className="text-center text-xs text-ink-500">
           Al confirmar, aceptas nuestras políticas de reserva y puntualidad.
         </p>
       </Surface>
@@ -1153,8 +1153,8 @@ function PasoConfirmar({
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
     <div className="space-y-0.5">
-      <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">{etiqueta}</dt>
-      <dd className="font-semibold text-ink-900 first-letter:uppercase text-[14px] leading-snug">
+      <dt className="text-xs font-bold uppercase tracking-[0.12em] text-ink-400">{etiqueta}</dt>
+      <dd className="font-semibold text-ink-900 first-letter:uppercase text-sm leading-snug">
         {valor}
       </dd>
     </div>
@@ -1199,13 +1199,13 @@ function Confirmacion({
           transition={{ ...tween.base, delay: 0.18 }}
           className="mt-6"
         >
-          <span className="text-[11.5px] font-bold uppercase tracking-[0.14em] text-malva-700">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-malva-700">
             Reserva completada con éxito
           </span>
-          <h1 className="font-display text-[32px] sm:text-[36px] font-semibold leading-tight text-ink-900 mt-1">
+          <h1 className="font-display text-4xl sm:text-4xl font-semibold leading-tight text-ink-900 mt-1">
             {cita.estado === 'pendiente' ? 'Cupo apartado' : '¡Tu cita está lista!'}
           </h1>
-          <p className="mx-auto mt-2 max-w-sm text-[15px] leading-relaxed text-ink-600">
+          <p className="mx-auto mt-2 max-w-sm text-base leading-relaxed text-ink-600">
             {cita.estado === 'pendiente'
               ? 'Te escribiremos por WhatsApp para terminar de confirmarla.'
               : 'Te esperamos en Casa Malva para brindarte una experiencia memorable.'}
@@ -1226,30 +1226,30 @@ function Confirmacion({
           className="border border-malva-300/80 bg-[var(--card)] shadow-xl dark:border-ink-800 space-y-4"
         >
           <div className="flex items-center justify-between border-b border-malva-100 pb-3">
-            <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-ink-400">
+            <span className="text-xs uppercase tracking-[0.14em] font-bold text-ink-400">
               Código de cita
             </span>
-            <span className="tnum font-mono text-[13px] font-bold text-malva-700 dark:text-malva-200 font-bold bg-malva-50 dark:bg-malva-950/60 px-2.5 py-0.5 rounded-md border border-malva-200/60">
+            <span className="tnum font-mono text-sm font-bold text-malva-700 dark:text-malva-200 font-bold bg-malva-50 dark:bg-malva-950/60 px-2.5 py-0.5 rounded-md border border-malva-200/60">
               {cita.id}
             </span>
           </div>
 
-          <dl className="grid grid-cols-2 gap-y-3 text-[13.5px]">
+          <dl className="grid grid-cols-2 gap-y-3 text-sm">
             <Dato etiqueta="Servicio" valor={servicio?.nombre ?? 'Ritual de Belleza'} />
             <Dato
               etiqueta="Fecha y hora"
               valor={`${fechaLarga(cita.inicioUtc)}, ${horaCorta(cita.inicioUtc)}`}
             />
             <div>
-              <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">
+              <dt className="text-xs font-bold uppercase tracking-[0.12em] text-ink-400">
                 Inversión congelada
               </dt>
-              <dd className="tnum mt-0.5 font-display text-[16px] font-bold text-malva-700 dark:text-malva-200 font-bold">
+              <dd className="tnum mt-0.5 font-display text-base font-bold text-malva-700 dark:text-malva-200 font-bold">
                 {formatCurrencyFromCents(cita.precioCentavos)}
               </dd>
             </div>
             <div>
-              <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">
+              <dt className="text-xs font-bold uppercase tracking-[0.12em] text-ink-400">
                 Estado
               </dt>
               <dd className="mt-0.5">

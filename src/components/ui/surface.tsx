@@ -101,11 +101,11 @@ export function SectionHeading({
       )}
     >
       {eyebrow && (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-malva-100/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-malva-700 backdrop-blur-sm">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-malva-100/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-malva-700 backdrop-blur-sm">
           {eyebrow}
         </span>
       )}
-      <h2 className="font-display text-[26px] leading-[1.15] font-semibold text-ink-900 sm:text-[34px]">
+      <h2 className="font-display text-3xl leading-[1.15] font-semibold text-ink-900 sm:text-4xl">
         {title}
       </h2>
       {subtitle && (
