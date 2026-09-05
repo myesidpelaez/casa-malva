@@ -50,7 +50,7 @@ export const Field = React.forwardRef<HTMLInputElement, FieldProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-[13px] font-semibold text-ink-700"
+            className="block text-sm font-semibold text-ink-700"
           >
             {label}
             {required && <span className="ml-0.5 text-malva-500">*</span>}
@@ -73,7 +73,7 @@ export const Field = React.forwardRef<HTMLInputElement, FieldProps>(
             aria-required={required || undefined}
             className={cn(
               inputBase,
-              'h-12 px-4 text-[15px]',
+              'h-12 px-4 text-base',
               Icon && 'pl-10',
               suffix && 'pr-16',
               error && 'border-danger focus:border-danger focus:shadow-[0_0_0_4px_rgba(180,70,47,0.12)]'
@@ -81,7 +81,7 @@ export const Field = React.forwardRef<HTMLInputElement, FieldProps>(
             {...props}
           />
           {suffix && (
-            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[13px] font-medium text-ink-400">
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-ink-400">
               {suffix}
             </div>
           )}
@@ -97,13 +97,13 @@ export const Field = React.forwardRef<HTMLInputElement, FieldProps>(
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={tween.fast}
-              className="flex items-center gap-1.5 overflow-hidden text-[12px] font-medium text-danger"
+              className="flex items-center gap-1.5 overflow-hidden text-xs font-medium text-danger"
             >
               <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
               {error}
             </motion.p>
           ) : hint ? (
-            <p key="hint" id={hintId} className="text-[12px] text-ink-400">
+            <p key="hint" id={hintId} className="text-xs text-ink-400">
               {hint}
             </p>
           ) : null}
@@ -138,11 +138,11 @@ export function Toggle({
       <div className="min-w-0">
         <label
           htmlFor={switchId}
-          className="block cursor-pointer text-[13px] font-semibold text-ink-700"
+          className="block cursor-pointer text-sm font-semibold text-ink-700"
         >
           {label}
         </label>
-        {description && <p className="text-[12px] text-ink-400">{description}</p>}
+        {description && <p className="text-xs text-ink-400">{description}</p>}
       </div>
 
       <button
@@ -154,7 +154,7 @@ export function Toggle({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
-          'relative h-[30px] w-[52px] shrink-0 rounded-full p-[3px] transition-colors duration-300',
+          'relative h-7.5 w-13 shrink-0 rounded-full p-0.5 transition-colors duration-300',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-malva-600',
           checked ? 'bg-malva-600' : 'bg-ink-200',
           disabled && 'cursor-not-allowed opacity-50'
@@ -181,19 +181,19 @@ export const Select = React.forwardRef<
   return (
     <div className={cn('space-y-1.5', className)}>
       {label && (
-        <label htmlFor={selectId} className="block text-[13px] font-semibold text-ink-700">
+        <label htmlFor={selectId} className="block text-sm font-semibold text-ink-700">
           {label}
         </label>
       )}
       <select
         ref={ref}
         id={selectId}
-        className={cn(inputBase, 'h-12 appearance-none px-4 text-[15px]')}
+        className={cn(inputBase, 'h-12 appearance-none px-4 text-base')}
         {...props}
       >
         {children}
       </select>
-      {hint && <p className="text-[12px] text-ink-400">{hint}</p>}
+      {hint && <p className="text-xs text-ink-400">{hint}</p>}
     </div>
   )
 })

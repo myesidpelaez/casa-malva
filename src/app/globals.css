@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 /* ============================================================================
    CASA MALVA — Sistema de diseño
    Especificación: docs/specs/10-sistema-diseno.md
@@ -13,6 +15,10 @@
     system-ui, sans-serif;
   --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
 
+  /* ---- Escala tipográfica complementaria -------------------------------- */
+  --text-2xs: 10px;
+  --text-2xs--line-height: 14px;
+
   /* ---- Escala malva (el acento de marca) -------------------------------- */
   --color-malva-50: var(--cm-malva-50);
   --color-malva-100: var(--cm-malva-100);
@@ -24,6 +30,7 @@
   --color-malva-700: var(--cm-malva-700);
   --color-malva-800: var(--cm-malva-800);
   --color-malva-900: var(--cm-malva-900);
+  --color-malva-950: #2a1525;
 
   /* ---- Neutros cálidos (nunca gris puro: siempre con un punto de rosa) --- */
   --color-ink-900: var(--cm-ink-900);
@@ -39,6 +46,14 @@
   --color-blush: #e8c4cf;
   --color-champagne: #e6d5bd;
   --color-sage: #c3d0c4;
+
+  /**
+   * Oro editorial: el cierre del degradado de los titulares de alta costura.
+   * Lo estrenó la portada del 2026-08-23 escrito a mano; vive aquí para que las
+   * tres rutas públicas usen el mismo oro y no tres oros parecidos.
+   * Más saturado que `--color-champagne`, que sigue siendo el de las superficies.
+   */
+  --color-oro-editorial: #c5a059;
 
   /* ---- Semántica de estado --------------------------------------------- */
   --color-success: var(--cm-success);
@@ -128,42 +143,44 @@
 }
 
 [data-theme='dark'] {
-  --canvas: #171316;
-  --card: #221c21;
+  --canvas: #120d11;
+  --card: #1c151b;
 
-  --cm-success: #48bb78;
-  --cm-success-soft: rgba(72, 187, 120, 0.16);
-  --cm-warning: #ecc94b;
-  --cm-warning-soft: rgba(236, 201, 75, 0.16);
-  --cm-danger: #f56565;
-  --cm-danger-soft: rgba(245, 101, 101, 0.16);
-  --cm-info: #63b3ed;
-  --cm-info-soft: rgba(99, 179, 237, 0.16);
-  --glass-tint: rgba(34, 28, 33, 0.65);
-  --glass-tint-strong: rgba(34, 28, 33, 0.85);
-  --glass-tint-deep: rgba(18, 14, 17, 0.85);
-  --glass-border: rgba(201, 163, 186, 0.2);
-  --glass-hairline: rgba(201, 163, 186, 0.12);
+  --cm-success: #4ade80;
+  --cm-success-soft: rgba(74, 222, 128, 0.18);
+  --cm-warning: #fbbf24;
+  --cm-warning-soft: rgba(251, 191, 36, 0.18);
+  --cm-danger: #f87171;
+  --cm-danger-soft: rgba(248, 113, 113, 0.18);
+  --cm-info: #60a5fa;
+  --cm-info-soft: rgba(96, 165, 250, 0.18);
+  --glass-tint: rgba(28, 21, 27, 0.75);
+  --glass-tint-strong: rgba(36, 27, 35, 0.92);
+  --glass-tint-deep: rgba(18, 13, 17, 0.92);
+  --glass-border: rgba(220, 186, 207, 0.25);
+  --glass-hairline: rgba(220, 186, 207, 0.16);
 
-  --cm-ink-900: #efe8ec;
-  --cm-ink-700: #ded5da;
-  --cm-ink-500: #a89aa4;
-  --cm-ink-400: #8d848a;
-  --cm-ink-300: #6b6268;
-  --cm-ink-200: #453d43;
-  --cm-ink-100: #2a2228;
-  --cm-ink-50: #221c21;
+  /* Neutros en Modo Oscuro: Altos ratios de contraste garantizados (WCAG AAA) */
+  --cm-ink-900: #ffffff;
+  --cm-ink-700: #f5edf2;
+  --cm-ink-500: #d4c5cf;
+  --cm-ink-400: #b3a0ac;
+  --cm-ink-300: #4a3a45;
+  --cm-ink-200: #382933;
+  --cm-ink-100: #2c1f28;
+  --cm-ink-50: #1a1218;
 
-  --cm-malva-50: #2a1b26;
-  --cm-malva-100: #3b2435;
-  --cm-malva-200: #523049;
-  --cm-malva-300: #703f64;
-  --cm-malva-400: #965786;
-  --cm-malva-500: #b878a6;
-  --cm-malva-600: #c9a3ba;
-  --cm-malva-700: #dcbacf;
-  --cm-malva-800: #ebdce4;
-  --cm-malva-900: #f7f0f4;
+  /* Escala Malva luminosa y elegante en Dark Mode */
+  --cm-malva-50: #261622;
+  --cm-malva-100: #382032;
+  --cm-malva-200: #552d4b;
+  --cm-malva-300: #7b406c;
+  --cm-malva-400: #a75892;
+  --cm-malva-500: #cb7bb4;
+  --cm-malva-600: #e2a0cd;
+  --cm-malva-700: #f2cbe3;
+  --cm-malva-800: #fae4f2;
+  --cm-malva-900: #fff5fb;
 }
 
 * {
@@ -232,7 +249,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   .aurora — el telón de fondo sobre el que el vidrio tiene sentido.
+   .aurora — el telón de fondo botánico y living aura sobre el que el vidrio tiene sentido.
    ------------------------------------------------------------------------ */
 .aurora {
   position: fixed;
@@ -240,7 +257,20 @@ body {
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  background: var(--canvas);
+  background: radial-gradient(
+    circle at 50% 10%,
+    rgba(243, 234, 240, 0.5) 0%,
+    var(--canvas) 62%
+  );
+}
+
+[data-theme='dark'] .aurora {
+  background: radial-gradient(
+    circle at 50% 12%,
+    rgba(61, 37, 55, 0.45) 0%,
+    rgba(197, 160, 89, 0.05) 38%,
+    var(--canvas) 72%
+  );
 }
 
 .aurora::before,
@@ -248,61 +278,115 @@ body {
   content: "";
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.55;
+  filter: blur(90px);
+  will-change: transform, opacity;
 }
 
 .aurora::before {
-  width: 60vw;
-  height: 60vw;
-  max-width: 720px;
-  max-height: 720px;
-  top: -18vw;
-  right: -12vw;
+  width: 65vw;
+  height: 65vw;
+  max-width: 780px;
+  max-height: 780px;
+  top: -16vw;
+  right: -10vw;
   background: radial-gradient(
-    circle at 30% 30%,
+    circle at 35% 35%,
     var(--color-malva-200),
-    transparent 68%
+    rgba(197, 160, 89, 0.18) 50%,
+    transparent 70%
   );
-  animation: aurora-drift-a 26s var(--ease-in-out-soft) infinite alternate;
+  animation: aurora-drift-a 22s var(--ease-in-out-soft) infinite alternate;
 }
 
 .aurora::after {
-  width: 52vw;
-  height: 52vw;
-  max-width: 620px;
-  max-height: 620px;
-  bottom: -16vw;
-  left: -10vw;
-  background: radial-gradient(circle at 60% 40%, var(--color-blush), transparent 66%);
-  animation: aurora-drift-b 32s var(--ease-in-out-soft) infinite alternate;
+  width: 58vw;
+  height: 58vw;
+  max-width: 680px;
+  max-height: 680px;
+  bottom: -14vw;
+  left: -8vw;
+  background: radial-gradient(
+    circle at 55% 45%,
+    var(--color-blush),
+    rgba(230, 213, 189, 0.22) 45%,
+    transparent 68%
+  );
+  animation: aurora-drift-b 28s var(--ease-in-out-soft) infinite alternate;
+}
+
+.aurora-core {
+  position: absolute;
+  top: 28%;
+  left: 32%;
+  width: 46vw;
+  height: 46vw;
+  max-width: 540px;
+  max-height: 540px;
+  border-radius: 50%;
+  filter: blur(100px);
+  background: radial-gradient(circle, rgba(197, 160, 89, 0.12) 0%, transparent 68%);
+  animation: aurora-breathe 18s var(--ease-in-out-soft) infinite alternate;
+  will-change: transform, opacity;
 }
 
 [data-theme='dark'] .aurora::before {
   background: radial-gradient(
-    circle at 30% 30%,
-    rgba(123, 75, 110, 0.35),
-    transparent 68%
+    circle at 35% 35%,
+    rgba(123, 75, 110, 0.42),
+    rgba(197, 160, 89, 0.14) 48%,
+    transparent 72%
   );
 }
 
 [data-theme='dark'] .aurora::after {
   background: radial-gradient(
-    circle at 60% 40%,
-    rgba(102, 61, 91, 0.3),
-    transparent 66%
+    circle at 55% 45%,
+    rgba(102, 61, 91, 0.38),
+    rgba(82, 50, 74, 0.25) 50%,
+    transparent 70%
   );
 }
 
+[data-theme='dark'] .aurora-core {
+  background: radial-gradient(circle, rgba(197, 160, 89, 0.08) 0%, transparent 68%);
+}
+
 @keyframes aurora-drift-a {
-  to {
-    transform: translate3d(-6%, 8%, 0) scale(1.12);
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate3d(-7%, 9%, 0) scale(1.15);
+    opacity: 0.58;
   }
 }
 
 @keyframes aurora-drift-b {
-  to {
-    transform: translate3d(8%, -6%, 0) scale(1.08);
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(9%, -7%, 0) scale(1.12);
+    opacity: 0.54;
+  }
+}
+
+@keyframes aurora-breathe {
+  0% {
+    transform: scale(0.88) translate3d(0, 0, 0);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.18) translate3d(4%, 3%, 0);
+    opacity: 0.8;
   }
 }
 
@@ -329,6 +413,94 @@ body {
   backdrop-filter: blur(24px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: white;
+}
+
+/* ---------------------------------------------------------------------------
+   .glass-button-primary — Botón con glassmorphism de alta costura
+   ------------------------------------------------------------------------ */
+.glass-button-primary {
+  position: relative;
+  background: linear-gradient(135deg, rgba(139, 82, 123, 0.94) 0%, rgba(102, 61, 91, 0.96) 50%, rgba(82, 50, 74, 0.98) 100%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 4px 20px -2px rgba(102, 61, 91, 0.38),
+              inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+  transition: all 240ms var(--ease-out-expo);
+}
+
+.glass-button-primary:hover {
+  background: linear-gradient(135deg, rgba(155, 92, 137, 0.96) 0%, rgba(115, 68, 102, 0.98) 50%, rgba(95, 58, 86, 1) 100%);
+  box-shadow: 0 8px 28px -2px rgba(102, 61, 91, 0.52),
+              inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-1.5px);
+}
+
+
+[data-theme='dark'] .glass-button-primary {
+  background: linear-gradient(135deg, rgba(168, 100, 148, 0.95) 0%, rgba(123, 75, 110, 0.98) 50%, rgba(95, 58, 86, 1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  box-shadow: 0 4px 22px -2px rgba(193, 139, 172, 0.35),
+              0 0 14px rgba(193, 139, 172, 0.2),
+              inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .glass-button-primary:hover {
+  background: linear-gradient(135deg, rgba(188, 115, 166, 1) 0%, rgba(139, 82, 123, 1) 50%, rgba(108, 65, 97, 1) 100%);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 32px -2px rgba(193, 139, 172, 0.55),
+              0 0 20px rgba(193, 139, 172, 0.35),
+              inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.8);
+}
+
+.glass-button-primary:active {
+  transform: translateY(0.5px) scale(0.99);
+  box-shadow: 0 2px 10px rgba(102, 61, 91, 0.4),
+              inset 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* ---------------------------------------------------------------------------
+   .glass-card-editorial — Tarjetas con efecto de vidrio pulido
+   ------------------------------------------------------------------------ */
+.glass-card-editorial {
+  position: relative;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.68) 100%);
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 30px -5px rgba(61, 20, 56, 0.07),
+              0 2px 6px rgba(0, 0, 0, 0.02),
+              inset 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+[data-theme='dark'] .glass-card-editorial {
+  background: linear-gradient(145deg, rgba(42, 34, 40, 0.88) 0%, rgba(28, 22, 27, 0.75) 100%);
+  border: 1px solid rgba(201, 163, 186, 0.18);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35),
+              inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+/* ---------------------------------------------------------------------------
+   .glass-banner-editorial — Banner principal de conversión
+   ------------------------------------------------------------------------ */
+.glass-banner-editorial {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(102, 61, 91, 0.92) 0%, rgba(82, 50, 74, 0.95) 45%, rgba(61, 37, 55, 0.98) 100%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 20px 50px -10px rgba(61, 20, 56, 0.35),
+              inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+[data-theme='dark'] .glass-banner-editorial {
+  background: linear-gradient(135deg, rgba(61, 37, 55, 0.9) 0%, rgba(35, 20, 31, 0.95) 50%, rgba(23, 13, 20, 0.98) 100%);
+  border: 1px solid rgba(201, 163, 186, 0.25);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6),
+              inset 0 1px 2px rgba(255, 255, 255, 0.15);
 }
 
 .glass-edge::after {

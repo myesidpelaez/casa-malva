@@ -1,0 +1,24 @@
+# Sin este fichero, `core.autocrlf=true` (el de Windows por defecto) materializa
+# los ficheros de texto con CRLF en cada checkout nuevo. Para casi todo da igual,
+# pero `prueba:marca` compara los .svg del disco **byte a byte** contra lo que
+# emite `construirFicheros()` en `src/lib/marca.ts` (D7), que siempre escribe LF:
+# con CRLF esa comprobación falla en un clon recién hecho aunque el contenido sea
+# idéntico. Se detectó el 2026-08-23 al crear un worktree limpio.
+*.svg text eol=lf
+
+# Los scripts de prueba leen y comparan estos formatos igual de literalmente.
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.css  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+
+# Binarios: que git no los toque nunca.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.db binary

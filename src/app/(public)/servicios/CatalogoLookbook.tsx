@@ -1,12 +1,17 @@
-'use client'
-
-import { Reveal } from '@/components/common/Reveal'
+"use client"
 
 import * as React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CalendarPlus, Clock, Info, Sparkles, Check } from 'lucide-react'
+import {
+  CalendarPlus,
+  Clock,
+  Info,
+  Sparkles,
+  Check,
+  ShieldCheck,
+} from 'lucide-react'
 import { formatCurrencyFromCents } from '@/lib/currency'
 import { REGLAS_NEGOCIO } from '@/lib/reglas'
 import {
@@ -15,28 +20,36 @@ import {
   humanDuration,
   getServiceImage,
   getProfessionalAvatar,
+  getSpecialistsForCategory,
   servicesOf,
 } from '@/lib/catalogo-ui'
 import { buttonClass } from '@/components/ui/button-variants'
-import { Surface, SectionHeading } from '@/components/ui/surface'
+import { Surface } from '@/components/ui/surface'
+import { TituloEditorial } from '@/components/brand'
 import { EmptyState } from '@/components/common/EmptyState'
+import { Reveal } from '@/components/common/Reveal'
 import { cn } from '@/lib/utils'
+import { InstagramIcon, FacebookIcon, TikTokIcon } from '@/components/icons/SocialIcons'
+import { REDES_SOCIALES } from '@/lib/brand'
 import type { Category, Professional, Service } from '@/types'
+
 
 type Props = {
   categories: Category[]
   services: Service[]
   professionals: Professional[]
+  estado?: React.ReactNode
 }
 
-export function CatalogoLookbook({ categories, services, professionals }: Props) {
-  // 'todas' o el id de una categoría ('cat_unas', 'cat_cabello', etc.)
+export function CatalogoLookbook({ categories, services, professionals, estado }: Props) {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = React.useState<string>('todas')
 
-  const categoriasConServicios = categories.filter((c) => servicesOf(services, c).length > 0)
+  const categoriasConServicios = React.useMemo(
+    () => categories.filter((c) => servicesOf(services, c).length > 0),
+    [categories, services]
+  )
   const hayServicios = categoriasConServicios.length > 0
 
-  // Filtrado de servicios según la categoría activa
   const serviciosFiltrados = React.useMemo(() => {
     if (categoriaSeleccionada === 'todas') {
       return services.filter((s) => s.activo)
@@ -45,287 +58,388 @@ export function CatalogoLookbook({ categories, services, professionals }: Props)
   }, [categoriaSeleccionada, services])
 
   const totalServicios = services.filter((s) => s.activo).length
+  const categoriaActivaObj = categories.find((c) => c.id === categoriaSeleccionada)
 
   return (
-    <div className="mx-auto max-w-6xl px-3.5 py-[var(--spacing-fib-4)] sm:px-6 sm:py-[var(--spacing-fib-5)]">
-      <Reveal>
-        <SectionHeading
-          align="center"
-          eyebrow="Lookbook Editorial"
-          title="Servicios y precios"
-          subtitle="Explora nuestras especialidades con fotografía de acabados reales. Precios transparentes y duración en silla garantizada."
-          className="mx-auto"
-        />
-      </Reveal>
+    <div className="relative overflow-hidden">
+      {/* =========================================================================
+          ATMÓSFERA Y AURORA ORGÁNICA DE FONDO (SUAVE, FEMENINA, DE ALTA COSTURA)
+         ========================================================================= */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-112 w-200 rounded-full bg-gradient-to-br from-malva-200/35 via-blush/25 to-champagne/20 blur-[110px] dark:from-malva-950/40 dark:via-malva-900/20 dark:to-transparent" />
+        <div className="absolute top-[600px] -right-32 h-125 w-125 rounded-full bg-gradient-to-bl from-malva-300/20 via-blush/20 to-transparent blur-[120px] dark:from-malva-900/15 dark:to-transparent" />
+        <div className="absolute top-[1200px] -left-32 h-125 w-125 rounded-full bg-gradient-to-tr from-champagne/25 via-malva-200/20 to-transparent blur-[120px] dark:from-malva-950/20 dark:to-transparent" />
+      </div>
 
-      {!hayServicios ? (
-        <EmptyState
-          className="mt-[var(--spacing-fib-4)]"
-          title="El catálogo está vacío"
-          description="Todavía no hay servicios publicados. El estudio los configura desde su panel."
-        />
-      ) : (
-        <div className="mt-6 sm:mt-8 space-y-7 sm:space-y-10">
-          
-          {/* =========================================================================
-              1. SELECTOR VISUAL DE CATEGORÍAS (TOCA UNA FOTO PARA FILTRAR)
-             ========================================================================= */}
-          <Reveal>
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-malva-700">
-                  Selecciona una especialidad
-                </span>
-                {categoriaSeleccionada !== 'todas' && (
-                  <button
-                    onClick={() => setCategoriaSeleccionada('todas')}
-                    className="text-[12px] font-semibold text-malva-700 hover:text-malva-900 underline underline-offset-4 transition-colors"
-                  >
-                    Ver todas ({totalServicios})
-                  </button>
-                )}
-              </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 py-[var(--spacing-fib-4)] sm:py-[var(--spacing-fib-5)]">
+        
+        {/* =========================================================================
+            1. CABECERA EDITORIAL Y REDES SOCIALES
+           ========================================================================= */}
+        <Reveal className="flex flex-col items-center text-center">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {estado}
+            
+            {/* Canales Oficiales Redes Sociales */}
+            <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-malva-200/80 bg-[var(--card)]/90 px-3 py-1.5 shadow-xs backdrop-blur-md">
+              <span className="text-xs font-semibold text-ink-500 mr-1">Síguenos:</span>
+              <a
+                href={REDES_SOCIALES.instagram.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={REDES_SOCIALES.instagram.label}
+                className="grid h-6 w-6 place-items-center rounded-full bg-malva-50 hover:bg-malva-100 text-malva-700 transition-colors"
+                title={`Instagram ${REDES_SOCIALES.instagram.handle}`}
+              >
+                <InstagramIcon className="h-3.5 w-3.5" />
+              </a>
+              <a
+                href={REDES_SOCIALES.tiktok.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={REDES_SOCIALES.tiktok.label}
+                className="grid h-6 w-6 place-items-center rounded-full bg-malva-50 hover:bg-malva-100 text-malva-700 transition-colors"
+                title={`TikTok ${REDES_SOCIALES.tiktok.handle}`}
+              >
+                <TikTokIcon className="h-3.5 w-3.5" />
+              </a>
+              <a
+                href={REDES_SOCIALES.facebook.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={REDES_SOCIALES.facebook.label}
+                className="grid h-6 w-6 place-items-center rounded-full bg-malva-50 hover:bg-malva-100 text-malva-700 transition-colors"
+                title={`Facebook ${REDES_SOCIALES.facebook.handle}`}
+              >
+                <FacebookIcon className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
 
-              {/* Carrusel / Grilla de Categorías con Imagen */}
-              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 sm:pb-0 pt-1 -mx-3.5 px-3.5 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-4">
-                {categoriasConServicios.map((cat) => {
-                  const look = categoryLook(cat.id)
-                  const Icon = look.icon
-                  const activa = categoriaSeleccionada === cat.id
-                  const conteo = servicesOf(services, cat).filter((s) => s.activo).length
+          <TituloEditorial
+            as="h1"
+            size="seccion"
+            resalte="en manos expertas."
+            className="mt-4"
+          >
+            El arte del cuidado,
+          </TituloEditorial>
+          <p className="mt-4 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-600 font-sans">
+            Cada ritual es una experiencia personalizada realizada por especialistas
+            apasionadas por realzar tu bienestar, con técnicas de alta precisión y cosmética botánica.
+          </p>
+        </Reveal>
 
-                  return (
+        {!hayServicios ? (
+          <EmptyState
+            className="mt-[var(--spacing-fib-4)]"
+            title="El catálogo está vacío"
+            description="Todavía no hay servicios publicados. El estudio los configura desde su panel."
+          />
+        ) : (
+          <div className="mt-8 sm:mt-12 space-y-9 sm:space-y-14">
+            
+            {/* =========================================================================
+                2. SELECTOR VISUAL DE ESPECIALIDADES (CARDS AMPLIADAS)
+               ========================================================================= */}
+            <Reveal>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-malva-700">
+                      Selecciona una especialidad
+                    </span>
+                    <span className="text-xs text-ink-400">· Toca para filtrar</span>
+                  </div>
+                  {categoriaSeleccionada !== 'todas' ? (
                     <button
-                      key={cat.id}
-                      onClick={() => setCategoriaSeleccionada(activa ? 'todas' : cat.id)}
-                      className={cn(
-                        'group relative flex-shrink-0 w-[160px] sm:w-auto h-[120px] sm:h-[135px] rounded-2xl overflow-hidden text-left transition-all duration-300 transform',
-                        activa
-                          ? 'ring-3 ring-malva-600 shadow-lg scale-[1.02]'
-                          : 'ring-1 ring-black/5 hover:ring-malva-400 hover:shadow-md opacity-85 hover:opacity-100'
-                      )}
+                      onClick={() => setCategoriaSeleccionada('todas')}
+                      className="text-xs font-semibold text-malva-700 hover:text-malva-900 underline underline-offset-4 transition-colors cursor-pointer"
                     >
-                      {/* Imagen de fondo de categoría */}
-                      <Image
-                        src={look.image}
-                        alt={cleanCategoryName(cat.nombre)}
-                        fill
-                        sizes="(max-width: 640px) 160px, 300px"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      {/* Gradiente oscuro para legibilidad */}
-                      <div
-                        className={cn(
-                          'absolute inset-0 transition-colors duration-300',
-                          activa
-                            ? 'bg-gradient-to-t from-ink-950/90 via-ink-950/50 to-malva-900/30'
-                            : 'bg-gradient-to-t from-ink-950/80 via-ink-950/40 to-transparent'
-                        )}
-                      />
+                      Ver todas ({totalServicios})
+                    </button>
+                  ) : (
+                    <span className="text-xs font-medium text-ink-500 hidden sm:inline">
+                      {totalServicios} servicios en catálogo
+                    </span>
+                  )}
+                </div>
 
-                      {/* Contenido de la píldora visual */}
-                      <div className="absolute inset-0 p-3 flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                          <span
-                            className={cn(
-                              'grid h-7 w-7 place-items-center rounded-lg backdrop-blur-md border border-white/30 text-white',
-                              activa ? 'bg-malva-600 text-white' : 'bg-black/30'
-                            )}
-                          >
-                            <Icon className="h-4 w-4" strokeWidth={2} />
-                          </span>
+                {/* Rejilla de 4 columnas en desktop / carrusel horizontal en móvil */}
+                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-3 sm:pb-0 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4">
+                  {categoriasConServicios.map((cat) => {
+                    const look = categoryLook(cat.id)
+                    const activa = categoriaSeleccionada === cat.id
+                    const conteo = servicesOf(services, cat).filter((s) => s.activo).length
+                    const especialistas = getSpecialistsForCategory(professionals, cat, services)
+
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setCategoriaSeleccionada(activa ? 'todas' : cat.id)}
+                        className={cn(
+                          'group relative flex flex-col text-left rounded-lg overflow-hidden transition-all duration-300 cursor-pointer',
+                          'bg-[var(--card)] border',
+                          activa
+                            ? 'border-malva-500 ring-2 ring-malva-600/90 shadow-xl shadow-malva-900/10 scale-[1.01]'
+                            : 'border-ink-200/80 hover:border-malva-300 hover:shadow-md hover:shadow-malva-900/5 hover:-translate-y-0.5',
+                          'flex-shrink-0 w-60 sm:w-auto'
+                        )}
+                      >
+                        {/* Fotografía limpia de la especialidad */}
+                        <div className="relative aspect-[16/11] sm:aspect-[4/3] w-full overflow-hidden bg-malva-100">
+                          <Image
+                            src={look.image}
+                            alt={cleanCategoryName(cat.nombre)}
+                            fill
+                            sizes="(max-width: 640px) 240px, 320px"
+                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
                           {activa && (
-                            <span className="grid h-5 w-5 place-items-center rounded-full bg-malva-600 text-white shadow-xs">
-                              <Check className="h-3 w-3" strokeWidth={3} />
-                            </span>
+                            <div className="absolute top-2.5 right-2.5">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-malva-700/90 backdrop-blur-md px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm border border-white/20">
+                                <Check className="h-3 w-3" strokeWidth={2.8} />
+                                Activa
+                              </span>
+                            </div>
                           )}
                         </div>
 
-                        <div>
-                          <h3 className="font-display text-[15px] sm:text-[16px] font-semibold text-white leading-tight">
-                            {cleanCategoryName(cat.nombre)}
-                          </h3>
-                          <p className="text-[11px] text-white/80 font-medium mt-0.5">
-                            {conteo} servicio{conteo > 1 ? 's' : ''}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </Reveal>
+                        {/* Bloque Informativo de la Card */}
+                        <div className="p-4 flex flex-col justify-between flex-1 space-y-3 bg-[var(--card)]">
+                          <div>
+                            <h3 className="font-display text-lg sm:text-lg font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-tight">
+                              {cleanCategoryName(cat.nombre)}
+                            </h3>
+                            <p className="text-xs font-medium text-ink-500 mt-1">
+                              {conteo} servicio{conteo > 1 ? 's' : ''} disponibles
+                            </p>
+                          </div>
 
-          {/* =========================================================================
-              2. GRILLA DE SERVICIOS TIPO LOOKBOOK (TARJETAS CON FOTOGRAFÍA)
-             ========================================================================= */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-malva-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-malva-600" />
-                <h2 className="font-display text-[20px] sm:text-[22px] font-semibold text-ink-900">
-                  {categoriaSeleccionada === 'todas'
-                    ? 'Todos los servicios disponibles'
-                    : cleanCategoryName(
-                        categories.find((c) => c.id === categoriaSeleccionada)?.nombre ?? ''
-                      )}
-                </h2>
-              </div>
-              <span className="text-[12.5px] font-semibold text-ink-500">
-                {serviciosFiltrados.length} servicio{serviciosFiltrados.length > 1 ? 's' : ''}
-              </span>
-            </div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={categoriaSeleccionada}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-              >
-                {serviciosFiltrados.map((service) => {
-                  const imageUrl = getServiceImage(service)
-                  const profsQueLoPrestan = professionals.filter((p) =>
-                    (p.serviceIds ?? []).includes(service.id)
-                  )
-                  const requiereConfirmacion =
-                    service.requiereConfirmacion ||
-                    service.precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos
-
-                  return (
-                    <div
-                      key={service.id}
-                      className="group flex flex-col justify-between rounded-[22px] border border-ink-100 bg-[var(--card)] shadow-sm transition-all duration-300 hover:border-malva-300 hover:shadow-lg hover:shadow-malva-900/5 overflow-hidden"
-                    >
-                      {/* Cabecera con Fotografía del Servicio */}
-                      <div className="relative aspect-[16/10] w-full overflow-hidden bg-malva-100">
-                        <Image
-                          src={imageUrl}
-                          alt={service.nombre}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-ink-950/60 via-transparent to-transparent" />
-
-                        {/* Badges Flotantes sobre la Imagen */}
-                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-ink-950/70 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs">
-                            <Clock className="h-3 w-3" strokeWidth={2} />
-                            {humanDuration(service.duracionMin)}
-                          </span>
-
-                          {requiereConfirmacion && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs">
-                              <Info className="h-3 w-3" />
-                              WhatsApp
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Precio en tag inferior sobre la foto */}
-                        <div className="absolute bottom-3 right-3">
-                          <span className="tnum inline-block rounded-xl bg-[var(--card)]/95 backdrop-blur-md px-3 py-1 font-display text-[16px] font-semibold text-malva-700 shadow-sm">
-                            {formatCurrencyFromCents(service.precioCentavos)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Cuerpo de la Tarjeta */}
-                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
-                        <div className="space-y-2">
-                          <h3 className="font-display text-[17px] sm:text-[18px] font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug">
-                            {service.nombre}
-                          </h3>
-
-                          {/* Profesionales asignadas con avatar real */}
-                          {profsQueLoPrestan.length > 0 && (
-                            <div className="flex items-center gap-2 pt-1">
-                              <div className="flex -space-x-1.5 overflow-hidden">
-                                {profsQueLoPrestan.slice(0, 3).map((p) => {
-                                  const avatar = getProfessionalAvatar(p)
+                          {/* Especialistas asignadas */}
+                          {especialistas.length > 0 && (
+                            <div className="pt-2.5 border-t border-ink-100/90 flex items-center gap-2">
+                              <div className="flex -space-x-1.5 overflow-hidden shrink-0">
+                                {especialistas.slice(0, 3).map((prof) => {
+                                  const avatar = getProfessionalAvatar(prof)
                                   return (
                                     <div
-                                      key={p.id}
-                                      className="relative h-6 w-6 rounded-full border-2 border-white bg-malva-100 overflow-hidden shadow-xs"
-                                      title={p.nombre}
+                                      key={prof.id}
+                                      className="relative h-6 w-6 rounded-full border-2 border-[var(--card)] bg-malva-100 overflow-hidden shadow-2xs"
+                                      title={`${prof.nombre} (${prof.cargo || 'Especialista'})`}
                                     >
                                       {avatar ? (
                                         <Image
                                           src={avatar}
-                                          alt={p.nombre}
+                                          alt={prof.nombre}
                                           fill
                                           sizes="24px"
                                           className="object-cover"
                                         />
                                       ) : (
-                                        <span className="grid h-full w-full place-items-center text-[10px] font-semibold text-malva-700">
-                                          {p.nombre.charAt(0)}
+                                        <span className="grid h-full w-full place-items-center text-2xs font-bold text-malva-700">
+                                          {prof.nombre.charAt(0)}
                                         </span>
                                       )}
                                     </div>
                                   )
                                 })}
                               </div>
-                              <span className="text-[12px] text-ink-500 font-medium truncate">
-                                {profsQueLoPrestan.map((p) => p.nombre.split(' ')[0]).join(', ')}
+                              <span className="text-xs font-medium text-ink-600 truncate">
+                                {especialistas.map((p) => p.nombre.split(' ')[0]).join(', ')}
                               </span>
                             </div>
                           )}
                         </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </Reveal>
 
-                        {/* Botón de Agendamiento Directo */}
-                        <div className="pt-2 border-t border-malva-100/70">
-                          <Link
-                            href={`/reservar?serviceId=${service.id}`}
-                            className={buttonClass({
-                              variant: 'primary',
-                              size: 'md',
-                              full: true,
-                            })}
-                          >
-                            <CalendarPlus className="h-4 w-4" strokeWidth={1.75} />
-                            Agendar cita
-                          </Link>
+            {/* =========================================================================
+                3. GRILLA DE SERVICIOS (TARJETAS REDISEÑADAS, FOTO LIMPIA Y METADATOS INTEGRADOS)
+               ========================================================================= */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-malva-100/80 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="h-5 w-5 text-malva-600" />
+                  <h2 className="font-display text-xl sm:text-2xl font-semibold text-ink-900">
+                    {categoriaSeleccionada === 'todas'
+                      ? 'Todos los servicios de autor'
+                      : `Especialidad: ${cleanCategoryName(categoriaActivaObj?.nombre ?? '')}`}
+                  </h2>
+                </div>
+                <span className="text-sm font-semibold text-ink-500">
+                  {serviciosFiltrados.length} servicio{serviciosFiltrados.length > 1 ? 's' : ''}
+                </span>
+              </div>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={categoriaSeleccionada}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {serviciosFiltrados.map((service) => {
+                    const imageUrl = getServiceImage(service)
+                    const profsQueLoPrestan = professionals.filter((p) =>
+                      (p.serviceIds ?? []).includes(service.id)
+                    )
+                    const requiereConfirmacion =
+                      service.requiereConfirmacion ||
+                      service.precioCentavos > REGLAS_NEGOCIO.umbralConfirmacionCentavos
+
+                    return (
+                      <div
+                        key={service.id}
+                        className="group flex flex-col justify-between rounded-lg border border-ink-200/80 bg-[var(--card)] shadow-xs transition-all duration-300 hover:border-malva-300 hover:shadow-xl hover:shadow-malva-900/10 overflow-hidden"
+                      >
+                        {/* Cabecera con Fotografía 100% Limpia (sin badges flotantes) */}
+                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-malva-100">
+                          <Image
+                            src={imageUrl}
+                            alt={service.nombre}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 420px"
+                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity" />
+                        </div>
+
+                        {/* Cuerpo de la Tarjeta con Metadatos Integrados */}
+                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                          <div className="space-y-3">
+                            {/* Fila 1: Título y Precio */}
+                            <div className="flex items-start justify-between gap-2.5">
+                              <h3 className="font-display text-lg sm:text-xl font-semibold text-ink-900 group-hover:text-malva-700 transition-colors leading-snug">
+                                {service.nombre}
+                              </h3>
+                              <span className="tnum font-display text-lg sm:text-xl font-bold text-malva-700 dark:text-malva-200 font-bold shrink-0">
+                                {formatCurrencyFromCents(service.precioCentavos)}
+                              </span>
+                            </div>
+
+                            {/* Fila 2: Duración y Badge de Confirmación si aplica */}
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-ink-500 font-medium">
+                              <span className="inline-flex items-center gap-1.5 rounded-md bg-ink-100/80 dark:bg-ink-900/90 px-2.5 py-1 text-ink-800 dark:text-ink-200 border border-transparent dark:border-ink-700/60">
+                                <Clock className="h-3.5 w-3.5 text-malva-600 shrink-0" strokeWidth={2} />
+                                {humanDuration(service.duracionMin)}
+                              </span>
+
+                              {requiereConfirmacion && (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-200 font-semibold">
+                                  <Info className="h-3 w-3 shrink-0" />
+                                  Confirmación previa
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Fila 3: Profesionales asignadas con avatar real */}
+                            {profsQueLoPrestan.length > 0 && (
+                              <div className="flex items-center gap-2 pt-2 border-t border-ink-100/80 dark:border-ink-800/80">
+                                <div className="flex -space-x-1.5 overflow-hidden shrink-0">
+                                  {profsQueLoPrestan.slice(0, 3).map((p) => {
+                                    const avatar = getProfessionalAvatar(p)
+                                    return (
+                                      <div
+                                        key={p.id}
+                                        className="relative h-6 w-6 rounded-full border-2 border-[var(--card)] bg-malva-100 overflow-hidden shadow-2xs"
+                                        title={`${p.nombre} (${p.cargo || 'Especialista'})`}
+                                      >
+                                        {avatar ? (
+                                          <Image
+                                            src={avatar}
+                                            alt={p.nombre}
+                                            fill
+                                            sizes="24px"
+                                            className="object-cover"
+                                          />
+                                        ) : (
+                                          <span className="grid h-full w-full place-items-center text-2xs font-bold text-malva-700">
+                                            {p.nombre.charAt(0)}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                                <span className="text-xs text-ink-600 dark:text-[#d4c5cf] font-medium truncate">
+                                  {profsQueLoPrestan.map((p) => p.nombre.split(' ')[0]).join(', ')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Botón de Agendamiento Directo (Ancho Completo, Cero Espacio Muerto) */}
+                          <div className="pt-2">
+                            <Link
+                              href={`/reservar?serviceId=${service.id}`}
+                              className={buttonClass({
+                                variant: 'primary',
+                                size: 'lg',
+                                full: true,
+                              })}
+                            >
+                              <CalendarPlus className="h-4.5 w-4.5" strokeWidth={1.75} />
+                              Agendar cita
+                            </Link>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })}
-              </motion.div>
-            </AnimatePresence>
+                    )
+                  })}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Bloque Informativo de Reglas */}
-      <Reveal className="mt-[var(--spacing-fib-5)]">
-        <Surface material="frost" pad="md" radius="lg">
-          <h3 className="text-[14px] font-semibold text-ink-900">
-            Antes de reservar, dos cosas
-          </h3>
-          <ul className="mt-2 space-y-1.5 text-[12.5px] sm:text-[13px] leading-relaxed text-ink-500">
-            <li>
-              · Reservamos con un mínimo de{' '}
-              <strong className="font-semibold text-ink-700">
-                {REGLAS_NEGOCIO.minAntelacionMin / 60} horas
-              </strong>{' '}
-              de antelación y hasta {REGLAS_NEGOCIO.maxAntelacionDias} días.
-            </li>
-            <li>
-              · Cancelar con menos de{' '}
-              <strong className="font-semibold text-ink-700">
-                {REGLAS_NEGOCIO.cancelacionNoShowHoras} horas
-              </strong>{' '}
-              queda registrado en tu ficha. Avísanos con tiempo y no pasa nada.
-            </li>
-          </ul>
-        </Surface>
-      </Reveal>
+        {/* =========================================================================
+            4. BLOQUE INFORMATIVO DE REGLAS DE RESERVA
+           ========================================================================= */}
+        <Reveal className="mt-[var(--spacing-fib-5)]">
+          <Surface material="frost" pad="lg" radius="xl" className="border border-malva-200/60 dark:border-ink-800">
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="h-5 w-5 text-malva-700 shrink-0" />
+              <h3 className="text-base font-semibold text-ink-900">
+                Garantías y Políticas de tu Reserva
+              </h3>
+            </div>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2 text-sm leading-relaxed text-ink-600">
+              <li className="flex items-start gap-2">
+                <span className="text-malva-600 font-bold">·</span>
+                <span>
+                  Reservamos con un mínimo de{' '}
+                  <strong className="font-semibold text-ink-800">
+                    {REGLAS_NEGOCIO.minAntelacionMin / 60} horas
+                  </strong>{' '}
+                  de antelación y hasta {REGLAS_NEGOCIO.maxAntelacionDias} días a futuro.
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-malva-600 font-bold">·</span>
+                <span>
+                  Cancelaciones con menos de{' '}
+                  <strong className="font-semibold text-ink-800">
+                    {REGLAS_NEGOCIO.cancelacionNoShowHoras} horas
+                  </strong>{' '}
+                  se registran en tu historial. Avísanos con antelación para reprogramar sin costo.
+                </span>
+              </li>
+            </ul>
+          </Surface>
+        </Reveal>
+      </div>
     </div>
   )
 }

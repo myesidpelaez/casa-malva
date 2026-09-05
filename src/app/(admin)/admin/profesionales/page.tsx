@@ -189,16 +189,22 @@ export default function AdminProfesionalesPage() {
   }
 
   return (
-    <>
-      <AdminHeader
-        title="Equipo de Profesionales"
-        subtitle="Gestiona el talento del estudio, horarios semanales y habilidades multicategoría."
-      >
-        <Button variant="primary" size="md" onClick={abrirNuevo}>
-          <UserPlus className="h-4 w-4" />
-          Nueva profesional
-        </Button>
-      </AdminHeader>
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      {/* Zona Fija Superior (~20%) */}
+      <div className="shrink-0 pb-3">
+        <AdminHeader
+          title="Equipo de Profesionales"
+          subtitle="Gestiona el talento del estudio, horarios semanales y habilidades multicategoría."
+        >
+          <Button variant="primary" size="md" onClick={abrirNuevo}>
+            <UserPlus className="h-4 w-4" />
+            Nueva profesional
+          </Button>
+        </AdminHeader>
+      </div>
+
+      {/* Zona de Galería con Scroll Interno (~80%) */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 scrollbar-slim pb-8">
 
       {cargando ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -249,10 +255,10 @@ export default function AdminProfesionalesPage() {
                         </div>
 
                         <div>
-                          <h3 className="font-display text-[17px] font-semibold text-ink-900 leading-snug">
+                          <h3 className="font-display text-lg font-semibold text-ink-900 leading-snug">
                             {prof.nombre}
                           </h3>
-                          <p className="text-[13px] text-ink-500">{prof.cargo}</p>
+                          <p className="text-sm text-ink-500">{prof.cargo}</p>
                         </div>
                       </div>
 
@@ -265,7 +271,7 @@ export default function AdminProfesionalesPage() {
                       {categoriasCubiertas.map((cat) => (
                         <span
                           key={cat.id}
-                          className="inline-flex items-center gap-1 rounded-md bg-malva-50 border border-malva-100 px-2 py-0.5 text-[11px] font-medium text-malva-700"
+                          className="inline-flex items-center gap-1 rounded-md bg-malva-50 border border-malva-100 px-2 py-0.5 text-xs font-medium text-malva-700"
                         >
                           <Sparkles className="h-2.5 w-2.5" />
                           {cleanCategoryName(cat.nombre)}
@@ -273,7 +279,7 @@ export default function AdminProfesionalesPage() {
                       ))}
                     </div>
 
-                    <div className="mt-3.5 space-y-1.5 border-t border-malva-100 pt-3 text-[12.5px] text-ink-500">
+                    <div className="mt-3.5 space-y-1.5 border-t border-malva-100 pt-3 text-xs text-ink-500">
                       <p className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 text-malva-500 shrink-0" />
                         <span>
@@ -305,6 +311,8 @@ export default function AdminProfesionalesPage() {
           })}
         </RevealGroup>
       )}
+
+      </div>
 
       {/* ===================================================================
           RIGHT DRAWER: CREAR / EDITAR PROFESIONAL (CERO SCROLL)
@@ -339,7 +347,7 @@ export default function AdminProfesionalesPage() {
         <div className="space-y-6">
           {/* Bloque 1: Datos Personales */}
           <div className="space-y-3.5">
-            <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-malva-700">
               1. Información básica
             </h3>
             
@@ -369,10 +377,10 @@ export default function AdminProfesionalesPage() {
           <div className="space-y-3.5 border-t border-malva-100 pt-5">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-malva-700">
                   2. Servicios que puede prestar
                 </h3>
-                <p className="text-[12.5px] text-ink-500">
+                <p className="text-xs text-ink-500">
                   Selecciona los servicios que domina ({serviceIds.length} seleccionados).
                 </p>
               </div>
@@ -398,7 +406,7 @@ export default function AdminProfesionalesPage() {
                         <span className={cn('grid h-7 w-7 place-items-center rounded-lg text-xs', look.tile)}>
                           <Icon className="h-3.5 w-3.5" />
                         </span>
-                        <span className="font-display text-[15px] font-semibold text-ink-900">
+                        <span className="font-display text-base font-semibold text-ink-900">
                           {cleanCategoryName(cat.nombre)}
                         </span>
                       </div>
@@ -406,7 +414,7 @@ export default function AdminProfesionalesPage() {
                       <button
                         type="button"
                         onClick={() => toggleCategoriaServicios(cat.id, svcsCat)}
-                        className="text-[12px] font-semibold text-malva-600 hover:text-malva-800 transition-colors"
+                        className="text-xs font-semibold text-malva-600 hover:text-malva-800 transition-colors"
                       >
                         {todos ? 'Desmarcar todos' : 'Marcar todos'}
                       </button>
@@ -422,7 +430,7 @@ export default function AdminProfesionalesPage() {
                             type="button"
                             onClick={() => alternarServicio(s.id)}
                             className={cn(
-                              'flex items-center justify-between gap-2 rounded-lg border p-2.5 text-left text-[13px] transition-all touch-target',
+                              'flex items-center justify-between gap-2 rounded-lg border p-2.5 text-left text-sm transition-all touch-target',
                               marcado
                                 ? 'border-malva-500 bg-[var(--card)] text-ink-900 shadow-sm ring-1 ring-malva-500'
                                 : 'border-ink-200 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)] hover:border-malva-300'
@@ -430,7 +438,7 @@ export default function AdminProfesionalesPage() {
                           >
                             <span className="truncate font-medium">{s.nombre}</span>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[11px] text-ink-400">
+                              <span className="text-xs text-ink-400">
                                 {s.duracionMin}m
                               </span>
                               <div
@@ -458,10 +466,10 @@ export default function AdminProfesionalesPage() {
           <div className="space-y-3.5 border-t border-malva-100 pt-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-malva-700">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-malva-700">
                   3. Horario de atención
                 </h3>
-                <p className="text-[12.5px] text-ink-500">
+                <p className="text-xs text-ink-500">
                   Define qué días trabaja y sus horas de inicio y fin.
                 </p>
               </div>
@@ -470,14 +478,14 @@ export default function AdminProfesionalesPage() {
                 <button
                   type="button"
                   onClick={() => aplicarHorarioEstandar('lun_sab')}
-                  className="rounded-md bg-malva-100 px-2 py-1 text-[11px] font-medium text-malva-800 hover:bg-malva-200 transition-colors"
+                  className="rounded-md bg-malva-100 px-2 py-1 text-xs font-medium text-malva-800 hover:bg-malva-200 transition-colors"
                 >
                   Lun–Sáb (9–18)
                 </button>
                 <button
                   type="button"
                   onClick={() => aplicarHorarioEstandar('lun_vie')}
-                  className="rounded-md bg-malva-100 px-2 py-1 text-[11px] font-medium text-malva-800 hover:bg-malva-200 transition-colors"
+                  className="rounded-md bg-malva-100 px-2 py-1 text-xs font-medium text-malva-800 hover:bg-malva-200 transition-colors"
                 >
                   Lun–Vie (9–18)
                 </button>
@@ -506,13 +514,13 @@ export default function AdminProfesionalesPage() {
                         onChange={() => alternarDia(d.n)}
                         className="h-4 w-4 rounded border-ink-300 text-malva-600 focus:ring-malva-500"
                       />
-                      <span className="text-[14px] font-semibold text-ink-900">
+                      <span className="text-sm font-semibold text-ink-900">
                         {d.largo}
                       </span>
                     </label>
 
                     {activoDia ? (
-                      <div className="flex items-center gap-2 text-[13px]">
+                      <div className="flex items-center gap-2 text-sm">
                         <select
                           value={inicio}
                           onChange={(e) => cambiarHora(d.n, 0, Number(e.target.value))}
@@ -538,7 +546,7 @@ export default function AdminProfesionalesPage() {
                         </select>
                       </div>
                     ) : (
-                      <span className="text-[12px] text-ink-400">Día libre / No atiende</span>
+                      <span className="text-xs text-ink-400">Día libre / No atiende</span>
                     )}
                   </div>
                 )
@@ -547,6 +555,6 @@ export default function AdminProfesionalesPage() {
           </div>
         </div>
       </RightDrawer>
-    </>
+    </div>
   )
 }

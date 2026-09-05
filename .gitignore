@@ -49,3 +49,25 @@ next-env.d.ts
 *.db-journal
 
 .claude/
+
+# AI assistant skill directories (created by uipro init --ai all)
+.agent/
+.cursor/
+.windsurf/
+.github/copilot/
+.kiro/
+.opencode/
+.roo/
+.codex/
+.qoder/
+.gemini/
+.trae/
+.continue/
+.codebuddy/
+
+# graphify output (regenerable)
+graphify-out/
+
+# nohup logs
+nohup.out
+.github/prompts/

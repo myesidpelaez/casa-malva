@@ -57,7 +57,7 @@ export function FlyerContent() {
   return (
     <div className="min-h-screen bg-[#f5eff3] py-6 sm:py-10 px-3 sm:px-6 flex flex-col items-center justify-start print:p-0 print:bg-white">
       {/* Floating Action Toolbar (Hidden in Print) */}
-      <aside aria-label="Herramientas del folleto" className="no-print mb-6 w-full max-w-[840px] flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-malva-200/80 bg-white/90 p-4 shadow-lg shadow-malva-900/5 backdrop-blur-md">
+      <aside aria-label="Herramientas del folleto" className="no-print mb-6 w-full max-w-4xl flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-malva-200/80 bg-white/90 p-4 shadow-lg shadow-malva-900/5 backdrop-blur-md">
         <div className="flex items-center gap-2.5">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-malva-100 text-malva-700">
             <Sparkles className="h-5 w-5" />
@@ -100,7 +100,7 @@ export function FlyerContent() {
       {/* =========================================================================
           THE PRINTABLE LUXURY FLYER SHEET (A5 / A4 Ratio - 100% Vectorial Crisp)
           ========================================================================= */}
-      <div className="flyer-sheet w-full max-w-[840px] bg-white rounded-[28px] border border-malva-200 shadow-2xl overflow-hidden print:border-none print:shadow-none print:rounded-none print:max-w-none print:w-full print:m-0 text-ink-900">
+      <div className="flyer-sheet w-full max-w-4xl bg-white rounded-xl border border-malva-200 shadow-2xl overflow-hidden print:border-none print:shadow-none print:rounded-none print:max-w-none print:w-full print:m-0 text-ink-900">
         {/* Top Decorative Header Accent */}
         <div className="h-3 w-full bg-gradient-to-r from-malva-700 via-malva-500 to-blush" />
 
@@ -108,7 +108,7 @@ export function FlyerContent() {
           {/* Header & Brand Identity */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-malva-100 pb-6">
             <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-2 rounded-full border border-malva-200 bg-malva-50/80 px-3 py-1 text-[11px] font-semibold text-malva-700 tracking-wide uppercase">
+              <div className="inline-flex items-center gap-2 rounded-full border border-malva-200 bg-malva-50/80 px-3 py-1 text-xs font-semibold text-malva-700 tracking-wide uppercase">
                 <Sparkles className="h-3 w-3 text-malva-600" />
                 <span>Solución Digital Exclusiva para Spas & Salones</span>
               </div>
@@ -122,7 +122,7 @@ export function FlyerContent() {
 
             <div className="flex items-center gap-2 self-start sm:self-auto rounded-2xl bg-malva-50 border border-malva-100 p-3 text-right">
               <div className="space-y-0.5">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-malva-600">Medellín • Colombia</p>
+                <p className="text-2xs uppercase font-bold tracking-wider text-malva-600">Medellín • Colombia</p>
                 <p className="text-xs font-semibold text-ink-800">Laureles • El Poblado • Envigado</p>
               </div>
             </div>
@@ -133,7 +133,7 @@ export function FlyerContent() {
             <h3 className="font-display text-xl sm:text-2xl font-bold leading-snug text-ink-900">
               ¿Tus clientas intentan agendar fuera de horario y se van con la competencia?
             </h3>
-            <p className="text-sm sm:text-[15px] leading-relaxed text-ink-700">
+            <p className="text-sm sm:text-base leading-relaxed text-ink-700">
               Transforma tu negocio con un sistema personalizado que trabaja por ti: <strong>recibe citas automáticas 24/7</strong>, 
               muestra tus trabajos en un <strong>Lookbook editorial de alta gama</strong> y elimina las inasistencias con recordatorios por WhatsApp.
             </p>
@@ -201,7 +201,7 @@ export function FlyerContent() {
                 <CheckCircle2 className="h-3.5 w-3.5 text-malva-600" />
                 Experiencia 100% Adaptada a tu Salón
               </span>
-              <span className="text-[11px] font-medium text-ink-500">Uñas • Cabello • Maquillaje • Cejas</span>
+              <span className="text-xs font-medium text-ink-500">Uñas • Cabello • Maquillaje • Cejas</span>
             </div>
 
             <div className="grid grid-cols-4 gap-2 text-center">
@@ -209,32 +209,32 @@ export function FlyerContent() {
                 <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-malva-200 shadow-xs">
                   <Image src="/images/categories/unas.jpg" alt="Uñas" fill className="object-cover" />
                 </div>
-                <p className="text-[11px] font-bold text-ink-800">Manicure Spa</p>
-                <p className="text-[10px] text-malva-700 font-semibold">$ 55.000 COP</p>
+                <p className="text-xs font-bold text-ink-800">Manicure Spa</p>
+                <p className="text-2xs text-malva-700 font-semibold">$ 55.000 COP</p>
               </div>
 
               <div className="space-y-1">
                 <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-malva-200 shadow-xs">
                   <Image src="/images/categories/cabello.jpg" alt="Cabello" fill className="object-cover" />
                 </div>
-                <p className="text-[11px] font-bold text-ink-800">Balayage & Color</p>
-                <p className="text-[10px] text-malva-700 font-semibold">$ 220.000 COP</p>
+                <p className="text-xs font-bold text-ink-800">Balayage & Color</p>
+                <p className="text-2xs text-malva-700 font-semibold">$ 220.000 COP</p>
               </div>
 
               <div className="space-y-1">
                 <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-malva-200 shadow-xs">
                   <Image src="/images/categories/maquillaje.jpg" alt="Maquillaje" fill className="object-cover" />
                 </div>
-                <p className="text-[11px] font-bold text-ink-800">Maquillaje Social</p>
-                <p className="text-[10px] text-malva-700 font-semibold">$ 120.000 COP</p>
+                <p className="text-xs font-bold text-ink-800">Maquillaje Social</p>
+                <p className="text-2xs text-malva-700 font-semibold">$ 120.000 COP</p>
               </div>
 
               <div className="space-y-1">
                 <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-malva-200 shadow-xs">
                   <Image src="/images/categories/cejas.jpg" alt="Cejas" fill className="object-cover" />
                 </div>
-                <p className="text-[11px] font-bold text-ink-800">Laminado & Pestañas</p>
-                <p className="text-[10px] text-malva-700 font-semibold">$ 75.000 COP</p>
+                <p className="text-xs font-bold text-ink-800">Laminado & Pestañas</p>
+                <p className="text-2xs text-malva-700 font-semibold">$ 75.000 COP</p>
               </div>
             </div>
           </div>
@@ -269,13 +269,13 @@ export function FlyerContent() {
             <div className="shrink-0 flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-malva-200 shadow-md">
               {qrSvg ? (
                 <div
-                  className="w-[140px] h-[140px] sm:w-[155px] sm:h-[155px] flex items-center justify-center"
+                  className="w-35 h-35 sm:w-39 sm:h-39 flex items-center justify-center"
                   dangerouslySetInnerHTML={{ __html: qrSvg }}
                 />
               ) : (
-                <div className="w-[140px] h-[140px] bg-malva-100 animate-pulse rounded-xl" />
+                <div className="w-35 h-35 bg-malva-100 animate-pulse rounded-xl" />
               )}
-              <span className="text-[10px] font-bold tracking-wider text-malva-800 uppercase">
+              <span className="text-2xs font-bold tracking-wider text-malva-800 uppercase">
                 Demo Interactiva
               </span>
             </div>
@@ -285,7 +285,7 @@ export function FlyerContent() {
           <div className="rounded-2xl border border-malva-200 bg-gradient-to-b from-malva-950 to-malva-900 p-6 text-white space-y-4 shadow-xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/15 pb-4">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-malva-300">
+                <span className="text-2xs font-bold uppercase tracking-widest text-malva-300">
                   Desarrollo de Software a la Medida
                 </span>
                 <h4 className="font-display text-xl font-bold tracking-tight text-white flex items-center gap-2">
@@ -306,7 +306,7 @@ export function FlyerContent() {
                 </div>
                 <div>
                   <p className="font-bold text-white leading-tight">{CONTACT_NAME}</p>
-                  <p className="text-[11px] text-malva-200">{CONTACT_ROLE}</p>
+                  <p className="text-xs text-malva-200">{CONTACT_ROLE}</p>
                 </div>
               </div>
 
@@ -315,7 +315,7 @@ export function FlyerContent() {
                   <Phone className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-malva-200">WhatsApp / Teléfono directo</p>
+                  <p className="text-2xs text-malva-200">WhatsApp / Teléfono directo</p>
                   <a href={`tel:${CONTACT_PHONE_CLEAN}`} className="font-bold text-white hover:underline">
                     {CONTACT_PHONE}
                   </a>
@@ -327,7 +327,7 @@ export function FlyerContent() {
                   <Mail className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-malva-200">Correo electrónico</p>
+                  <p className="text-2xs text-malva-200">Correo electrónico</p>
                   <a href={`mailto:${CONTACT_EMAIL}`} className="font-bold text-white hover:underline truncate block">
                     {CONTACT_EMAIL}
                   </a>

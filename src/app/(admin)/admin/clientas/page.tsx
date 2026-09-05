@@ -133,92 +133,98 @@ export default function AdminClientasPage() {
   }
 
   return (
-    <>
-      <AdminHeader
-        title="Clientas"
-        subtitle="Cada ficha reúne el historial completo, venga de la web, de WhatsApp o de recepción."
-      >
-        <Button variant="primary" onClick={() => setCrearAbierto(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva clienta
-        </Button>
-      </AdminHeader>
-
-      {pares.length > 0 && (
-        <div className="mb-4 flex items-center justify-between rounded-lg bg-amber-50 p-3 text-[13px] text-amber-800 border border-amber-200">
-          <span>{pares.length} posibles fichas repetidas</span>
-          <Button variant="outline" size="sm" onClick={() => setDuplicadasAbierto(true)}>
-            Revisar
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      {/* Zona Fija Superior (~20%) */}
+      <div className="shrink-0 pb-3 space-y-3">
+        <AdminHeader
+          title="Clientas"
+          subtitle="Cada ficha reúne el historial completo, venga de la web, de WhatsApp o de recepción."
+        >
+          <Button variant="primary" onClick={() => setCrearAbierto(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva clienta
           </Button>
-        </div>
-      )}
+        </AdminHeader>
 
-      <div className="mb-[var(--spacing-fib-3)] max-w-sm">
-        <Field
-          icon={Search}
-          type="search"
-          placeholder="Buscar por nombre o teléfono"
-          aria-label="Buscar clienta"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+        {pares.length > 0 && (
+          <div className="flex items-center justify-between rounded-lg bg-amber-50 dark:bg-amber-950/40 p-3 text-sm text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800">
+            <span>{pares.length} posibles fichas repetidas</span>
+            <Button variant="outline" size="sm" onClick={() => setDuplicadasAbierto(true)}>
+              Revisar
+            </Button>
+          </div>
+        )}
+
+        <div className="max-w-sm">
+          <Field
+            icon={Search}
+            type="search"
+            placeholder="Buscar por nombre o teléfono"
+            aria-label="Buscar clienta"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </div>
       </div>
 
-      {cargando ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-[var(--radius-lg)]" />
-          ))}
-        </div>
-      ) : filtradas.length === 0 ? (
-        <EmptyState
-          icon={UserRound}
-          title={busqueda ? 'Ninguna coincidencia' : 'Todavía no hay clientas'}
-          description={
-            busqueda
-              ? 'Prueba con otro nombre o con los últimos dígitos del celular.'
-              : 'La primera reserva crea la ficha automáticamente, con el teléfono como identidad.'
-          }
-        />
-      ) : (
-        <RevealGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtradas.map((cli) => (
-            <RevealItem key={cli.id} variant="pop">
-              <Surface
-                interactive
-                pad="sm"
-                radius="lg"
-                role="button"
-                tabIndex={0}
-                onClick={() => abrir(cli.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    abrir(cli.id)
-                  }
-                }}
-                className={cn('h-full', abriendo === cli.id && 'opacity-60')}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-malva-100 font-display text-base font-semibold text-malva-700">
-                    {cli.nombre.charAt(0).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-[14px] font-semibold text-ink-900">
-                      {cli.nombre}
-                    </h2>
-                    <p className="tnum flex items-center gap-1 truncate text-[12px] text-ink-400">
-                      <Phone className="h-3 w-3" strokeWidth={2} />
-                      {cli.telefonoE164}
-                    </p>
+      {/* Zona con Scroll Interno (~80%) */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 scrollbar-slim pb-8">
+        {cargando ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 rounded-[var(--radius-lg)]" />
+            ))}
+          </div>
+        ) : filtradas.length === 0 ? (
+          <EmptyState
+            icon={UserRound}
+            title={busqueda ? 'Ninguna coincidencia' : 'Todavía no hay clientas'}
+            description={
+              busqueda
+                ? 'Prueba con otro nombre o con los últimos dígitos del celular.'
+                : 'La primera reserva crea la ficha automáticamente, con el teléfono como identidad.'
+            }
+          />
+        ) : (
+          <RevealGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filtradas.map((cli) => (
+              <RevealItem key={cli.id} variant="pop">
+                <Surface
+                  interactive
+                  pad="sm"
+                  radius="lg"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => abrir(cli.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      abrir(cli.id)
+                    }
+                  }}
+                  className={cn('h-full', abriendo === cli.id && 'opacity-60')}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-malva-100 font-display text-base font-semibold text-malva-700">
+                      {cli.nombre.charAt(0).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="truncate text-sm font-semibold text-ink-900">
+                        {cli.nombre}
+                      </h2>
+                      <p className="tnum flex items-center gap-1 truncate text-xs text-ink-400">
+                        <Phone className="h-3 w-3" strokeWidth={2} />
+                        {cli.telefonoE164}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-ink-300" strokeWidth={2} />
                   </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-300" strokeWidth={2} />
-                </div>
-              </Surface>
-            </RevealItem>
-          ))}
-        </RevealGroup>
-      )}
+                </Surface>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        )}
+      </div>
 
       {/* ---------- Ficha ---------- */}
       <RightDrawer
@@ -246,7 +252,7 @@ export default function AdminClientasPage() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-[13px] font-semibold text-ink-700">Historial</h3>
+              <h3 className="text-sm font-semibold text-ink-700">Historial</h3>
 
               {detalle.appointments.length === 0 ? (
                 <EmptyState compact title="Sin citas registradas" />
@@ -259,18 +265,18 @@ export default function AdminClientasPage() {
                       <Surface material="solid" radius="md" pad="sm">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate text-[13px] font-semibold text-ink-900">
+                            <p className="truncate text-sm font-semibold text-ink-900">
                               {servicios.find((s) => s.id === cita.serviceId)?.nombre ??
                                 'Servicio'}
                             </p>
-                            <p className="tnum text-[11.5px] text-ink-400 first-letter:uppercase">
+                            <p className="tnum text-xs text-ink-400 first-letter:uppercase">
                               {fechaHoraConAnio(cita.inicioUtc)}
                               {' · '}
                               {equipo.find((p) => p.id === cita.professionalId)?.nombre ?? '—'}
                             </p>
                           </div>
                           <div className="shrink-0 text-right">
-                            <p className="tnum text-[13px] font-semibold text-malva-700">
+                            <p className="tnum text-sm font-semibold text-malva-700">
                               {formatCurrencyFromCents(cita.precioCentavos)}
                             </p>
                             <div className="mt-1">
@@ -281,12 +287,12 @@ export default function AdminClientasPage() {
 
                         {cita.historial?.length > 0 && (
                           <details className="mt-2 border-t border-ink-100 pt-2">
-                            <summary className="cursor-pointer text-[11.5px] font-semibold text-ink-400 hover:text-malva-700">
+                            <summary className="cursor-pointer text-xs font-semibold text-ink-400 hover:text-malva-700">
                               Traza ({cita.historial.length})
                             </summary>
                             <ul className="mt-1.5 space-y-1">
                               {cita.historial.map((h, i) => (
-                                <li key={i} className="text-[11px] leading-relaxed text-ink-400">
+                                <li key={i} className="text-xs leading-relaxed text-ink-400">
                                   <span className="tnum">
                                     {selloCorto(h.fechaUtc)}
                                   </span>{' '}
@@ -335,10 +341,10 @@ export default function AdminClientasPage() {
             type="email"
           />
           <div className="space-y-1">
-            <label className="text-[13px] font-medium text-ink-700">Notas</label>
+            <label className="text-sm font-medium text-ink-700">Notas</label>
             <textarea
               name="notas"
-              className="w-full rounded-[var(--radius-md)] border border-ink-200 bg-white p-2.5 text-[13.5px] text-ink-900 outline-none transition focus:border-malva-400 focus:ring-4 focus:ring-malva-400/20"
+              className="w-full rounded-[var(--radius-md)] border border-ink-200 bg-white p-2.5 text-sm text-ink-900 outline-none transition focus:border-malva-400 focus:ring-4 focus:ring-malva-400/20"
               rows={3}
             />
           </div>
@@ -394,7 +400,7 @@ export default function AdminClientasPage() {
           </div>
         )}
       </RightDrawer>
-    </>
+    </div>
   )
 }
 
@@ -413,10 +419,10 @@ function Metrica({
 }) {
   return (
     <div className="rounded-[var(--radius-md)] border border-ink-100 bg-[var(--glass-tint)] px-2.5 py-3 text-center">
-      <p className="text-[10.5px] uppercase tracking-[0.1em] text-ink-400">{etiqueta}</p>
+      <p className="text-2xs uppercase tracking-[0.1em] text-ink-400">{etiqueta}</p>
       <p
         className={cn(
-          'tnum mt-0.5 text-[16px] font-semibold',
+          'tnum mt-0.5 text-base font-semibold',
           acento && 'text-malva-700',
           tono === 'alerta' && 'text-danger',
           tono === 'bien' && 'text-success',
@@ -425,7 +431,7 @@ function Metrica({
       >
         {valor}
       </p>
-      {nota && <p className="text-[9.5px] text-ink-300">{nota}</p>}
+      {nota && <p className="text-2xs text-ink-300">{nota}</p>}
     </div>
   )
 }

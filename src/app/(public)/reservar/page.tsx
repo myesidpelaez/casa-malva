@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getCategoriesAction, getServicesAction } from '@/actions/catalogo'
 import { getProfessionalsAction } from '@/actions/profesionales'
 import { ReservaWizard } from './ReservaWizard'
+import { BadgeApertura } from '@/components/brand/Apertura'
 
 export const revalidate = 0
 
@@ -24,9 +25,9 @@ export const metadata: Metadata = {
 export default async function ReservarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ serviceId?: string }>
+  searchParams: Promise<{ serviceId?: string; professionalId?: string }>
 }) {
-  const [{ serviceId }, catRes, srvRes, profRes] = await Promise.all([
+  const [{ serviceId, professionalId }, catRes, srvRes, profRes] = await Promise.all([
     searchParams,
     getCategoriesAction(),
     getServicesAction(),
@@ -36,6 +37,8 @@ export default async function ReservarPage({
   return (
     <ReservaWizard
       serviceIdInicial={serviceId ?? null}
+      professionalIdInicial={professionalId ?? null}
+      estado={<BadgeApertura />}
       categories={(catRes.ok ? catRes.data : []).filter((c) => c.activa)}
       services={(srvRes.ok ? srvRes.data : []).filter((s) => s.activo)}
       professionals={(profRes.ok ? profRes.data : []).filter((p) => p.activo)}

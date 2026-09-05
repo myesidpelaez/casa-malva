@@ -58,7 +58,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                const guardado = localStorage.getItem('cm:tema');
+                const urlTema = new URLSearchParams(window.location.search).get('tema');
+                const guardado = urlTema || localStorage.getItem('cm:tema');
                 if (guardado === 'dark' || (!guardado && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                   document.documentElement.setAttribute('data-theme', 'dark');
                 } else {
@@ -69,7 +70,9 @@ export default function RootLayout({
           }}
         />
         {/* Telón de fondo. Sin esto, el vidrio no tiene nada que refractar. */}
-        <div className="aurora" aria-hidden />
+        <div className="aurora" aria-hidden>
+          <div className="aurora-core" />
+        </div>
         {children}
         <RevealProvider />
         <SonnerToaster />

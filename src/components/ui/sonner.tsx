@@ -20,8 +20,8 @@ export function SonnerToaster() {
         classNames: {
           toast:
             'glass-strong glass-edge !rounded-[var(--radius-md)] !border-transparent !shadow-[var(--shadow-e3)] !font-sans !text-ink-900',
-          title: '!text-[14px] !font-semibold',
-          description: '!text-[12.5px] !text-ink-500',
+          title: '!text-sm !font-semibold',
+          description: '!text-xs !text-ink-500',
           actionButton: '!bg-malva-600 !text-white !rounded-[var(--radius-xs)]',
           cancelButton: '!bg-ink-100 !text-ink-700 !rounded-[var(--radius-xs)]',
           closeButton: '!bg-white/80 !border-ink-200 !text-ink-500',
