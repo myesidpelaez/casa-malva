@@ -7,7 +7,7 @@ runConfig:
   # sirve: con la instancia dormida, el mensaje de la madrugada paga arranque en frío, Meta
   # reintenta, y el trabajo diferido del webhook muere cuando Cloud Run congela la instancia.
   # Esto es lo que cuesta poder decirle "24/7" al dueño del spa sin mentir.
-  minInstances: 1
+  minInstances: 0
   maxInstances: 2          # Techo de gasto ante picos imprevistos
   concurrency: 80
   cpu: 1
