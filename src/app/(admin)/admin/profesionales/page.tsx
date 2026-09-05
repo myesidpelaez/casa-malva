@@ -189,16 +189,22 @@ export default function AdminProfesionalesPage() {
   }
 
   return (
-    <>
-      <AdminHeader
-        title="Equipo de Profesionales"
-        subtitle="Gestiona el talento del estudio, horarios semanales y habilidades multicategoría."
-      >
-        <Button variant="primary" size="md" onClick={abrirNuevo}>
-          <UserPlus className="h-4 w-4" />
-          Nueva profesional
-        </Button>
-      </AdminHeader>
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      {/* Zona Fija Superior (~20%) */}
+      <div className="shrink-0 pb-3">
+        <AdminHeader
+          title="Equipo de Profesionales"
+          subtitle="Gestiona el talento del estudio, horarios semanales y habilidades multicategoría."
+        >
+          <Button variant="primary" size="md" onClick={abrirNuevo}>
+            <UserPlus className="h-4 w-4" />
+            Nueva profesional
+          </Button>
+        </AdminHeader>
+      </div>
+
+      {/* Zona de Galería con Scroll Interno (~80%) */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 scrollbar-slim pb-8">
 
       {cargando ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -305,6 +311,8 @@ export default function AdminProfesionalesPage() {
           })}
         </RevealGroup>
       )}
+
+      </div>
 
       {/* ===================================================================
           RIGHT DRAWER: CREAR / EDITAR PROFESIONAL (CERO SCROLL)
@@ -547,6 +555,6 @@ export default function AdminProfesionalesPage() {
           </div>
         </div>
       </RightDrawer>
-    </>
+    </div>
   )
 }

@@ -49,17 +49,20 @@ function humanDuration(minutos: number): string {
 
 
 
-export function ChatWidget() {
-  const [abierto, setAbierto] = React.useState(false)
+let contadorMensajes = 0
+function generarIdMensaje(prefijo: 'usr' | 'agt'): string {
+  contadorMensajes += 1
+  return `${prefijo}_${Date.now()}_${contadorMensajes}`
+}
 
-  React.useEffect(() => {
+export function ChatWidget() {
+  const [abierto, setAbierto] = React.useState(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
-      if (params.get('chat') === 'open') {
-        setAbierto(true)
-      }
+      return params.get('chat') === 'open'
     }
-  }, [])
+    return false
+  })
   const [mensajes, setMensajes] = React.useState<MensajeChat[]>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
@@ -163,7 +166,7 @@ export function ChatWidget() {
     setUltimoMensajeFallido(null)
 
     const mensajeUsuario: MensajeChat = {
-      id: `usr_${Date.now()}`,
+      id: generarIdMensaje('usr'),
       rol: 'cliente',
       texto: textoLimpio,
     }
@@ -193,7 +196,7 @@ export function ChatWidget() {
       const { servicio, especialista } = detectarRecomendaciones(data.texto || '')
 
       const mensajeRespuesta: MensajeChat = {
-        id: `agt_${Date.now()}`,
+        id: generarIdMensaje('agt'),
         rol: 'agente',
         texto: data.texto || '¿En qué más te puedo colaborar?',
         servicioRecomendado: servicio,
@@ -237,25 +240,24 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Botón Flotante Concierge Haute Couture */}
+      {/* Botón Flotante Concierge Haute Couture (Estilo LUMIÈRE) */}
       <div className="fixed bottom-6 right-6 z-40">
         <button
+          type="button"
           onClick={() => setAbierto(true)}
-          aria-label="Abrir asistente de belleza Malva"
-          className="group relative flex items-center gap-3.5 rounded-full border border-[#c5a059]/40 bg-[#160f15]/95 px-5 py-3 text-left shadow-[0_12px_32px_rgba(0,0,0,0.45),0_0_20px_rgba(197,160,89,0.18)] backdrop-blur-xl transition-all duration-300 hover:scale-[1.03] hover:border-[#c5a059] hover:shadow-[0_16px_40px_rgba(0,0,0,0.55),0_0_28px_rgba(197,160,89,0.3)] active:scale-95 cursor-pointer"
+          aria-label="Abrir asistente de belleza Malva Concierge"
+          className="group flex items-center gap-3.5 rounded-full bg-[#2A1525]/92 dark:bg-[#160D15]/95 backdrop-blur-2xl px-3 py-2 sm:pr-5 text-white shadow-[0_10px_35px_rgba(61,20,44,0.4)] border border-[#C5A059]/50 hover:border-[#C5A059] hover:scale-[1.03] hover:shadow-[0_14px_45px_rgba(197,160,89,0.3)] active:scale-95 transition-all duration-300 cursor-pointer"
         >
-          {/* Avatar con aura dorada */}
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2a1b26] to-[#120c11] border border-[#c5a059]/50 shadow-inner">
-            <Marca variant="linea" size={24} className="text-[#c5a059]" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-[#160f15]" />
+          {/* Avatar con Flor Canónica de Casa Malva y Aura Dorada */}
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#3D2036] to-[#160D15] border border-[#C5A059]/60 shadow-inner">
+            <Marca size={22} className="text-[#C5A059]" />
           </div>
 
-          <div className="hidden flex-col pr-1 sm:flex">
-            <span className="font-display text-sm font-semibold tracking-tight text-white group-hover:text-[#f7e9b0] transition-colors leading-tight">
+          <div className="hidden flex-col pr-1 sm:flex text-left">
+            <span className="font-display text-sm font-semibold tracking-tight text-white group-hover:text-[#F7E9B0] transition-colors leading-tight">
               Malva · Concierge
             </span>
-            <span className="text-xs font-medium text-[#c5a059] tracking-wide mt-0.5 flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-2xs font-medium text-[#D8C2CE] dark:text-[#C5A059]/90 tracking-wide mt-0.5">
               Asistente de Belleza 24/7
             </span>
           </div>
@@ -268,24 +270,20 @@ export function ChatWidget() {
         onOpenChange={setAbierto}
         title={
           <div className="flex items-center gap-3.5">
-            <div className="relative">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#2d1a29] via-[#1a1218] to-[#100a0f] border border-[#c5a059]/50 shadow-md">
-                <Marca variant="linea" size={28} className="text-[#c5a059]" />
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-[#160f15]" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D1A29] via-[#1A1218] to-[#100A0F] border border-[#C5A059]/50 shadow-md">
+              <Marca size={26} className="text-[#C5A059]" />
             </div>
             <div>
-              <div className="text-lg sm:text-xl font-display font-bold text-ink-950 dark:text-[#fbf7fa] leading-tight">
+              <div className="text-lg sm:text-xl font-display font-bold text-ink-950 dark:text-[#FBF7FA] leading-tight">
                 Malva · Concierge de Belleza
               </div>
-              <div className="text-xs text-ink-600 dark:text-[#c5a059] font-sans flex items-center gap-1.5 mt-0.5 font-medium">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Atención de autor · Casa Malva Medellín</span>
+              <div className="text-xs text-ink-600 dark:text-[#C5A059] font-sans mt-0.5 font-medium">
+                Atención de autor · Casa Malva Medellín
               </div>
             </div>
           </div>
         }
-        description="Orientación de rituales, selección de especialistas y reserva sin esperas."
+        description={undefined}
         size="md"
         className="flex flex-col h-full"
       >
@@ -446,32 +444,34 @@ export function ChatWidget() {
               </div>
             )}
 
+            {mensajes.length <= 1 && (
+              <div className="flex flex-col gap-2 pt-1">
+                <span className="text-2xs uppercase tracking-wider font-bold text-[#c5a059]">Sugerencias rápidas</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {CHIPS_SUGERENCIAS.map((chip) => (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      onClick={() => enviarMensaje(chip.prompt)}
+                      className="text-xs px-3 py-1.5 rounded-xl border border-malva-200 dark:border-white/10 hover:border-[#c5a059] bg-white/70 dark:bg-white/5 text-ink-800 dark:text-[#ede4eb] transition-all hover:scale-101 cursor-pointer text-left shadow-2xs"
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div ref={finalMensajesRef} />
           </div>
 
-          {/* Atajos Rápidos / Sugerencias Interactivas (UX/UI PRO MAX) */}
-          <div className="space-y-3 pt-3 border-t border-malva-100 dark:border-white/10">
-            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
-              {CHIPS_SUGERENCIAS.map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  disabled={cargando}
-                  onClick={() => enviarMensaje(chip.prompt)}
-                  className="whitespace-nowrap rounded-full border border-malva-200 dark:border-[#c5a059]/30 bg-white dark:bg-[#20171e] hover:border-[#c5a059] hover:bg-malva-50 dark:hover:bg-[#2b1f28] px-3.5 py-1.5 text-xs font-semibold text-ink-800 dark:text-[#fbf7fa] shadow-2xs transition-all cursor-pointer shrink-0 disabled:opacity-50"
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Formulario de Entrada */}
+          {/* Formulario de Entrada Simplificado y Limpio (Sin doble contorno) */}
+          <div className="space-y-2 pt-3 border-t border-malva-100 dark:border-white/10">
             <form
               onSubmit={(e) => {
                 e.preventDefault()
                 enviarMensaje(inputTexto)
               }}
-              className="relative flex items-center rounded-2xl border border-malva-200 dark:border-[#c5a059]/35 bg-white dark:bg-[#160f15] shadow-sm focus-within:border-[#c5a059] focus-within:ring-2 focus-within:ring-[#c5a059]/20 transition-all p-1.5"
+              className="relative flex items-center rounded-2xl border border-malva-300/80 dark:border-[#C5A059]/40 bg-white dark:bg-[#180E17] shadow-xs focus-within:border-[#C5A059] focus-within:ring-2 focus-within:ring-[#C5A059]/25 transition-all p-1.5"
             >
               <textarea
                 ref={inputRef}
@@ -481,15 +481,15 @@ export function ChatWidget() {
                 rows={1}
                 placeholder="Escribe tu consulta a Malva..."
                 disabled={cargando}
-                className="w-full resize-none bg-transparent px-3 py-2 text-sm text-ink-950 dark:text-[#fbf7fa] placeholder:text-ink-400 dark:placeholder:text-white/40 focus:outline-none disabled:opacity-50 min-h-10 max-h-32"
+                className="w-full resize-none border-0 border-none bg-transparent px-3 py-2 text-sm text-ink-950 dark:text-[#FBF7FA] placeholder:text-ink-400 dark:placeholder:text-white/40 outline-none ring-0 focus:border-0 focus:outline-none focus:ring-0 focus:shadow-none disabled:opacity-50 min-h-10 max-h-32"
               />
               <button
                 type="submit"
                 disabled={cargando || !inputTexto.trim()}
                 aria-label="Enviar mensaje a Malva"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#c5a059] hover:bg-[#d8b56f] text-[#140e13] disabled:opacity-30 disabled:hover:bg-[#c5a059] transition-all cursor-pointer shadow-xs"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#C5A059] hover:bg-[#D8B56F] text-[#140E13] disabled:opacity-30 disabled:hover:bg-[#C5A059] transition-all cursor-pointer shadow-xs"
               >
-                <Send className="h-4.5 w-4.5 text-[#140e13]" strokeWidth={2.2} />
+                <Send className="h-4.5 w-4.5 text-[#140E13]" strokeWidth={2.2} />
               </button>
             </form>
 

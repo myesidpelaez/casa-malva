@@ -18,7 +18,6 @@ import {
   Sunset,
   TriangleAlert,
   User,
-  Calendar as CalendarIcon,
   ShieldCheck,
 } from 'lucide-react'
 import { crearCitaAction, franjasDelDiaAction, diasConCuposAction } from '@/actions/citas'
@@ -43,7 +42,6 @@ import { Field } from '@/components/ui/field'
 import { Stepper } from '@/components/ui/segmented'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/common/EmptyState'
-import { Reveal } from '@/components/common/Reveal'
 import { Marca, TituloEditorial } from '@/components/brand'
 import type { Appointment, Category, Professional, Service } from '@/types'
 
@@ -123,8 +121,12 @@ export function ReservaWizard({
   React.useEffect(() => {
     if (!servicio) return
     let vivo = true
-    setCargandoFranjas(true)
-    setFranja(null)
+    void Promise.resolve().then(() => {
+      if (vivo) {
+        setCargandoFranjas(true)
+        setFranja(null)
+      }
+    })
 
     franjasDelDiaAction(servicio.id, dia.toISOString(), profesional?.id)
       .then((res) => {

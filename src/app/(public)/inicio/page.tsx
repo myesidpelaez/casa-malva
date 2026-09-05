@@ -1,321 +1,674 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, CalendarPlus, Sparkles, MapPin, CheckCircle2, ShieldCheck, Clock } from 'lucide-react'
-import { getCategoriesAction, getServicesAction } from '@/actions/catalogo'
-import { getProfessionalsAction } from '@/actions/profesionales'
-import { formatCurrencyFromCents } from '@/lib/currency'
-import { categoryLook, cleanCategoryName, priceFrom, servicesOf } from '@/lib/catalogo-ui'
-import { buttonClass } from '@/components/ui/button-variants'
-import { SectionHeading } from '@/components/ui/surface'
+import {
+  ArrowRight,
+  CalendarPlus,
+  Sparkles,
+  ShieldCheck,
+  Leaf,
+  Award,
+  Star,
+  Users,
+  Clock,
+  Play,
+  Check,
+  Sparkle,
+} from 'lucide-react'
 import { Reveal, RevealGroup, RevealItem } from '@/components/common/Reveal'
-import { Marca, TituloEditorial } from '@/components/brand'
-import { BadgeApertura } from '@/components/brand/Apertura'
-import { EquipoSlider } from '@/components/home/EquipoSlider'
-import { cn } from '@/lib/utils'
-import { REGLAS_NEGOCIO } from '@/lib/reglas'
+import { FaqAccordion } from '@/components/home/FaqAccordion'
 
 export const revalidate = 0
 
-export default async function InicioPage() {
-  const [catRes, srvRes, profRes] = await Promise.all([
-    getCategoriesAction(),
-    getServicesAction(),
-    getProfessionalsAction(),
-  ])
+const ESPECIALIDADES_ELABORADAS = [
+  {
+    id: 'unas-gel',
+    categoriaId: 'cat_unas',
+    badge: 'MANOS & UÑAS',
+    rating: '4.9',
+    reviews: '128',
+    duracion: '90 min',
+    eyebrow: 'ARQUITECTURA DE UÑAS',
+    titulo: 'Manicura Rusa & Nivelación Gel',
+    descripcion: 'Limpieza milimétrica de cutículas con torno diamantado, nivelación de uña natural con rubber base y esmaltado de máxima durabilidad.',
+    tags: ['Cutícula Rusa', 'Fórmula 10-Free', 'Brillo Espejo'],
+    precio: '$95.000',
+    imagen: '/images/details.jpg',
+  },
+  {
+    id: 'cejas-lashes',
+    categoriaId: 'cat_cejas',
+    badge: 'MIRADA & CEJAS',
+    rating: '5.0',
+    reviews: '94',
+    duracion: '75 min',
+    eyebrow: 'VISAGISMO & LIFTING',
+    titulo: 'Diseño de Cejas & Lash Lifting',
+    descripcion: 'Mapeo facial con calibre, laminado orgánico con aminoácidos, tintura botánica y curvado natural de pestañas con keratina pura.',
+    tags: ['Laminado HD', 'Lifting Keratina', 'Efecto Rímel'],
+    precio: '$85.000',
+    imagen: '/images/novia_2_ojos.jpg',
+  },
+  {
+    id: 'balayage',
+    categoriaId: 'cat_cabello',
+    badge: 'COLOR & CORTE',
+    rating: '4.9',
+    reviews: '145',
+    duracion: '180 min',
+    eyebrow: 'ALTA PELUQUERÍA',
+    titulo: 'Colorimetría & Balayage de Autor',
+    descripcion: 'Iluminación multidimensional a mano alzada, babylights sin efecto raíz y sellado de cutícula con gloss tonificante libre de amoníaco.',
+    tags: ['Sin Daño Térmico', 'Matización Pro', 'Caída Natural'],
+    precio: '$260.000',
+    imagen: '/images/hair.jpg',
+  },
+  {
+    id: 'botox-capilar',
+    categoriaId: 'cat_cabello',
+    badge: 'SALUD CAPILAR',
+    rating: '4.8',
+    reviews: '89',
+    duracion: '90 min',
+    eyebrow: 'NUTRICIÓN INTENSIVA',
+    titulo: 'Bótox Capilar & Nutrición Botánica',
+    descripcion: 'Terapia regenerativa profunda de ácido hialurónico y colágeno vegetal. Elimina el frizz, recupera elasticidad y sella las puntas abiertas.',
+    tags: ['Antifrizz Orgánico', 'Ácido Hialurónico', 'Brillo Seda'],
+    precio: '$140.000',
+    imagen: '/images/cat_cabello.jpg',
+  },
+  {
+    id: 'pedicura-spa',
+    categoriaId: 'cat_unas',
+    badge: 'RITUAL PODAL',
+    rating: '4.9',
+    reviews: '112',
+    duracion: '60 min',
+    eyebrow: 'BIENESTAR PODAL',
+    titulo: 'Pedicura Spa & Exfoliación Mineral',
+    descripcion: 'Inmersión en sales de Epsom con aromaterapia, remoción de asperezas, exfoliación con azúcar orgánica, masaje podal y esmalte pro.',
+    tags: ['Sales de Epsom', 'Masaje Podal', 'Larga Duración'],
+    precio: '$75.000',
+    imagen: '/images/cat_unas.jpg',
+  },
+  {
+    id: 'maquillaje-novias',
+    categoriaId: 'cat_maquillaje',
+    badge: 'HAUTE BEAUTY',
+    rating: '5.0',
+    reviews: '78',
+    duracion: '90 min',
+    eyebrow: 'EVENTOS & NOVIAS',
+    titulo: 'Maquillaje Social & Bridal Glow',
+    descripcion: 'Preparación dermatológica de la piel, técnica de piel blindada HD resistente al agua y lágrimas, visagismo armónico y pestañas pelo a pelo.',
+    tags: ['Piel Blindada HD', 'Fijación 16 Horas', 'Pestañas Pelo a Pelo'],
+    precio: '$180.000',
+    imagen: '/images/novia_3_glow.jpg',
+  },
+]
 
-  const categories = (catRes.ok ? catRes.data : []).filter((c) => c.activa)
-  const services = (srvRes.ok ? srvRes.data : []).filter((s) => s.activo)
-  const professionals = (profRes.ok ? profRes.data : []).filter((p) => p.activo)
+export default async function InicioPage() {
+
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      {/* ================= PORTADA HAUTE COUTURE (HERO EDITORIAL EXPANSIVO) ================= */}
-      <section className="relative py-8 sm:py-14 lg:py-20">
-        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8 xl:gap-14">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-24 sm:space-y-32 pb-20">
+      
+      {/* ================= 1. HERO BOUTIQUE EDITORIAL (INSPIRADO EN LUMIÈRE) ================= */}
+      <section className="relative my-4 sm:my-6 overflow-hidden rounded-3xl bg-[#FAF6F3] dark:bg-[#160E15] border border-[#EFE4E0] dark:border-white/10 shadow-[0_12px_40px_rgba(61,20,44,0.06)]">
+        <div className="grid items-center gap-10 lg:grid-cols-12 p-6 sm:p-10 lg:p-14">
           
-          {/* Columna Editorial (Texto y Acciones) */}
+          {/* Columna Izquierda: Copywriting de Autor */}
           <Reveal className="text-center lg:col-span-7 lg:text-left">
-            <div className="inline-flex justify-center lg:justify-start">
-              <BadgeApertura />
-            </div>
+            <span className="inline-block text-xs sm:text-xs font-bold uppercase tracking-[0.24em] text-malva-700 dark:text-[#E8829F]">
+              CUIDADO DE AUTOR · BELLEZA CONSCIENTE · MEDELLÍN
+            </span>
 
-            <TituloEditorial className="mt-5" resalte="belleza botánica.">
-              Santuario de
-            </TituloEditorial>
+            <h1 className="mt-4 font-display text-4xl sm:text-6xl xl:text-7xl font-semibold tracking-tight text-ink-900 dark:text-white leading-[1.06]">
+              Cuidado Experto,<br />
+              <span className="font-display italic font-normal text-malva-800 dark:text-[#E8829F]">Resultados Impecables.</span>
+            </h1>
 
-            <p className="mt-5 max-w-xl text-base sm:text-xl leading-relaxed text-ink-700 dark:text-[#ede4eb] font-sans font-normal">
-              Peluquería de autor, spa de uñas y diseño de cejas en El Poblado, Medellín. Elige tu especialista preferida y reserva tu cita en tiempo real sin esperas ni llamadas.
+            <p className="mt-5 max-w-xl text-base sm:text-lg leading-relaxed text-ink-700 dark:text-[#E2D5DF] font-sans">
+              Estudio de belleza boutique en El Poblado especializado en manicura de autor, diseño de cejas, pestañas y salud capilar. Una experiencia sensorial creada para tu bienestar.
             </p>
 
+            {/* Trío de Insignias de Confianza con Micro-iconos */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto lg:mx-0">
+              <div className="flex items-center gap-2.5 rounded-2xl bg-white/90 dark:bg-white/5 border border-malva-100 dark:border-white/10 p-3 shadow-2xs">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-malva-100/80 dark:bg-malva-900/50 text-malva-800 dark:text-white">
+                  <Award className="h-4 w-4" strokeWidth={2} />
+                </div>
+                <span className="text-xs font-semibold text-ink-900 dark:text-white leading-tight">
+                  Especialistas Certificadas
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5 rounded-2xl bg-white/90 dark:bg-white/5 border border-malva-100 dark:border-white/10 p-3 shadow-2xs">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-malva-100/80 dark:bg-malva-900/50 text-malva-800 dark:text-white">
+                  <Leaf className="h-4 w-4" strokeWidth={2} />
+                </div>
+                <span className="text-xs font-semibold text-ink-900 dark:text-white leading-tight">
+                  Fórmulas Libres de Tóxicos
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5 rounded-2xl bg-white/90 dark:bg-white/5 border border-malva-100 dark:border-white/10 p-3 shadow-2xs">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-malva-100/80 dark:bg-malva-900/50 text-malva-800 dark:text-white">
+                  <Sparkles className="h-4 w-4" strokeWidth={2} />
+                </div>
+                <span className="text-xs font-semibold text-ink-900 dark:text-white leading-tight">
+                  Protocolos a Medida
+                </span>
+              </div>
+            </div>
+
+            {/* Doble CTA Estilo LUMIÈRE */}
             <div className="mt-8 flex flex-col items-stretch justify-start gap-4 sm:flex-row sm:items-center">
               <Link
                 href="/reservar"
-                className={cn(
-                  buttonClass({ variant: 'primary', size: 'xl' }),
-                  'w-full sm:w-auto shadow-[0_8px_24px_rgba(102,61,91,0.35)] hover:shadow-[0_12px_32px_rgba(102,61,91,0.48)] transition-all'
-                )}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#3D142C] hover:bg-[#270B1C] text-white px-8 py-4 text-xs sm:text-sm font-bold tracking-widest uppercase transition-all shadow-[0_8px_25px_rgba(61,20,44,0.28)] hover:shadow-[0_12px_32px_rgba(61,20,44,0.4)] hover:-translate-y-0.5 active:translate-y-0"
               >
-                <CalendarPlus className="h-5 w-5" strokeWidth={1.8} />
-                <span>Reservar mi cita</span>
+                <span>RESERVAR CITA</span>
+                <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
               </Link>
 
               <Link
-                href="/servicios"
-                className={cn(
-                  buttonClass({ variant: 'glass', size: 'xl' }),
-                  'w-full sm:w-auto shadow-sm'
-                )}
+                href="#nosotros"
+                className="inline-flex items-center justify-center gap-2.5 rounded-full bg-white dark:bg-white/10 hover:bg-[#FAF4F7] text-ink-900 dark:text-white px-7 py-4 text-xs sm:text-sm font-bold tracking-widest uppercase border border-malva-200 dark:border-white/20 transition-all shadow-xs hover:-translate-y-0.5 active:translate-y-0"
               >
-                <span>Explorar Lookbook</span>
-                <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
+                <Play className="h-3.5 w-3.5 fill-current text-malva-700 dark:text-white" />
+                <span>CONOCER EL ESTUDIO</span>
               </Link>
-            </div>
-
-            {/* Compromisos Exclusivos de Autor (Signature Pillars) */}
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 border-t border-malva-100/70 dark:border-ink-800/80 pt-6 text-left">
-              <div className="group flex flex-col gap-1 rounded-2xl bg-white/75 dark:bg-[#1c151b]/80 p-3.5 border border-malva-200/60 dark:border-malva-400/20 shadow-xs backdrop-blur-md transition-all hover:border-[#c5a059]/50 hover:-translate-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#C5A059] shrink-0" />
-                  <span className="text-sm text-ink-950 dark:text-white font-semibold font-display">Atención 1 a 1 de Autor</span>
-                </div>
-                <p className="text-xs text-ink-600 dark:text-ink-400 leading-snug">
-                  Sin citas simultáneas ni prisas. Tu tiempo y bienestar son exclusivos.
-                </p>
-              </div>
-
-              <div className="group flex flex-col gap-1 rounded-2xl bg-white/75 dark:bg-[#1c151b]/80 p-3.5 border border-malva-200/60 dark:border-malva-400/20 shadow-xs backdrop-blur-md transition-all hover:border-[#c5a059]/50 hover:-translate-y-0.5">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-malva-600 dark:text-malva-400 shrink-0" />
-                  <span className="text-sm text-ink-950 dark:text-white font-semibold font-display">Visagismo & Diagnóstico</span>
-                </div>
-                <p className="text-xs text-ink-600 dark:text-ink-400 leading-snug">
-                  Colorimetría botánica y diseño previo a la medida de tus facciones.
-                </p>
-              </div>
-
-              <div className="group flex flex-col gap-1 rounded-2xl bg-white/75 dark:bg-[#1c151b]/80 p-3.5 border border-malva-200/60 dark:border-malva-400/20 shadow-xs backdrop-blur-md transition-all hover:border-[#c5a059]/50 hover:-translate-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-[#C5A059] shrink-0" />
-                  <span className="text-sm text-ink-950 dark:text-white font-semibold font-display">Puntualidad Absoluta</span>
-                </div>
-                <p className="text-xs text-ink-600 dark:text-ink-400 leading-snug">
-                  Comenzamos en el minuto exacto agendado. Cero minutos de espera en sala.
-                </p>
-              </div>
-
-              <div className="group flex flex-col gap-1 rounded-2xl bg-white/75 dark:bg-[#1c151b]/80 p-3.5 border border-malva-200/60 dark:border-malva-400/20 shadow-xs backdrop-blur-md transition-all hover:border-[#c5a059]/50 hover:-translate-y-0.5">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span className="text-sm text-ink-950 dark:text-white font-semibold font-display">Confirmación WhatsApp</span>
-                </div>
-                <p className="text-xs text-ink-600 dark:text-ink-400 leading-snug">
-                  Gestión instantánea en un toque y recordatorios automáticos sin llamadas.
-                </p>
-              </div>
             </div>
           </Reveal>
 
-          {/* Columna Visual (Hero Showpiece Editorial con Glassmorphism) */}
+          {/* Columna Derecha: Fotografía de Alta Definición */}
           <Reveal className="lg:col-span-5" variant="pop">
-            <div className="group relative mx-auto w-full max-w-lg lg:max-w-none">
-              
-              {/* Aura luminosa de fondo */}
-              <div className="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-malva-500/20 via-[var(--color-oro-editorial)]/15 to-malva-300/20 blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-700" />
-
-              {/* Marco arqueado con estética de salón boutique */}
-              <div className="relative aspect-[4/5] sm:aspect-[1/1.18] overflow-hidden rounded-3xl border border-white/70 dark:border-malva-700/30 bg-malva-50/50 shadow-[0_20px_50px_rgba(61,20,56,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+            <div className="group relative mx-auto w-full max-w-md lg:max-w-none">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/90 dark:border-white/10 shadow-[0_20px_45px_rgba(61,20,44,0.14)] dark:shadow-[0_20px_45px_rgba(0,0,0,0.6)]">
                 <Image
-                  src="/images/hero.jpg"
-                  alt="Interior del salón Casa Malva, estudio boutique en El Poblado, Medellín"
+                  src="/images/hero_nails_luxury.jpg"
+                  alt="Tratamiento de alta gama en Casa Malva"
                   fill
                   priority
-                  sizes="(max-width: 768px) 100vw, 600px"
+                  sizes="(max-width: 768px) 100vw, 500px"
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
-                
-                {/* Degradado para garantizar contraste fotográfico */}
-                <div className="absolute inset-0 bg-gradient-to-t from-ink-950/75 via-ink-950/15 to-transparent" />
-
-                {/* Pasaporte Boutique / Sello de Casa Malva (Alto Contraste Bimodal Garantizado) */}
-                <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 rounded-2xl border border-white/90 dark:border-[#c5a059]/30 bg-white/95 dark:bg-[#160f15]/95 p-4 shadow-[0_16px_45px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-all">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3.5">
-                      {/* Monograma oficial botánico de Casa Malva con pistilo en oro */}
-                      <div className="grid h-11 w-11 place-items-center rounded-xl border border-[#c5a059]/40 bg-white/90 dark:bg-[#2a1525]/90 shadow-md backdrop-blur-md">
-                        <Marca size={28} variant="linea" color="#c5a059" animate="breathe" className="shrink-0 drop-shadow-xs" />
-                      </div>
-                      <div>
-                        <p className="font-display text-base font-bold text-ink-950 dark:text-white leading-tight">
-                          Casa Malva Estudio
-                        </p>
-                        <p className="text-xs font-medium text-ink-600 dark:text-[#ded5da] flex items-center gap-1 mt-0.5">
-                          <MapPin className="h-3.5 w-3.5 text-malva-600 dark:text-[#c5a059] shrink-0" />
-                          <span>El Poblado · Medellín</span>
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-1.5 rounded-full border border-[#c5a059]/40 bg-[#c5a059]/15 dark:bg-[#c5a059]/20 px-3.5 py-1.5 backdrop-blur-md shadow-xs shrink-0">
-                      <span className="relative flex h-2 w-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c5a059] opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#c5a059]" />
-                      </span>
-                      <span className="text-xs font-bold tracking-tight text-[#8c6b2d] dark:text-[#f3d99e]">
-                        {professionals.length} Maestras de Autor
-                      </span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* ================= LOOKBOOK DE ESPECIALIDADES ================= */}
-      <section className="py-14 sm:py-20 border-t border-malva-100/60 dark:border-ink-800/60">
-        <Reveal>
-          <SectionHeading
-            align="center"
-            eyebrow="Colección & Carta"
-            title="Nuestras especialidades"
-            subtitle="Precios y duración transparentes desde el primer momento. Elige tu tratamiento preferido."
-            className="mx-auto"
-          />
+      {/* ================= 2. MATRIZ DE ESPECIALIDADES (ELABORADA CON FOTOGRAFÍA & CHIPS) ================= */}
+      <section className="space-y-12">
+        <Reveal className="text-center max-w-2xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-[0.24em] text-malva-700 dark:text-[#E8829F]">
+            CARTA DE SERVICIOS DE AUTOR
+          </span>
+          <h2 className="mt-2 font-display text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-ink-900 dark:text-white">
+            Nuestras Especialidades
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-ink-600 dark:text-[#D8C2CE]">
+            Procedimientos no invasivos de máxima precisión técnica, diseñados con fórmulas botánicas y cosmética europea de alta fidelidad.
+          </p>
         </Reveal>
 
-        <RevealGroup className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {categories.map((cat) => {
-            const catServices = servicesOf(services, cat)
-            const look = categoryLook(cat.id)
-            const desde = priceFrom(catServices)
-            
-            return (
-              <RevealItem key={cat.id} variant="pop">
-                <Link href={`/servicios#${cat.id}`} className="group block h-full">
-                  <div
-                    className={cn(
-                      'glass-card-editorial flex h-full flex-col overflow-hidden rounded-xl transition-all duration-300',
-                      'group-hover:-translate-y-1.5 group-hover:shadow-[0_16px_36px_rgba(61,20,56,0.14)] dark:group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.6)]'
-                    )}
-                  >
-                    {/* Fotografía de la categoría */}
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-malva-100 dark:bg-malva-950">
-                      <Image
-                        src={look.image}
-                        alt={cleanCategoryName(cat.nombre)}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-600 ease-out group-hover:scale-108"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-ink-950/65 via-transparent to-transparent" />
-                      
-                      
+        {/* Grilla de 6 Especialidades de Ultra-Lujo con Fotografía */}
+        <RevealGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {ESPECIALIDADES_ELABORADAS.map((item) => (
+            <RevealItem key={item.id} variant="pop">
+              <Link
+                href={`/reservar?categoria=${item.categoriaId}`}
+                className="group flex flex-col h-full overflow-hidden rounded-2xl bg-white dark:bg-[#1A1218] border border-malva-100/90 dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_45px_rgba(61,20,44,0.14)] dark:hover:shadow-[0_20px_45px_rgba(0,0,0,0.7)] hover:-translate-y-1.5 transition-all duration-500"
+              >
+                {/* Cabecera con Fotografía Editorial */}
+                <div className="relative aspect-[16/11] w-full overflow-hidden bg-malva-100 dark:bg-malva-950">
+                  <Image
+                    src={item.imagen}
+                    alt={item.titulo}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                      {/* Contador de servicios */}
-                      <span className="absolute bottom-3 left-3.5 rounded-full bg-white/95 dark:bg-[#160f15]/95 px-3 py-1 text-xs font-bold text-ink-900 dark:text-[#fbf7fa] backdrop-blur-md border border-white/70 dark:border-[#c5a059]/40 shadow-xs">
-                        {catServices.length} {catServices.length === 1 ? 'servicio' : 'servicios'}
+                  {/* Badge de Categoría Superior Izquierdo (Alto Contraste Claro/Oscuro) */}
+                  <span className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 rounded-full bg-white/95 dark:bg-[#1C121A]/95 px-3 py-1 text-2xs font-bold uppercase tracking-wider text-malva-950 dark:text-[#F5E8C8] backdrop-blur-md border border-white/80 dark:border-[#C5A059]/40 shadow-xs">
+                    <Sparkle className="h-2.5 w-2.5 fill-current text-[#C5A059]" />
+                    {item.badge}
+                  </span>
+
+                  {/* Rating Superior Derecho (Alto Contraste Claro/Oscuro) */}
+                  <span className="absolute top-3.5 right-3.5 inline-flex items-center gap-1 rounded-full bg-white/95 dark:bg-[#1C121A]/95 text-malva-950 dark:text-[#F5E8C8] px-2.5 py-1 text-xs font-bold backdrop-blur-md border border-white/80 dark:border-[#C5A059]/40 shadow-xs">
+                    <Star className="h-3 w-3 fill-[#C5A059] text-[#C5A059]" />
+                    <span>{item.rating}</span>
+                    <span className="text-2xs text-ink-500 dark:text-white/70 font-normal">({item.reviews})</span>
+                  </span>
+
+                  {/* Duración Inferior Izquierdo (Alto Contraste Claro/Oscuro) */}
+                  <span className="absolute bottom-3 left-3.5 inline-flex items-center gap-1.5 rounded-full bg-white/95 dark:bg-[#1C121A]/95 px-3 py-1 text-xs font-semibold text-malva-950 dark:text-[#F5E8C8] backdrop-blur-md border border-white/80 dark:border-[#C5A059]/30 shadow-xs">
+                    <Clock className="h-3 w-3 text-malva-700 dark:text-[#E8829F]" />
+                    <span>{item.duracion}</span>
+                  </span>
+                </div>
+
+                {/* Cuerpo de la Card */}
+                <div className="flex flex-1 flex-col p-6">
+                  <span className="text-2xs font-bold uppercase tracking-[0.2em] text-malva-700 dark:text-[#E8829F]">
+                    {item.eyebrow}
+                  </span>
+
+                  <h3 className="mt-1 font-display text-xl font-semibold text-ink-900 dark:text-white group-hover:text-malva-800 dark:group-hover:text-[#E8829F] transition-colors leading-snug">
+                    {item.titulo}
+                  </h3>
+
+                  <p className="mt-2.5 flex-1 text-xs sm:text-sm leading-relaxed text-ink-600 dark:text-[#D8C2CE] font-sans line-clamp-2">
+                    {item.descripcion}
+                  </p>
+
+                  {/* Chips de Beneficios Técnicos */}
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {item.tags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="rounded-md bg-malva-50 dark:bg-white/5 px-2 py-0.5 text-xs font-medium text-ink-700 dark:text-[#E2D5DF] border border-malva-100/70 dark:border-white/10"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Footer de la Card: Precio & Botón */}
+                  <div className="mt-5 flex items-center justify-between border-t border-malva-100/80 dark:border-white/10 pt-4">
+                    <div>
+                      <span className="block text-2xs uppercase tracking-wider text-ink-400 dark:text-white/60 font-semibold">
+                        Desde
+                      </span>
+                      <span className="font-display text-base sm:text-lg font-bold text-malva-950 dark:text-[#F0D48F] tnum">
+                        {item.precio} COP
                       </span>
                     </div>
 
-                    {/* Cuerpo de la Card (UX/UI PRO MAX) */}
-                    <div className="flex flex-1 flex-col p-6">
-                      <h3 className="font-display text-xl font-semibold text-ink-950 dark:text-[#fbf7fa] group-hover:text-malva-700 dark:group-hover:text-[#c5a059] transition-colors">
-                        {cleanCategoryName(cat.nombre)}
-                      </h3>
-                      
-                      <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-600 dark:text-[#ede4eb] font-sans line-clamp-2">
-                        {look.claim}
-                      </p>
-
-                      <div className="mt-5 flex items-center justify-between border-t border-malva-100/70 dark:border-white/10 pt-3.5">
-                        <span className="text-xs font-medium text-ink-500 dark:text-[#d4c5cf]">Desde</span>
-                        {desde !== null && (
-                          <span className="tnum text-base font-bold text-malva-800 dark:text-[#f0d48f]">
-                            {formatCurrencyFromCents(desde)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-malva-50 dark:bg-white/10 text-malva-800 dark:text-white group-hover:bg-[#3D142C] group-hover:text-white px-3.5 py-1.5 text-xs font-bold transition-all shadow-2xs">
+                      <span>Reservar</span>
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </span>
                   </div>
-                </Link>
-              </RevealItem>
-            )
-          })}
+                </div>
+              </Link>
+            </RevealItem>
+          ))}
         </RevealGroup>
+
+        {/* CTA General Inferior */}
+        <div className="text-center pt-4">
+          <Link
+            href="/servicios"
+            className="inline-flex items-center gap-2 rounded-full bg-[#3D142C] hover:bg-[#270B1C] text-white px-9 py-4 text-xs sm:text-sm font-bold uppercase tracking-widest transition-all shadow-[0_8px_25px_rgba(61,20,44,0.22)] hover:scale-[1.02]"
+          >
+            <span>EXPLORAR CATÁLOGO COMPLETO</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </section>
 
-      {/* ================= EQUIPO Y ESPECIALISTAS (SLIDER INTERACTIVO + COPYWRITING PERSUASIVO) ================= */}
-      {professionals.length > 0 && (
-        <section className="py-14 sm:py-20 border-t border-malva-100/60 dark:border-ink-800/60">
-          <Reveal>
-            <SectionHeading
-              align="center"
-              eyebrow="El Equipo"
-              title="Profesionales de autor"
-              subtitle="Especialistas certificadas en cabello, cejas y uñas dedicadas a potenciar tu imagen y bienestar."
-              className="mx-auto"
-            />
-          </Reveal>
-
-          <div className="mt-10">
-            <EquipoSlider professionals={professionals} />
-          </div>
-        </section>
-      )}
-
-      {/* ================= BANNER INVITACIÓN EDITORIAL CON GLASSMORPHISM ================= */}
-      <section className="pb-20 pt-6">
-        <Reveal variant="pop">
-          <div className="glass-banner-editorial rounded-2xl p-8 sm:p-12 lg:p-16 text-center text-white relative">
-            
-            {/* Destello decorativo de fondo */}
-            <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[var(--color-oro-editorial)]/20 blur-3xl pointer-events-none" />
-            <div className="absolute -left-24 -bottom-24 h-72 w-72 rounded-full bg-malva-400/25 blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 max-w-2xl mx-auto">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/15 px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-md mb-4 shadow-xs">
-                <Sparkles className="h-3.5 w-3.5 text-[#C5A059]" />
-                Tu cita en Medellín
+      {/* ================= 3. RESULTADOS REALES & COMPARATIVA ANTES/DESPUÉS ================= */}
+      <section className="rounded-3xl bg-[#FAF6F3] dark:bg-[#160E15] border border-[#EFE4E0] dark:border-white/10 p-6 sm:p-10 lg:p-14">
+        <div className="grid items-center gap-10 lg:grid-cols-12">
+          
+          {/* Columna 1: Motivos de Consulta / Deseos (4 cols) */}
+          <div className="space-y-6 lg:col-span-4">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-[0.24em] text-malva-700 dark:text-[#E8829F]">
+                RESULTADOS QUE SE SIENTEN
               </span>
-
-              <h2 className="font-display text-4xl sm:text-5xl font-semibold leading-[1.08] tracking-tight text-white drop-shadow-sm">
-                Vive la experiencia Casa Malva
+              <h2 className="mt-2 font-display text-3xl sm:text-4xl font-semibold text-ink-900 dark:text-white leading-tight">
+                La Belleza Consciente Transforma Vidas.
               </h2>
+            </div>
 
-              <p className="mt-4 text-base sm:text-lg leading-relaxed text-white/90 font-sans max-w-xl mx-auto">
-                Reserva en menos de un minuto con confirmación inmediata por WhatsApp y atención 100% personalizada.
-              </p>
+            <ul className="space-y-3.5">
+              {[
+                'Uñas frágiles, quebradizas o mordidas',
+                'Cejas despobladas o sin definición armónica',
+                'Cabello reseco, sensibilizado o sin brillo',
+                'Estrés, fatiga y necesidad de desconexión',
+                'Pestañas rectas y sin curvatura natural',
+              ].map((deseo, idx) => (
+                <li key={idx} className="flex items-center gap-3 text-sm font-semibold text-ink-800 dark:text-[#FAF5F8]">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-malva-200 dark:bg-malva-900/80 text-malva-900 dark:text-[#E8829F]">
+                    <Check className="h-3 w-3" strokeWidth={3} />
+                  </div>
+                  <span>{deseo}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href="/reservar"
-                  className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-white px-8 py-4 text-base font-bold text-[#1a1618] shadow-[0_10px_30px_rgba(0,0,0,0.35),0_0_24px_rgba(255,255,255,0.45)] hover:bg-white/95 hover:scale-105 active:scale-95 transition-all duration-200 font-display"
-                >
-                  <CalendarPlus className="h-5 w-5 text-malva-800" strokeWidth={2.2} />
-                  <span className="tracking-tight font-bold text-[#1a1618]">Agendar Cita Ahora</span>
-                </Link>
+          {/* Columna 2: Tarjeta Comparativa Antes / Después (5 cols) con Split Dual */}
+          <div className="lg:col-span-5">
+            <div className="overflow-hidden rounded-2xl bg-white dark:bg-[#1E141C] border border-malva-200/80 dark:border-white/10 shadow-[0_12px_36px_rgba(61,20,44,0.1)]">
+              {/* Header con Pestañas ANTES y DESPUÉS */}
+              <div className="grid grid-cols-2 text-center text-xs font-bold uppercase tracking-widest border-b border-malva-100 dark:border-white/10">
+                <div className="py-3 bg-[#FAF5F8] dark:bg-white/5 text-ink-600 dark:text-white/60">
+                  DIAGNÓSTICO PREVIO
+                </div>
+                <div className="py-3 bg-[#3D142C] text-white">
+                  RESULTADO FINAL
+                </div>
               </div>
 
-              {/* Indicadores de confianza al pie del banner */}
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/80 font-medium pt-6 border-t border-white/15">
-                <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-[#C5A059]" />
-                  Confirmación inmediata
+              {/* Comparación Fotográfica Lado a Lado (Estilo LUMIÈRE) */}
+              <div className="grid grid-cols-2 divide-x divide-white/20">
+                <div className="relative aspect-[3/4] w-full">
+                  <Image
+                    src="/images/novia_1_prep.jpg"
+                    alt="Antes del tratamiento en Casa Malva"
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 250px"
+                    className="object-cover"
+                  />
+                  <span className="absolute bottom-2 left-2 rounded-md bg-black/75 px-2 py-0.5 text-2xs font-bold text-white uppercase tracking-wider backdrop-blur-xs">
+                    Antes
+                  </span>
+                </div>
+
+                <div className="relative aspect-[3/4] w-full">
+                  <Image
+                    src="/images/novia_3_glow.jpg"
+                    alt="Después del tratamiento en Casa Malva"
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 250px"
+                    className="object-cover"
+                  />
+                  <span className="absolute bottom-2 right-2 rounded-md bg-[#3D142C] px-2 py-0.5 text-2xs font-bold text-white uppercase tracking-wider shadow-xs">
+                    Después
+                  </span>
+                </div>
+              </div>
+
+              {/* Pie de Foto */}
+              <div className="p-4 text-center text-xs text-ink-500 dark:text-[#D8C2CE]">
+                Resultados reales y duraderos logrados por nuestras artistas en cabina.
+              </div>
+            </div>
+          </div>
+
+          {/* Columna 3: Testimonio de Clienta (3 cols) */}
+          <div className="lg:col-span-3">
+            <div className="rounded-2xl bg-white dark:bg-[#1E141C] border border-malva-200/80 dark:border-white/10 p-6 sm:p-7 shadow-[0_8px_24px_rgba(61,20,44,0.06)] space-y-4">
+              <span className="font-display text-4xl text-malva-600 dark:text-[#E8829F] leading-none select-none">
+                “
+              </span>
+              <p className="text-sm italic leading-relaxed text-ink-700 dark:text-[#E2D5DF]">
+                Por fin siento mis uñas fuertes y mis cejas con un marco natural. El trato y la delicadeza del equipo en Casa Malva es una experiencia que renueva tu energía.
+              </p>
+              <div className="border-t border-malva-100 dark:border-white/10 pt-3">
+                <p className="text-xs font-bold text-ink-900 dark:text-white">
+                  — Mariana Vélez
+                </p>
+                <p className="text-xs text-ink-500 dark:text-[#D8C2CE]">
+                  Clienta habitual en El Poblado
+                </p>
+                <div className="flex gap-1 text-[#C5A059] pt-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ================= 4. SOBRE EL ESTUDIO & MÉTRICAS DE AUTORIDAD ================= */}
+      <section id="nosotros" className="space-y-8">
+        <div className="grid items-center gap-10 lg:grid-cols-12">
+          
+          {/* Foto de Arquitectura Interior del Salón (4 cols) */}
+          <div className="lg:col-span-4">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-malva-200/80 dark:border-white/10 shadow-[0_16px_40px_rgba(61,20,44,0.1)]">
+              <Image
+                src="/images/salon_interior_luxury.jpg"
+                alt="Interiorismo del estudio Casa Malva en El Poblado"
+                fill
+                sizes="(max-width: 1024px) 100vw, 400px"
+                className="object-cover"
+              />
+              <span className="absolute bottom-3 left-3 rounded-full bg-black/80 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md border border-white/15">
+                Sede El Poblado · Medellín
+              </span>
+            </div>
+          </div>
+
+          {/* Texto de Filosofía (5 cols) */}
+          <div className="space-y-5 lg:col-span-5">
+            <span className="text-xs font-bold uppercase tracking-[0.24em] text-malva-700 dark:text-[#E8829F]">
+              NUESTRO ESTUDIO
+            </span>
+
+            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-ink-900 dark:text-white leading-[1.12]">
+              Donde la Técnica se Encuentra con la Calidez
+            </h2>
+
+            <p className="text-sm sm:text-base leading-relaxed text-ink-700 dark:text-[#E2D5DF]">
+              En Casa Malva creamos un refugio en el corazón de El Poblado. Integramos técnicas avanzadas de belleza europea con fórmulas veganas y libres de tóxicos. Cuidamos cada segundo de tu cita con hospitalidad cálida, aromaterapia y atención exclusiva sin prisas.
+            </p>
+
+            <div className="pt-2">
+              <Link
+                href="/servicios"
+                className="inline-flex items-center gap-2 rounded-full bg-[#3D142C] hover:bg-[#270B1C] text-white px-7 py-3 text-xs font-bold uppercase tracking-widest transition-all shadow-md hover:scale-[1.02]"
+              >
+                <span>CONOCER NUESTRA CARTA</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          {/* 3 Métricas de Impacto Apiladas (3 cols) */}
+          <div className="space-y-4 lg:col-span-3">
+            <div className="flex items-center gap-4 rounded-2xl bg-white dark:bg-[#1A1218] border border-malva-100 dark:border-white/10 p-5 shadow-xs">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-malva-100/70 dark:bg-malva-900/40 text-malva-800 dark:text-[#E8829F]">
+                <Users className="h-6 w-6" strokeWidth={1.75} />
+              </div>
+              <div>
+                <span className="block text-2xl font-bold tracking-tight text-ink-900 dark:text-white tnum">
+                  +3,500
                 </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 text-[#C5A059]" />
-                  Sin llamadas ni esperas
+                <span className="text-xs font-medium text-ink-500 dark:text-[#D8C2CE]">
+                  Clientas Satisfechas
                 </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-[#C5A059]" />
-                  El Poblado, Medellín
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 rounded-2xl bg-white dark:bg-[#1A1218] border border-malva-100 dark:border-white/10 p-5 shadow-xs">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-malva-100/70 dark:bg-malva-900/40 text-malva-800 dark:text-[#E8829F]">
+                <Award className="h-6 w-6" strokeWidth={1.75} />
+              </div>
+              <div>
+                <span className="block text-2xl font-bold tracking-tight text-ink-900 dark:text-white tnum">
+                  6+
+                </span>
+                <span className="text-xs font-medium text-ink-500 dark:text-[#D8C2CE]">
+                  Años de Maestría
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 rounded-2xl bg-white dark:bg-[#1A1218] border border-malva-100 dark:border-white/10 p-5 shadow-xs">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-malva-100/70 dark:bg-malva-900/40 text-malva-800 dark:text-[#E8829F]">
+                <ShieldCheck className="h-6 w-6" strokeWidth={1.75} />
+              </div>
+              <div>
+                <span className="block text-2xl font-bold tracking-tight text-ink-900 dark:text-white tnum">
+                  100%
+                </span>
+                <span className="text-xs font-medium text-ink-500 dark:text-[#D8C2CE]">
+                  Libres de Tóxicos
                 </span>
               </div>
             </div>
           </div>
-        </Reveal>
+
+        </div>
       </section>
+
+      {/* ================= 5. ESPECIALISTAS DE AUTOR (ROSTER DE EQUIPO) ================= */}
+      <section className="space-y-10">
+        <Reveal className="text-center max-w-2xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-[0.24em] text-malva-700 dark:text-[#E8829F]">
+            NUESTRO EQUIPO
+          </span>
+          <h2 className="mt-2 font-display text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-ink-900 dark:text-white">
+            Conoce a Nuestras Artistas
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-ink-600 dark:text-[#D8C2CE]">
+            Profesionales apasionadas dedicadas a realzar tu armonía natural con máxima precisión.
+          </p>
+        </Reveal>
+
+        <RevealGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              id: 'pro_camila',
+              nombre: 'Camila Restrepo',
+              titulo: 'Master Lash & Brow Artist',
+              especialidad: 'Arquitectura de Cejas & Lifting',
+              foto: '/images/pro_camila.jpg',
+            },
+            {
+              id: 'pro_daniela',
+              nombre: 'Daniela Mesa',
+              titulo: 'Colorista de Autor',
+              especialidad: 'Balayage & Colorimetría HD',
+              foto: '/images/pro_daniela.jpg',
+            },
+            {
+              id: 'pro_valentina',
+              nombre: 'Valentina Gómez',
+              titulo: 'Especialista en Uñas',
+              especialidad: 'Manicura Rusa & Escultura Gel',
+              foto: '/images/pro_valentina.jpg',
+            },
+            {
+              id: 'pro_sara',
+              nombre: 'Sara López',
+              titulo: 'Terapeuta Capilar',
+              especialidad: 'Spa Botánico & Bótox Orgánico',
+              foto: '/images/pro_sara.jpg',
+            },
+          ].map((pro) => (
+            <RevealItem key={pro.id} variant="pop">
+              <div className="group overflow-hidden rounded-2xl bg-white dark:bg-[#1A1218] border border-malva-100 dark:border-white/10 shadow-xs hover:shadow-[0_12px_32px_rgba(61,20,44,0.1)] transition-all duration-300">
+                <div className="relative aspect-[3/4] w-full overflow-hidden bg-malva-100">
+                  <Image
+                    src={pro.foto}
+                    alt={pro.nombre}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  />
+                </div>
+
+                <div className="p-5 text-center">
+                  <h3 className="font-display text-lg font-semibold text-ink-900 dark:text-white">
+                    {pro.nombre}
+                  </h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-malva-700 dark:text-[#E8829F] mt-1">
+                    {pro.titulo}
+                  </p>
+                  <p className="text-xs text-ink-500 dark:text-[#D8C2CE] mt-1">
+                    {pro.especialidad}
+                  </p>
+
+                  <div className="mt-4 pt-3 border-t border-malva-100 dark:border-white/10">
+                    <Link
+                      href={`/reservar?profesional=${pro.id}`}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-malva-800 dark:text-[#E8829F] hover:underline"
+                    >
+                      <CalendarPlus className="h-3.5 w-3.5" />
+                      <span>Agendar con ella</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </RevealItem>
+          ))}
+        </RevealGroup>
+      </section>
+
+      {/* ================= 6. CONVERSIÓN & PREGUNTAS FRECUENTES (FAQ SPLIT) ================= */}
+      <section className="grid items-start gap-10 lg:grid-cols-12 pt-6">
+        
+        {/* Columna Izquierda: Tarjeta de Reserva Directa (5 cols) */}
+        <div className="lg:col-span-5 rounded-3xl bg-[#FAF6F3] dark:bg-[#160E15] border border-[#EFE4E0] dark:border-white/10 p-7 sm:p-9 space-y-6">
+          <div className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-[0.24em] text-malva-700 dark:text-[#E8829F]">
+              RESERVA TU ESPACIO
+            </span>
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold text-ink-900 dark:text-white leading-tight">
+              Inicia tu Experiencia en Casa Malva
+            </h2>
+            <p className="text-sm text-ink-600 dark:text-[#D8C2CE] leading-relaxed">
+              Reserva tu cita en menos de dos minutos. Sin esperas, con confirmación inmediata y atención personalizada.
+            </p>
+          </div>
+
+          {/* Imagen Decorativa del Estudio */}
+          <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-white/80 dark:border-white/10 shadow-xs">
+            <Image
+              src="/images/editorial_still_life.jpg"
+              alt="Detalle estético Casa Malva"
+              fill
+              sizes="(max-width: 1024px) 100vw, 400px"
+              className="object-cover"
+            />
+          </div>
+
+          <ul className="space-y-2.5 text-xs sm:text-sm text-ink-700 dark:text-[#E2D5DF]">
+            <li className="flex items-center gap-2.5">
+              <Check className="h-4 w-4 text-malva-700 dark:text-[#E8829F]" strokeWidth={2.5} />
+              <span>Diagnóstico sensorial previo sin costo</span>
+            </li>
+            <li className="flex items-center gap-2.5">
+              <Check className="h-4 w-4 text-malva-700 dark:text-[#E8829F]" strokeWidth={2.5} />
+              <span>Café de origen o infusión aromática de bienvenida</span>
+            </li>
+            <li className="flex items-center gap-2.5">
+              <Check className="h-4 w-4 text-malva-700 dark:text-[#E8829F]" strokeWidth={2.5} />
+              <span>Garantía de satisfacción y cuidado posterior</span>
+            </li>
+          </ul>
+
+          <div className="pt-2">
+            <Link
+              href="/reservar"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#3D142C] hover:bg-[#270B1C] text-white py-4 text-xs sm:text-sm font-bold tracking-widest uppercase transition-all shadow-[0_8px_25px_rgba(61,20,44,0.3)] hover:scale-[1.01]"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              <span>AGENDAR MI CITA AHORA</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Columna Derecha: Acordeón FAQ (7 cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-[0.24em] text-malva-700 dark:text-[#E8829F]">
+              PREGUNTAS FRECUENTES
+            </span>
+            <h2 className="mt-2 font-display text-3xl sm:text-4xl font-semibold text-ink-900 dark:text-white">
+              Todo lo que Necesitas Saber
+            </h2>
+          </div>
+
+          <FaqAccordion />
+        </div>
+
+      </section>
+
     </div>
   )
 }

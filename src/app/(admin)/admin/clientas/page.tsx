@@ -133,92 +133,98 @@ export default function AdminClientasPage() {
   }
 
   return (
-    <>
-      <AdminHeader
-        title="Clientas"
-        subtitle="Cada ficha reúne el historial completo, venga de la web, de WhatsApp o de recepción."
-      >
-        <Button variant="primary" onClick={() => setCrearAbierto(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva clienta
-        </Button>
-      </AdminHeader>
-
-      {pares.length > 0 && (
-        <div className="mb-4 flex items-center justify-between rounded-lg bg-amber-50 p-3 text-sm text-amber-800 border border-amber-200">
-          <span>{pares.length} posibles fichas repetidas</span>
-          <Button variant="outline" size="sm" onClick={() => setDuplicadasAbierto(true)}>
-            Revisar
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      {/* Zona Fija Superior (~20%) */}
+      <div className="shrink-0 pb-3 space-y-3">
+        <AdminHeader
+          title="Clientas"
+          subtitle="Cada ficha reúne el historial completo, venga de la web, de WhatsApp o de recepción."
+        >
+          <Button variant="primary" onClick={() => setCrearAbierto(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva clienta
           </Button>
-        </div>
-      )}
+        </AdminHeader>
 
-      <div className="mb-[var(--spacing-fib-3)] max-w-sm">
-        <Field
-          icon={Search}
-          type="search"
-          placeholder="Buscar por nombre o teléfono"
-          aria-label="Buscar clienta"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+        {pares.length > 0 && (
+          <div className="flex items-center justify-between rounded-lg bg-amber-50 dark:bg-amber-950/40 p-3 text-sm text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800">
+            <span>{pares.length} posibles fichas repetidas</span>
+            <Button variant="outline" size="sm" onClick={() => setDuplicadasAbierto(true)}>
+              Revisar
+            </Button>
+          </div>
+        )}
+
+        <div className="max-w-sm">
+          <Field
+            icon={Search}
+            type="search"
+            placeholder="Buscar por nombre o teléfono"
+            aria-label="Buscar clienta"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </div>
       </div>
 
-      {cargando ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-[var(--radius-lg)]" />
-          ))}
-        </div>
-      ) : filtradas.length === 0 ? (
-        <EmptyState
-          icon={UserRound}
-          title={busqueda ? 'Ninguna coincidencia' : 'Todavía no hay clientas'}
-          description={
-            busqueda
-              ? 'Prueba con otro nombre o con los últimos dígitos del celular.'
-              : 'La primera reserva crea la ficha automáticamente, con el teléfono como identidad.'
-          }
-        />
-      ) : (
-        <RevealGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtradas.map((cli) => (
-            <RevealItem key={cli.id} variant="pop">
-              <Surface
-                interactive
-                pad="sm"
-                radius="lg"
-                role="button"
-                tabIndex={0}
-                onClick={() => abrir(cli.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    abrir(cli.id)
-                  }
-                }}
-                className={cn('h-full', abriendo === cli.id && 'opacity-60')}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-malva-100 font-display text-base font-semibold text-malva-700">
-                    {cli.nombre.charAt(0).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-sm font-semibold text-ink-900">
-                      {cli.nombre}
-                    </h2>
-                    <p className="tnum flex items-center gap-1 truncate text-xs text-ink-400">
-                      <Phone className="h-3 w-3" strokeWidth={2} />
-                      {cli.telefonoE164}
-                    </p>
+      {/* Zona con Scroll Interno (~80%) */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 scrollbar-slim pb-8">
+        {cargando ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 rounded-[var(--radius-lg)]" />
+            ))}
+          </div>
+        ) : filtradas.length === 0 ? (
+          <EmptyState
+            icon={UserRound}
+            title={busqueda ? 'Ninguna coincidencia' : 'Todavía no hay clientas'}
+            description={
+              busqueda
+                ? 'Prueba con otro nombre o con los últimos dígitos del celular.'
+                : 'La primera reserva crea la ficha automáticamente, con el teléfono como identidad.'
+            }
+          />
+        ) : (
+          <RevealGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filtradas.map((cli) => (
+              <RevealItem key={cli.id} variant="pop">
+                <Surface
+                  interactive
+                  pad="sm"
+                  radius="lg"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => abrir(cli.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      abrir(cli.id)
+                    }
+                  }}
+                  className={cn('h-full', abriendo === cli.id && 'opacity-60')}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-malva-100 font-display text-base font-semibold text-malva-700">
+                      {cli.nombre.charAt(0).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="truncate text-sm font-semibold text-ink-900">
+                        {cli.nombre}
+                      </h2>
+                      <p className="tnum flex items-center gap-1 truncate text-xs text-ink-400">
+                        <Phone className="h-3 w-3" strokeWidth={2} />
+                        {cli.telefonoE164}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-ink-300" strokeWidth={2} />
                   </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-300" strokeWidth={2} />
-                </div>
-              </Surface>
-            </RevealItem>
-          ))}
-        </RevealGroup>
-      )}
+                </Surface>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        )}
+      </div>
 
       {/* ---------- Ficha ---------- */}
       <RightDrawer
@@ -394,7 +400,7 @@ export default function AdminClientasPage() {
           </div>
         )}
       </RightDrawer>
-    </>
+    </div>
   )
 }
 

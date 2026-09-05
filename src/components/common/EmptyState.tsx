@@ -13,20 +13,29 @@ import { spring } from '@/lib/motion'
  * deja una zona en blanco sin explicar por qué está vacía y qué hacer ahora.
  */
 export function EmptyState({
-  icon: Icon = Sparkles,
+  icon: IconOrNode = Sparkles,
   title,
   description,
   action,
   className,
   compact = false,
 }: {
-  icon?: LucideIcon
+  icon?: LucideIcon | React.ReactNode
   title: string
   description?: string
   action?: React.ReactNode
   className?: string
   compact?: boolean
 }) {
+  const renderIcon = () => {
+    if (!IconOrNode) return null
+    if (React.isValidElement(IconOrNode)) {
+      return IconOrNode
+    }
+    const Icon = IconOrNode as LucideIcon
+    return <Icon className={compact ? 'h-5 w-5' : 'h-6 w-6'} strokeWidth={1.5} />
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
@@ -45,7 +54,7 @@ export function EmptyState({
           compact ? 'h-10 w-10' : 'h-14 w-14'
         )}
       >
-        <Icon className={compact ? 'h-5 w-5' : 'h-6 w-6'} strokeWidth={1.5} />
+        {renderIcon()}
       </div>
 
       <div className="space-y-1">

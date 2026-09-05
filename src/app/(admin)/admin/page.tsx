@@ -247,140 +247,231 @@ export default function AdminAgendaPage() {
   }, [visibles, profesionalMovil])
 
   return (
-    <>
-      <AdminHeader
-        title="Agenda del día"
-        subtitle={<LivePulse label={`En vivo · se actualiza sola cada ${REFRESCO_SEG} segundos`} />}
-      >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-          <Button variant="primary" size="sm" onClick={() => setNuevaCitaOpen(true)}>Nueva cita</Button>
-          <Segmented
-            ariaLabel="Filtrar citas"
-            size="sm"
-            value={filtro}
-            onChange={setFiltro}
-            className="w-full sm:w-auto"
-            options={[
-              { value: 'todas', label: 'Todas', count: citasDelDia.length },
-              { value: 'activas', label: 'En pie', count: activas },
-              { value: 'pendientes', label: 'Por confirmar', count: pendientes },
-            ]}
-          />
-        </div>
-      </AdminHeader>
-
-      {/* ---------- Navegador de fecha + resumen (100% fluido) ---------- */}
-      <Surface material="frost" radius="lg" pad="sm" className="mb-[var(--spacing-fib-3)]">
-        <div className="flex items-center justify-between gap-2 sm:gap-3">
-          <Button
-            variant="glass"
-            size="icon-sm"
-            aria-label="Día anterior"
-            className="h-9 w-9 shrink-0"
-            onClick={() => moverDia(-1)}
-          >
-            <ChevronLeft className="h-4 w-4" strokeWidth={2} />
-          </Button>
-
-          <div className="min-w-0 flex-1 px-1 text-center">
-            <p className="truncate font-display text-base sm:text-lg font-semibold leading-tight text-ink-900 first-letter:uppercase">
-              {fechaLarga(dia)}
-            </p>
-            <p className="tnum truncate text-xs sm:text-xs text-ink-400">
-              {citasDelDia.length} cita{citasDelDia.length === 1 ? '' : 's'} ·{' '}
-              {formatCurrencyFromCents(ingresoPrevisto)} previstos
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            {!esHoy && (
-              <Button
-                variant="soft"
-                size="sm"
-                className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-xs"
-                onClick={() => setDia(startOfDay(new Date()))}
-              >
-                Hoy
-              </Button>
-            )}
-            <Button
-              variant="glass"
-              size="icon-sm"
-              aria-label="Día siguiente"
-              className="h-9 w-9 shrink-0"
-              onClick={() => moverDia(1)}
-            >
-              <ChevronRight className="h-4 w-4" strokeWidth={2} />
-            </Button>
-          </div>
-        </div>
-      </Surface>
-
-      {/* ---------- Pestañas de Profesional (Móvil: < md) ---------- */}
-      <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none md:hidden">
-        <button
-          type="button"
-          onClick={() => setProfesionalMovil('todas')}
-          className={cn(
-            'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all',
-            profesionalMovil === 'todas'
-              ? 'bg-malva-600 text-white shadow-[var(--shadow-malva)]'
-              : 'border border-ink-100 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)]'
-          )}
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      {/* =========================================================================
+          ZONA FIJA SUPERIOR (~20-25%): Cabecera, Navegador de Fecha y KPIs
+         ========================================================================= */}
+      <div className="shrink-0 space-y-2 pb-2.5">
+        <AdminHeader
+          title="Agenda del día"
+          subtitle={<LivePulse label={`En vivo · se actualiza sola cada ${REFRESCO_SEG} segundos`} />}
         >
-          <Users className="h-3.5 w-3.5" />
-          <span>Todo el equipo</span>
-          <span
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => setNuevaCitaOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#3D142C] hover:bg-[#270B1C] dark:bg-malva-800 dark:hover:bg-malva-700 text-white px-4 py-1.5 text-xs font-bold tracking-wider uppercase shadow-xs transition-all cursor-pointer"
+            >
+              <Calendar className="h-3.5 w-3.5 text-[#C5A059] dark:text-malva-300" />
+              <span>Nueva Cita</span>
+            </button>
+            <Segmented
+              ariaLabel="Filtrar citas"
+              size="sm"
+              value={filtro}
+              onChange={setFiltro}
+              className="w-auto"
+              options={[
+                { value: 'todas', label: 'Todas', count: citasDelDia.length },
+                { value: 'activas', label: 'En pie', count: activas },
+                { value: 'pendientes', label: 'Por confirmar', count: pendientes },
+              ]}
+            />
+          </div>
+        </AdminHeader>
+
+        {/* Barra de control unificada: Navegador de fecha + Tira de KPIs ejecutivos */}
+        <Surface
+          material="glass"
+          pad="sm"
+          radius="xl"
+          className="p-2 sm:p-2.5 space-y-2 border border-ink-200/80 dark:border-ink-200/40 shadow-xs"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+            {/* Navegador de Fecha */}
+            <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="glass"
+                  size="icon-sm"
+                  aria-label="Día anterior"
+                  className="h-8 w-8 shrink-0 rounded-lg"
+                  onClick={() => moverDia(-1)}
+                >
+                  <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+                </Button>
+                <div className="flex items-center gap-2 px-1">
+                  <span className="font-display text-sm sm:text-base font-semibold text-ink-900 first-letter:uppercase select-none">
+                    {fechaLarga(dia)}
+                  </span>
+                  {!esHoy && (
+                    <button
+                      type="button"
+                      onClick={() => setDia(startOfDay(new Date()))}
+                      className="rounded-full bg-malva-100 dark:bg-malva-950/80 px-2 py-0.5 text-2xs font-semibold text-malva-800 dark:text-malva-300 hover:bg-malva-200 dark:hover:bg-malva-900 transition-colors"
+                    >
+                      Hoy
+                    </button>
+                  )}
+                </div>
+                <Button
+                  variant="glass"
+                  size="icon-sm"
+                  aria-label="Día siguiente"
+                  className="h-8 w-8 shrink-0 rounded-lg"
+                  onClick={() => moverDia(1)}
+                >
+                  <ChevronRight className="h-4 w-4" strokeWidth={2} />
+                </Button>
+              </div>
+
+              <span className="hidden sm:inline-block h-4 w-px bg-ink-200/80 dark:bg-white/10" />
+
+              <span className="hidden sm:inline-block tnum text-xs text-ink-400 dark:text-ink-400">
+                {citasDelDia.length} {citasDelDia.length === 1 ? 'cita' : 'citas'}
+              </span>
+            </div>
+
+            {/* Tira Ejecutiva de Métricas (Alta Densidad, Cero Desperdicio) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 min-w-0">
+              {/* Card 1: Citas del Día */}
+              <div className="flex items-center gap-2 rounded-lg bg-[var(--card)] px-2.5 py-1 border border-ink-200/80 dark:border-white/10 shadow-2xs">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-malva-100/80 dark:bg-white/5 border border-malva-200/60 dark:border-white/10 text-malva-800 dark:text-[#E8829F]">
+                  <Calendar className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-display text-xs sm:text-sm font-bold text-ink-950 dark:text-white tnum leading-tight">
+                      {citasDelDia.length}
+                    </span>
+                    <span className="text-2xs font-semibold uppercase tracking-wider text-ink-400 dark:text-[#C5A059]">
+                      Citas
+                    </span>
+                  </div>
+                  <p className="text-2xs text-ink-500 dark:text-[#D8C2CE] truncate leading-none">
+                    {activas} act · {pendientes} pend
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 2: Previsto */}
+              <div className="flex items-center gap-2 rounded-lg bg-[var(--card)] px-2.5 py-1 border border-ink-200/80 dark:border-white/10 shadow-2xs">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-malva-100/80 dark:bg-white/5 border border-malva-200/60 dark:border-white/10 text-malva-800 dark:text-[#E8829F]">
+                  <Sparkles className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </div>
+                <div className="min-w-0">
+                  <span className="block font-display text-xs sm:text-sm font-bold text-ink-950 dark:text-white tnum truncate leading-tight">
+                    {formatCurrencyFromCents(ingresoPrevisto)}
+                  </span>
+                  <p className="text-2xs text-ink-500 dark:text-[#D8C2CE] truncate leading-none">
+                    Previsto
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 3: Ocupación */}
+              <div className="flex items-center gap-2 rounded-lg bg-[var(--card)] px-2.5 py-1 border border-ink-200/80 dark:border-white/10 shadow-2xs">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-malva-100/80 dark:bg-white/5 border border-malva-200/60 dark:border-white/10 text-malva-800 dark:text-[#E8829F]">
+                  <Clock className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </div>
+                <div className="min-w-0">
+                  <span className="block font-display text-xs sm:text-sm font-bold text-ink-950 dark:text-white tnum leading-tight">
+                    {Math.min(100, Math.round((citasDelDia.length / Math.max(1, equipo.length * 4)) * 100))}%
+                  </span>
+                  <p className="text-2xs text-ink-500 dark:text-[#D8C2CE] truncate leading-none">
+                    Ocupación
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 4: Especialistas */}
+              <div className="flex items-center gap-2 rounded-lg bg-[var(--card)] px-2.5 py-1 border border-ink-200/80 dark:border-white/10 shadow-2xs">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-malva-100/80 dark:bg-white/5 border border-malva-200/60 dark:border-white/10 text-malva-800 dark:text-[#E8829F]">
+                  <Users className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </div>
+                <div className="min-w-0">
+                  <span className="block font-display text-xs sm:text-sm font-bold text-ink-950 dark:text-white tnum leading-tight">
+                    {new Set(citasDelDia.map((c) => c.professionalId)).size} / {equipo.length}
+                  </span>
+                  <p className="text-2xs text-ink-500 dark:text-[#D8C2CE] truncate leading-none">
+                    Equipo hoy
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Surface>
+
+        {/* ---------- Pestañas de Profesional (Móvil: < md) ---------- */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none md:hidden">
+          <button
+            type="button"
+            onClick={() => setProfesionalMovil('todas')}
             className={cn(
-              'rounded-full px-1.5 py-px text-2xs tnum',
-              profesionalMovil === 'todas' ? 'bg-white/20 text-white' : 'bg-ink-100 text-ink-600'
+              'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all',
+              profesionalMovil === 'todas'
+                ? 'bg-malva-600 text-white shadow-[var(--shadow-malva)]'
+                : 'border border-ink-100 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)]'
             )}
           >
-            {visibles.length}
-          </span>
-        </button>
-
-        {equipo.map((prof) => {
-          const count = visibles.filter((c) => c.professionalId === prof.id).length
-          const active = profesionalMovil === prof.id
-
-          return (
-            <button
-              key={prof.id}
-              type="button"
-              onClick={() => setProfesionalMovil(prof.id)}
+            <Users className="h-3.5 w-3.5" />
+            <span>Todo el equipo</span>
+            <span
               className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all',
-                active
-                  ? 'bg-malva-600 text-white shadow-[var(--shadow-malva)]'
-                  : 'border border-ink-100 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)]'
+                'rounded-full px-1.5 py-px text-2xs tnum',
+                profesionalMovil === 'todas' ? 'bg-white/20 text-white' : 'bg-ink-100 text-ink-600'
               )}
             >
-              <span
+              {visibles.length}
+            </span>
+          </button>
+
+          {equipo.map((prof) => {
+            const count = visibles.filter((c) => c.professionalId === prof.id).length
+            const active = profesionalMovil === prof.id
+
+            return (
+              <button
+                key={prof.id}
+                type="button"
+                onClick={() => setProfesionalMovil(prof.id)}
                 className={cn(
-                  'grid h-4 w-4 shrink-0 place-items-center rounded-full text-2xs font-bold',
-                  active ? 'bg-white/25 text-white' : 'bg-malva-100 text-malva-700'
+                  'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all',
+                  active
+                    ? 'bg-malva-600 text-white shadow-[var(--shadow-malva)]'
+                    : 'border border-ink-100 bg-[var(--glass-tint)] text-ink-600 hover:bg-[var(--card)]'
                 )}
               >
-                {prof.nombre.charAt(0)}
-              </span>
-              <span>{nombreCorto(prof.id, equipo)}</span>
-              {count > 0 && (
                 <span
                   className={cn(
-                    'rounded-full px-1.5 py-px text-2xs tnum',
-                    active ? 'bg-white/20 text-white' : 'bg-malva-100 text-malva-700'
+                    'grid h-4 w-4 shrink-0 place-items-center rounded-full text-2xs font-bold',
+                    active ? 'bg-white/25 text-white' : 'bg-malva-100 text-malva-700'
                   )}
                 >
-                  {count}
+                  {prof.nombre.charAt(0)}
                 </span>
-              )}
-            </button>
-          )
-        })}
+                <span>{nombreCorto(prof.id, equipo)}</span>
+                {count > 0 && (
+                  <span
+                    className={cn(
+                      'rounded-full px-1.5 py-px text-2xs tnum',
+                      active ? 'bg-white/20 text-white' : 'bg-malva-100 text-malva-700'
+                    )}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* ---------- Vista Móvil: Línea de Tiempo / Lista Fluida (< md) ---------- */}
+      {/* =========================================================================
+          ZONA DE CONTENIDO CON SCROLL INTERNO (~75-80%): Columnas de Especialistas
+         ========================================================================= */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 scrollbar-slim pb-8">
+        {/* ---------- Vista Móvil: Línea de Tiempo / Lista Fluida (< md) ---------- */}
       <div className="block md:hidden">
         {cargando ? (
           <div className="space-y-3">
@@ -527,6 +618,7 @@ export default function AdminAgendaPage() {
           </div>
         )}
       </div>
+      </div>
 
       {/* ---------- Cancelación con motivo ---------- */}
       <RightDrawer
@@ -589,7 +681,7 @@ export default function AdminAgendaPage() {
         servicios={servicios}
         profesionales={equipo}
       />
-    </>
+    </div>
   )
 }
 

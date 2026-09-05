@@ -46,6 +46,11 @@ function esActivo(pathname: string, href: string) {
  * La navegación vive aquí y en un solo sitio: en el mockup, las cinco páginas
  * del panel repetían su propia barra de pestañas copiada y pegada, y ya se
  * habían desincronizado entre sí.
+ *
+ * Arquitectura Cero Scroll General:
+ * En escritorio, la ventana bloquea el scroll externo (h-dvh overflow-hidden)
+ * para evitar la redundancia de doble scroll. Cada módulo gestiona su propio
+ * contenedor interno con cabecera fija y galería fluida.
  */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -61,7 +66,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-dvh">
+    <div className="flex min-h-dvh md:h-dvh md:overflow-hidden">
       {/* ---------- Barra lateral (escritorio) ---------- */}
       <aside className="sticky top-0 hidden h-dvh w-62 shrink-0 flex-col border-r border-[var(--glass-hairline)] bg-[var(--glass-tint)] p-3 backdrop-blur-xl md:flex">
         <Link href="/admin" className="group flex items-center gap-2.5 px-2 py-3">
@@ -131,9 +136,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* ---------- Contenido ---------- */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <main className="flex-1 px-4 py-[var(--spacing-fib-3)] pb-28 sm:px-[var(--spacing-fib-3)] md:pb-[var(--spacing-fib-4)]">
+      {/* ---------- Contenido Principal sin Scroll Redundante ---------- */}
+      <div className="flex min-w-0 flex-1 flex-col md:h-dvh md:overflow-hidden">
+        <main className="flex-1 min-h-0 flex flex-col px-4 py-[var(--spacing-fib-3)] pb-28 sm:px-[var(--spacing-fib-3)] md:pb-[var(--spacing-fib-3)] overflow-hidden">
           {children}
         </main>
       </div>
@@ -196,12 +201,12 @@ export function AdminHeader({
   children?: React.ReactNode
 }) {
   return (
-    <header className="mb-[var(--spacing-fib-3)] flex flex-col gap-3 border-b border-ink-100 pb-[var(--spacing-fib-2)] sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-[var(--spacing-fib-2)] flex flex-col gap-2 border-b border-ink-100 dark:border-ink-200/40 pb-[var(--spacing-fib-2)] sm:flex-row sm:items-center sm:justify-between shrink-0">
       <div className="min-w-0">
-        <h1 className="font-display text-3xl font-semibold leading-tight text-ink-900">
+        <h1 className="font-display text-2xl sm:text-3xl font-semibold leading-tight text-ink-900">
           {title}
         </h1>
-        {subtitle && <div className="mt-0.5 text-sm text-ink-500">{subtitle}</div>}
+        {subtitle && <div className="mt-0.5 text-xs sm:text-sm text-ink-500">{subtitle}</div>}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
     </header>
